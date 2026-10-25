@@ -24,6 +24,14 @@ def relevance(student: np.ndarray, program: np.ndarray) -> float:
     return 0.0 if denom == 0 else float(student @ program / denom)
 
 
+def relevance_matrix(student: np.ndarray, X: np.ndarray) -> np.ndarray:
+    """Vectorised `relevance` against every row of X (must stay equal to it row-wise)."""
+    norms = np.linalg.norm(X, axis=1) * np.linalg.norm(student)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        scores = X @ student / norms
+    return np.where(norms == 0, 0.0, scores)
+
+
 def contributions(student: np.ndarray, program: np.ndarray) -> dict[str, float]:
     """C2.4: share of the cosine numerator contributed by each dimension.
 

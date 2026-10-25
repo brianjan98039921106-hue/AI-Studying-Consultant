@@ -11,7 +11,13 @@ Sub-components (docs/components/C2-discovery.md):
 
 from aisc.discovery.constraints import passes_constraints
 from aisc.discovery.rerank import recommend
-from aisc.discovery.scoring import contributions, label_similarity, novelty, relevance
+from aisc.discovery.scoring import (
+    contributions,
+    label_similarity,
+    novelty,
+    relevance,
+    relevance_matrix,
+)
 from aisc.discovery.sectioned import discover, shortlist
 
 __all__ = [
@@ -22,5 +28,6 @@ __all__ = [
     "passes_constraints",
     "recommend",
     "relevance",
+    "relevance_matrix",
     "shortlist",
 ]
