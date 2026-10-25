@@ -19,6 +19,9 @@
 | 方法 | 理論來源 | 引入的假設 |
 |---|---|---|
 | 需求維度骨架 | Holland (1997), *Making Vocational Choices*：RIASEC 六型職業興趣；O*NET Interest Profiler | A-C1-1 興趣是相對穩定、可測量的潛在特質 |
+| 興趣短題 | O*NET Interest Profiler Short Form：Rounds, Su, Lewis & Rivkin (2010) 心理計量報告 | 英文常模；中文版需重新驗證（B-C1-3） |
+| 台灣既有興趣資料 | 大學入學考試中心興趣量表：以 Holland 類型論為基礎，六型各 33 題，每型 0–99 分，輸出三碼興趣代碼，並對應台灣大學學群 | A-C1-6 高中時測得的興趣代碼對研究所申請仍有參考價值（B-C1-7） |
+| 成對情境題 | 強迫選擇（forced-choice）格式降低默許與社會期許偏誤 | A-C1-2 的部分對策 |
 | 測量模型與信度 | 古典測驗理論（Cronbach's α、再測信度）；因素分析 | A-C1-1 |
 | 作答偏誤 | Podsakoff et al. (2003), *J. Applied Psychology*：共同方法偏誤、社會期許 | A-C1-2 作答誠實且不受題目措辭影響 |
 | 偏好建構 | Payne, Bettman & Johnson (1992), *Annual Review of Psychology*；Lichtenstein & Slovic (2006), *The Construction of Preference* | A-C1-4（被此理論**否定**）：偏好在提問前就存在 |
@@ -64,6 +67,14 @@
 |---|---|---|
 | 模型誤設測試 | 統計模擬研究的標準做法：資料生成模型 ≠ 估計模型 | 避免 S-1 循環驗證 |
 | 資料洩漏 | Kaufman et al. (2012), *ACM TKDD*, "Leakage in Data Mining" | S-3 |
+| 合成需求分布 | 潛在類別混合（原型 + 個體雜訊） | A-C5-1 需求由少數原型加雜訊產生 |
+| 熟悉度生成 | Logistic 模型：知名度、與學生背景同分類、台灣常見分類 | A-C5-2 |
+| 錨點選擇 | 離散選擇模型 multinomial logit（McFadden, 1974）：效用 = 契合度與名氣的加權 | A-C5-3 錨點只能從熟悉的學程中選 |
+| 陳述需求的作答風格 | 默許傾向、社會期許（Podsakoff et al., 2003） | A-C5-4 偏誤可加成到真實需求上 |
+| 真實效用（ground truth） | 兩種定義並列：加權歐氏距離（考慮強度）與 cosine（只看方向） | A-C5-5 真相函數的選擇會影響哪個估計器看起來較好（B-C5-1） |
+| 排序一致性 | Kendall (1945), *Biometrika*：含同分的 τ-b | — |
+| 分布差異 | Kullback & Leibler (1951) KL 散度（加平滑） | — |
+| 機率評分 | Brier (1950) | — |
 
 ## 相關開源專案與資料
 

@@ -18,6 +18,7 @@ See docs/ARCHITECTURE.md for the full graph.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from functools import cached_property
 
 import numpy as np
 
@@ -58,13 +59,21 @@ class Program:
     stem_opt: bool | None = None
     tuition_usd: int | None = None
     synthetic: bool = False
-    attribute_source: str = "hand_set"  # hand_set | curriculum | occupation | fused
+    attribute_source: str = "hand_set"  # hand_set | curriculum | occupation | fused | simulated
     source_url: str | None = None
     retrieved_at: str | None = None  # ISO date
+    prestige: float | None = None  # perceived prestige in [0, 1]; used by C5 and V-C2-4
 
-    @property
+    def __post_init__(self) -> None:
+        if self.prestige is not None and not 0 <= self.prestige <= 1:
+            raise ValueError("prestige must lie in [0, 1]")
+
+    @cached_property
     def vector(self) -> np.ndarray:
-        return to_vector(self.attributes)
+        """Validated, cached, read-only attribute vector (Program is immutable)."""
+        vec = to_vector(self.attributes)
+        vec.flags.writeable = False
+        return vec
 
     @property
     def cip_family(self) -> str:
