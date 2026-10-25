@@ -5,10 +5,17 @@ Sub-components (docs/components/C1-profiling.md):
          CEEC inventory prior (ceec.py) done; item bank planned
     C1.2 anchor decomposition                                     — v0 (reference, failed L3);
          v1 anchors as prior for unanswered dims + prestige widening
-    C1.3 adaptive elicitation (value-of-information item choice)  — planned
+    C1.3 adaptive questionnaire (adaptive.py)                     — v1: 4 item-selection strategies
     C1.4 familiarity elicitation (what the student already knows) — v1 done (familiarity.py)
 """
 
+from aisc.profiling.adaptive import (
+    STRATEGIES,
+    AdaptiveSession,
+    Item,
+    cosine_scores,
+    default_item_bank,
+)
 from aisc.profiling.anchors import (
     anchor_prior,
     blend_profile,
@@ -20,6 +27,11 @@ from aisc.profiling.ceec import RiasecPrior, apply_prior, riasec_prior_from_ceec
 from aisc.profiling.familiarity import LEVELS, STRICT_KNOWN, apply_familiarity, known_ids
 
 __all__ = [
+    "AdaptiveSession",
+    "Item",
+    "STRATEGIES",
+    "cosine_scores",
+    "default_item_bank",
     "LEVELS",
     "RiasecPrior",
     "STRICT_KNOWN",

@@ -1,5 +1,7 @@
 """System layer: composes components through their public APIs only.
 
+    run_questionnaire:
+        C1.2 v1 completion (prior) -> C1.3 adaptive questionnaire, scored with C2.1
     interactive_discovery:
         C1.2 v1 profile completion -> C2 shortlist -> C1.4 familiarity check (ask)
         -> C2.3 v1 discover
@@ -13,11 +15,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+import numpy as np
+
 from aisc.contracts import DiscoveryResult, Program, StudentProfile
-from aisc.discovery import discover, shortlist
-from aisc.profiling import apply_familiarity, blend_profile_v1
+from aisc.discovery import discover, relevance_matrix, shortlist
+from aisc.profiling import AdaptiveSession, Item, apply_familiarity, blend_profile_v1
 
 AskFn = Callable[[list[str]], dict[str, str]]
+AnswerFn = Callable[[Item], float]
+
+
+def c2_scores(w: np.ndarray, X: np.ndarray) -> np.ndarray:
+    """C2.1 relevance for every catalogue row: the scorer C1.3 must optimise for."""
+    return relevance_matrix(w, X)
 
 
 def prepare_profile(profile: StudentProfile, catalog: list[Program]) -> StudentProfile:
@@ -29,6 +39,34 @@ def prepare_profile(profile: StudentProfile, catalog: list[Program]) -> StudentP
     prior for unanswered dimensions; answered dimensions are left unchanged.
     """
     return blend_profile_v1(profile, {p.program_id: p for p in catalog})
+
+
+def run_questionnaire(
+    profile: StudentProfile,
+    catalog: list[Program],
+    answer: AnswerFn,
+    budget: int,
+    strategy: str = "voi",
+    item_noise_sd: float = 0.25,
+    rng: np.random.Generator | None = None,
+) -> StudentProfile:
+    """Ask up to `budget` items chosen by C1.3 and return the posterior profile."""
+    if budget < 0:
+        raise ValueError("budget must be non-negative")
+    session = AdaptiveSession(
+        prior=prepare_profile(profile, catalog),
+        catalog=catalog,
+        strategy=strategy,
+        item_noise_sd=item_noise_sd,
+        score_fn=c2_scores,
+        rng=rng if rng is not None else np.random.default_rng(0),
+    )
+    for _ in range(budget):
+        item = session.next_item()
+        if item is None:
+            break
+        session.record(item, answer(item))
+    return session.profile()
 
 
 def interactive_discovery(

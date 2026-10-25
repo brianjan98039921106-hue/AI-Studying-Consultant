@@ -32,3 +32,29 @@ def make_ask(
         return report
 
     return ask
+
+
+def make_item_responder(
+    student: SyntheticStudent,
+    rng: np.random.Generator,
+    noise_sd: float = 0.25,
+    acquiescence: float = 0.0,
+    desirability: dict[str, float] | None = None,
+):
+    """Answers C1.3 items: y = clip(w_d + acquiescence + desirability_d + N(0, noise_sd)).
+
+    Setting `noise_sd` different from the estimator's assumed item noise, or
+    adding biases, simulates a misspecified response model (V-C1-4, B-C1-5).
+    """
+    from aisc.dimensions import NEED_KEYS
+
+    if noise_sd < 0:
+        raise ValueError("noise_sd must be non-negative")
+    shift = desirability or {}
+
+    def answer(item) -> float:
+        d = NEED_KEYS.index(item.dimension)
+        y = student.true_needs[d] + acquiescence + shift.get(item.dimension, 0.0)
+        return float(np.clip(y + rng.normal(0.0, noise_sd), 0.0, 1.0))
+
+    return answer
