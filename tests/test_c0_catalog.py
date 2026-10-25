@@ -23,7 +23,7 @@ BASE = {
     "school": "X",
     "degree_name": "MS Y",
     "cip": "27.0501",
-    "attributes": {"quant": 0.5},
+    "attributes": {"quant_intensity": 0.5},
 }
 
 
@@ -44,6 +44,6 @@ def test_duplicate_ids_rejected(tmp_path):
 
 
 def test_out_of_range_attribute_rejected(tmp_path):
-    rec = {**BASE, "synthetic": True, "attributes": {"quant": 2.0}}
+    rec = {**BASE, "synthetic": True, "attributes": {"quant_intensity": 2.0}}
     with pytest.raises(ValueError):
         load_programs(_write(tmp_path, [rec]))

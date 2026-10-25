@@ -15,7 +15,7 @@
 | 部件 | 功能 | 狀態 |
 |---|---|---|
 | C0 Program 知識庫 | CIP 分類骨架 + 兩種獨立來源測量學程屬性 | loader ✅ · 資料管線 ⬜ |
-| C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 | 錨點拆解 v0 ✅ |
+| C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 | 15 維需求空間 ✅ · 大考中心分數先驗 ✅ · 錨點拆解 v0 ✅ |
 | C2 探索推薦 | 需求空間算契合、標籤空間算新穎、MMR 多樣化、可忠實分解的理由 | v0 ✅；L3 未通過（待 W-28） |
 | C3 錄取可行性 | 階層貝氏模型 + 選擇偏誤校正 + 校準 | ⬜ |
 | C4 申請組合 | Kapur & Hong 精確解 + 相關性評估 + 穩健選擇 | 精確解 ✅（已驗證） |
@@ -31,16 +31,16 @@
 | 已知假設與演算法盲區 | [docs/REGISTER.md](docs/REGISTER.md) |
 | 驗證階梯、關卡、指標門檻 | [docs/VALIDATION.md](docs/VALIDATION.md) |
 | 工項與順序 | [docs/ROADMAP.md](docs/ROADMAP.md) |
-| 需求維度與評分準則（草案） | [docs/rubric.md](docs/rubric.md) |
-| 最新 L3 合成驗證結論 | [results/synthetic-l3-v0-findings.md](results/synthetic-l3-v0-findings.md) |
+| 需求維度與評分準則 | [docs/rubric.md](docs/rubric.md) |
+| 最新 L3 合成驗證結論 | [results/synthetic-l3-v1-findings.md](results/synthetic-l3-v1-findings.md) |
 
 ## Quickstart
 
 ```bash
 pip install -e ".[dev]"
-pytest -rx                   # 160 passed + 3 xfailed（xfail = 已知盲區探針）
+pytest -rx                   # 176 passed + 3 xfailed（xfail = 已知盲區探針）
 python examples/quickstart.py
-python scripts/run_l3_baseline.py   # L3 合成驗證，約 4 分鐘
+python scripts/run_l3_baseline.py --tag v1   # L3 合成驗證，約 5 分鐘
 ```
 
 ## 驗證方式一覽

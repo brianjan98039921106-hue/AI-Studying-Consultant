@@ -11,7 +11,7 @@ A recommender that profiles Taiwanese grad-school applicants by *needs* (not pro
 ## Component rules
 - Components (C0–C5) exchange only the types in `src/aisc/contracts.py`. Do not import another component's internals.
 - Before writing code for a new method: add it to `docs/THEORY.md` with its source and the assumptions it imposes, and register those in `docs/REGISTER.md` (Gate G0).
-- New blind spot found → register a B item → write a probe test (`@pytest.mark.probe`, `xfail(strict=True)`) → only then fix it.
+- New blind spot found → register a B item → write a probe test (`@pytest.mark.probe`, `xfail(strict=True, raises=AssertionError)`) → only then fix it. `raises=AssertionError` is mandatory: without it a probe broken by e.g. a renamed key would still "xfail" and hide the breakage.
 - Fixing a blind spot = remove the `xfail`, update the register status and `docs/VALIDATION.md` §5 in the same commit.
 - Keep reference implementations (e.g. C4.1 exact solvers, C2 v0 scorers) when adding v1; ablations compare against them.
 - Never report a novelty gain without the matching relevance number.

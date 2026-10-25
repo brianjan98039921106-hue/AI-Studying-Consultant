@@ -142,8 +142,8 @@ def test_background_match_probability(sim_catalog):
 
 def test_response_bias_shifts_stated_needs(sim_catalog):
     pop = _pop(sim_catalog, n_students=800, noise_sd=0.05, acquiescence=0.0)
-    q = NEED_KEYS.index("quant")
-    shift = np.mean([s.stated_needs["quant"] - s.true_needs[q] for s in pop])
+    q = NEED_KEYS.index("quant_intensity")
+    shift = np.mean([s.stated_needs["quant_intensity"] - s.true_needs[q] for s in pop])
     assert 0.05 < shift < 0.12  # desirability +0.10, reduced by clipping at 1
 
 

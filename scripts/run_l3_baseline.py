@@ -1,8 +1,8 @@
 """First L3 synthetic validation of C1.2 v0 and C2 v0 against baselines.
 
-Writes results/synthetic-l3-v0.md. Deterministic (fixed seeds).
+Writes results/synthetic-l3-<tag>.md. Deterministic (fixed seeds).
 
-    python scripts/run_l3_baseline.py [--students 400]
+    python scripts/run_l3_baseline.py [--students 400] [--tag v1]
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from pathlib import Path
 import numpy as np
 
 from aisc.contracts import Program, StudentProfile
+from aisc.dimensions import N_NEEDS
 from aisc.discovery import passes_constraints, relevance
 from aisc.simulation.catalog_gen import synthetic_catalog
 from aisc.simulation.evaluate import (
@@ -24,7 +25,7 @@ from aisc.simulation.evaluate import (
     popular_baseline,
     similar_baseline,
 )
-from aisc.simulation.population import SimConfig, generate_population
+from aisc.simulation.population import ARCHETYPES, SimConfig, generate_population
 
 ROOT = Path(__file__).resolve().parents[1]
 TRUTHS = ("distance", "cosine")
@@ -80,14 +81,19 @@ def fmt(v: tuple[float, float]) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--students", type=int, default=400)
-    parser.add_argument("--out", type=Path, default=ROOT / "results" / "synthetic-l3-v0.md")
+    parser.add_argument("--tag", default="v1", help="result version label")
+    parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args()
+    if args.out is None:
+        args.out = ROOT / "results" / f"synthetic-l3-{args.tag}.md"
 
     catalog = synthetic_catalog(np.random.default_rng(0), n_per_family=10)
     lines = [
-        "# L3 合成驗證 v0：C1.2 v0 與 C2 v0",
+        f"# L3 合成驗證 {args.tag}：C1.2 v0 與 C2 v0",
         "",
-        f"- 產生日期：{date.today().isoformat()} · 指令：`python scripts/run_l3_baseline.py`",
+        f"- 產生日期：{date.today().isoformat()} · "
+        f"指令：`python scripts/run_l3_baseline.py --tag {args.tag}`",
+        f"- 需求維度：{N_NEEDS} 維（`aisc.dimensions`）；學生原型：{len(ARCHETYPES)} 類",
         f"- 目錄：{len(catalog)} 個合成學程（12 個原型 × 10，族內 sd=0.12）",
         f"- 學生：每組設定 {args.students} 位 · 推薦長度 k={K} · 「相關」= 真實效用前 10%",
         "- 數值為平均 ± 標準誤。**這是合成資料，參數未校準（B-C5-2），只用來淘汰錯誤設計。**",
