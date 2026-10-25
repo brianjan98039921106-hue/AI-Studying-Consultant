@@ -30,6 +30,7 @@
 | 自適應提問 | 電腦化適性測驗 CAT：van der Linden & Glas (2000)；適應式效用擷取：Chajewska, Koller & Parr (2000), AAAI | A-C1-5 作答模型設定正確 |
 | 冷啟動提問 | Christakopoulou, Radlinski & Hofmann (2016), KDD；Zuo et al. (2022) 階層式提問 | 同上 |
 | 定錨效應 | Tversky & Kahneman (1974), *Science* | 說明為何錨點會扭曲判斷（B-C1-2） |
+| 熟悉度回報（C1.4） | 訊號偵測理論（Green & Swets, 1966）：回報錯誤分為漏報（miss，知道但沒勾）與誤報（false alarm，因名稱相似而誤以為知道）；只對候選短名單提問，控制作答負擔 | A-C1-9 只有短名單內的學程需要熟悉度資訊 |
 
 ## C2 探索推薦
 
@@ -38,6 +39,7 @@
 | 契合度 | 向量空間相似度（cosine） | A-C2-1 契合度隨方向相似度單調增加 |
 | 新穎度、意外性、覆蓋率 | Kaminskas & Bridge (2016), *ACM TiiS*；Vargas & Castells (2011), RecSys | A-C2-2 新穎價值可與契合度線性相加；A-C2-3 分類距離代理「不知道」 |
 | 多樣化 | Carbonell & Goldstein (1998), SIGIR：Maximal Marginal Relevance | — |
+| 分區呈現（C2.3 v1） | 依 L3 F7 的證據設計；與意外性文獻中「相關且非預期」的定義一致（Kaminskas & Bridge 2016）：以契合度排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區，而非以分數懲罰已知學程 | A-C2-5 「新穎」以學生回報的熟悉度定義 |
 | 熱門度偏誤 | Abdollahpouri, Burke & Mobasher (2019), FLAIRS | — |
 | 清單長度 | Iyengar & Lepper (2000), *JPSP*：選擇過載 | — |
 | 推薦理由 | Tintarev & Masthoff (2007)：推薦解釋的忠實性 | A-C2-4 理由反映實際的計分方式 |
@@ -73,6 +75,7 @@
 | 熟悉度生成 | Logistic 模型：知名度、與學生背景同分類、台灣常見分類 | A-C5-2 |
 | 錨點選擇 | 離散選擇模型 multinomial logit（McFadden, 1974）：效用 = 契合度與名氣的加權 | A-C5-3 錨點只能從熟悉的學程中選 |
 | 陳述需求的作答風格 | 默許傾向、社會期許（Podsakoff et al., 2003） | A-C5-4 偏誤可加成到真實需求上 |
+| 熟悉度回報模擬 | 訊號偵測：固定漏報率與誤報率，學程之間獨立 | A-C5-8 |
 | 真實效用（ground truth） | 兩種定義並列：加權歐氏距離（考慮強度）與 cosine（只看方向） | A-C5-5 真相函數的選擇會影響哪個估計器看起來較好（B-C5-1） |
 | 排序一致性 | Kendall (1945), *Biometrika*：含同分的 τ-b | — |
 | 分布差異 | Kullback & Leibler (1951) KL 散度（加平滑） | — |

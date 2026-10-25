@@ -14,12 +14,11 @@ from pathlib import Path
 
 import numpy as np
 
-from aisc.contracts import Program, StudentProfile
 from aisc.dimensions import N_NEEDS
-from aisc.discovery import passes_constraints, relevance
 from aisc.simulation.catalog_gen import synthetic_catalog
 from aisc.simulation.evaluate import (
     c2_pipeline,
+    c2_v1_pipeline,
     evaluate_lists,
     evaluate_profiles,
     popular_baseline,
@@ -38,20 +37,6 @@ PRESTIGE_WEIGHTS = (0.0, 0.5, 0.9)
 K = 10
 
 
-def fit_exclude_known(profile: StudentProfile, catalog: list[Program], k: int) -> list[str]:
-    """EXPLORATORY candidate for W-28 (not part of C2): rank by fit only and drop
-    programs the student already knows, instead of adding a novelty score."""
-    known = set(profile.anchors) | set(profile.familiar)
-    target = profile.vector
-    pool = [
-        p
-        for p in catalog
-        if p.program_id not in known and passes_constraints(p, profile.hard_constraints)
-    ]
-    pool.sort(key=lambda p: (-relevance(target, p.vector), p.program_id))
-    return [p.program_id for p in pool[:k]]
-
-
 RECOMMENDERS = {
     "(a) popular": popular_baseline,
     "(b) similar-to-anchors": similar_baseline,
@@ -59,11 +44,14 @@ RECOMMENDERS = {
     "C2 fit-only, stated only": c2_pipeline(0.0, 0.0, blend=False),
     "C2 v0 (α=0.3, λ=0.3), anchor blend": c2_pipeline(0.3, 0.3),
     "C2 v0 + familiarity (oracle C1.4)": c2_pipeline(0.3, 0.3),
-    "探索：fit-only + 排除已知 (oracle C1.4)": fit_exclude_known,
+    "C2 v1 分區（熟悉度回報完美）": c2_v1_pipeline(),
+    "C2 v1 分區（漏報 10%／誤報 5%）": c2_v1_pipeline(),
+    "C2 v1 分區（漏報 30%／誤報 15%）": c2_v1_pipeline(),
 }
-FAMILIAR_FOR = {
-    "C2 v0 + familiarity (oracle C1.4)": True,
-    "探索：fit-only + 排除已知 (oracle C1.4)": True,
+FAMILIAR_FOR = {"C2 v0 + familiarity (oracle C1.4)": True}
+FAMILIARITY_NOISE = {
+    "C2 v1 分區（漏報 10%／誤報 5%）": (0.10, 0.05),
+    "C2 v1 分區（漏報 30%／誤報 15%）": (0.30, 0.15),
 }
 NOISE_LEVELS = (0.15, 0.30)  # sensitivity of the C1 result (B-C5-2)
 LIST_COLS = [
@@ -71,6 +59,7 @@ LIST_COLS = [
     ("novel_relevant_rate", "相關且不知道"),
     ("unfamiliar_rate", "不熟悉率"),
     ("best_fit_retained", "最佳契合保留"),
+    ("outside_shortlist_rate", "未詢問比例"),
     ("coverage", "覆蓋率"),
     ("popularity_kl", "熱門度 KL"),
 ]
@@ -105,6 +94,8 @@ def main() -> None:
         f"- 目錄：{len(catalog)} 個合成學程（12 個原型 × 10，族內 sd=0.12）",
         f"- 學生：每組設定 {args.students} 位 · 推薦長度 k={K} · 「相關」= 真實效用前 10%",
         "- 數值為平均 ± 標準誤。**這是合成資料，參數未校準（B-C5-2），只用來淘汰錯誤設計。**",
+        "- C2 v1：短名單 25 → 熟悉度問答 → 分區；列表指標以「可能沒想過」區計算，"
+        "最佳契合保留以兩區合計",
         "",
     ]
 
@@ -128,7 +119,13 @@ def main() -> None:
             header = "| 推薦器 | " + " | ".join(label for _, label in LIST_COLS) + " |"
             lines += [header, "|---" * (len(LIST_COLS) + 1) + "|"]
             results = evaluate_lists(
-                pop, catalog, RECOMMENDERS, k=K, truth=truth, include_familiar=FAMILIAR_FOR
+                pop,
+                catalog,
+                RECOMMENDERS,
+                k=K,
+                truth=truth,
+                include_familiar=FAMILIAR_FOR,
+                familiarity_noise=FAMILIARITY_NOISE,
             )
             for name, res in results.items():
                 lines.append(f"| {name} | " + " | ".join(fmt(res[c]) for c, _ in LIST_COLS) + " |")

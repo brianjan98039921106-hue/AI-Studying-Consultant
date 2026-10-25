@@ -74,6 +74,7 @@ flowchart LR
 | C2.2 | $\text{nov}(p) = 1 - \max_{q \in K \cup F} \text{sim}_\ell(p,q)$；$\text{sim}_\ell$ = 1（同 4 碼）/ 0.5（同 2 碼）/ 0；$p \in F \Rightarrow 0$ | `discovery/scoring.py` |
 | C2.3 | $\text{score} = (1-\alpha)\,\text{rel} + \alpha\,\text{nov}$；MMR：$\arg\max (1-\lambda)\text{score} - \lambda \max_{q \in S}\cos(x_p,x_q)$ | `discovery/rerank.py` |
 | C2.4 | $c_k = w_k x_{p,k} / (w \cdot x_p)$，$\sum_k c_k = 1$（精確分解） | `discovery/scoring.py` |
+| C2.3 v1 | 短名單 $L = \text{top-}n$ 依 $\text{rel}$（排除錨點）；回報熟悉集合 $\hat F \subseteq L$；發現區 $= \text{top-}k$ of $\{p \notin \hat F\}$，已知區 $= \text{top-}k'$ of $\{p \in \hat F\}$，皆依 $\text{rel}$ | `discovery/sectioned.py`、`pipeline.py` |
 | C4.1 | $v(S) = \sum_i u_{j_i} p_{j_i}\prod_{l<i}(1-p_{j_l})$；DP $V_j(b)=\max\{V_{j-1}(b),\, p_ju_j+(1-p_j)V_{j-1}(b-c_j)\}$ | `portfolio/solvers.py` |
 
 v1 的改動（例如 C2.1 改成考慮強度的距離、C2.2 改成未知機率）寫在各部件規格，並以 L4 探針測試鎖定。
@@ -83,6 +84,7 @@ v1 的改動（例如 C2.1 改成考慮強度的距離、C2.2 改成未知機率
 ```
 src/aisc/
   contracts.py      # 部件之間唯一的共用型別
+  pipeline.py       # 系統層：只透過各部件公開 API 串接（C2 短名單 → C1.4 熟悉度 → C2.3 v1）
   dimensions.py     # 需求維度登錄 v1：4 層 15 維（docs/rubric.md）
   catalog/          # C0
   profiling/        # C1

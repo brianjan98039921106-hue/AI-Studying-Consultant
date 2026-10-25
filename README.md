@@ -15,8 +15,8 @@
 | 部件 | 功能 | 狀態 |
 |---|---|---|
 | C0 Program 知識庫 | CIP 分類骨架 + 兩種獨立來源測量學程屬性 | loader ✅ · 資料管線 ⬜ |
-| C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 | 15 維需求空間 ✅ · 大考中心分數先驗 ✅ · 錨點拆解 v0 ✅ |
-| C2 探索推薦 | 需求空間算契合、標籤空間算新穎、MMR 多樣化、可忠實分解的理由 | v0 ✅；L3 未通過（待 W-28） |
+| C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 | 15 維需求空間 ✅ · 大考中心分數先驗 ✅ · 熟悉度擷取 ✅ · 錨點拆解 v0（L3 未通過） |
+| C2 探索推薦 | 依契合排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區 | **v1 ✅ L3 通過**；v0 保留為參考 |
 | C3 錄取可行性 | 階層貝氏模型 + 選擇偏誤校正 + 校準 | ⬜ |
 | C4 申請組合 | Kapur & Hong 精確解 + 相關性評估 + 穩健選擇 | 精確解 ✅（已驗證） |
 | C5 模擬與評估 | 已知真相的合成學生，驗證所有部件 | 產生器、指標、執行器 ✅ · 首次 L3 報告 ✅ |
@@ -32,17 +32,17 @@
 | 驗證階梯、關卡、指標門檻 | [docs/VALIDATION.md](docs/VALIDATION.md) |
 | 工項與順序 | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | 需求維度與評分準則 | [docs/rubric.md](docs/rubric.md) |
-| 最新 L3 合成驗證結論 | [results/synthetic-l3-v1-continuous-findings.md](results/synthetic-l3-v1-continuous-findings.md) |
+| 最新 L3 合成驗證結論 | [results/synthetic-l3-v2-findings.md](results/synthetic-l3-v2-findings.md) |
 
 ## Quickstart
 
 ```bash
 pip install -e ".[dev]"
-pytest -rx                   # 176 passed + 3 xfailed（xfail = 已知盲區探針）
+pytest -rx                   # 200 passed + 3 xfailed（xfail = 已知盲區探針）
 python examples/quickstart.py
-python scripts/run_l3_baseline.py --tag v1 --needs-model archetype    # L3，約 5 分鐘
-python scripts/run_l3_baseline.py --tag v1-continuous --needs-model continuous
-python scripts/compare_l3.py results/synthetic-l3-v1.md results/synthetic-l3-v1-continuous.md
+python scripts/run_l3_baseline.py --tag v2 --needs-model archetype    # L3，約 6 分鐘
+python scripts/run_l3_baseline.py --tag v2-continuous --needs-model continuous
+python scripts/compare_l3.py results/synthetic-l3-v2.md results/synthetic-l3-v2-continuous.md
 ```
 
 ## 驗證方式一覽

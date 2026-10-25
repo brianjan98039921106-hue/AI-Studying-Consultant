@@ -81,3 +81,61 @@ def test_evaluate_profiles_keys(setup):
     res = evaluate_profiles(pop[:10], cat)
     assert set(res) == {"stated_only", "anchor_blend"}
     assert all(0 <= v["rmse"][0] <= 1 for v in res.values())
+
+
+# --- W-24 respondent and interactive evaluation ----------------------------------------
+
+
+def test_respondent_perfect_answers(setup):
+    from aisc.simulation.respondent import make_ask
+
+    cat, pop = setup
+    s = pop[0]
+    report = make_ask(s, np.random.default_rng(0))([p.program_id for p in cat])
+    assert {pid for pid, lvl in report.items() if lvl == "heard"} == set(s.familiar)
+
+
+def test_respondent_error_rates(setup):
+    from aisc.simulation.respondent import make_ask
+
+    cat, pop = setup
+    ids = [p.program_id for p in cat]
+    misses = false_alarms = known = unknown = 0
+    for i, s in enumerate(pop):
+        report = make_ask(s, np.random.default_rng(i), miss_rate=0.3, false_alarm_rate=0.1)(ids)
+        for pid, lvl in report.items():
+            if pid in s.familiar:
+                known += 1
+                misses += lvl == "unknown"
+            else:
+                unknown += 1
+                false_alarms += lvl == "heard"
+    assert misses / known == pytest.approx(0.3, abs=0.04)
+    assert false_alarms / unknown == pytest.approx(0.1, abs=0.03)
+    with pytest.raises(ValueError):
+        make_ask(pop[0], np.random.default_rng(0), miss_rate=1.5)
+
+
+def test_interactive_v1_with_perfect_answers_shows_only_unknown(setup):
+    """With perfect answers every discovery that was asked about is truly
+    unfamiliar; only never-asked discoveries (B-C2-7) can be familiar."""
+    from aisc.simulation.evaluate import c2_v1_pipeline
+
+    cat, pop = setup
+    res = evaluate_lists(pop, cat, {"v1": c2_v1_pipeline(n_shortlist=20)}, k=5)["v1"]
+    assert res["unfamiliar_rate"][0] >= 1.0 - res["outside_shortlist_rate"][0] - 1e-12
+    assert res["novel_relevant_rate"][0] <= res["relevant_rate"][0] + 1e-12
+
+    # A shortlist large enough to cover the whole catalogue leaves nothing unasked.
+    full = evaluate_lists(pop, cat, {"v1": c2_v1_pipeline(n_shortlist=len(cat))}, k=5)["v1"]
+    assert full["outside_shortlist_rate"][0] == pytest.approx(0.0)
+    assert full["unfamiliar_rate"][0] == pytest.approx(1.0)
+
+
+def test_interactive_noise_lowers_unfamiliar_rate(setup):
+    from aisc.simulation.evaluate import c2_v1_pipeline
+
+    cat, pop = setup
+    recs = {"clean": c2_v1_pipeline(n_shortlist=30), "noisy": c2_v1_pipeline(n_shortlist=30)}
+    res = evaluate_lists(pop, cat, recs, k=5, familiarity_noise={"noisy": (0.5, 0.0)})
+    assert res["noisy"]["unfamiliar_rate"][0] < res["clean"]["unfamiliar_rate"][0]
