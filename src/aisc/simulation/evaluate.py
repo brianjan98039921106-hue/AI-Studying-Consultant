@@ -191,3 +191,69 @@ def evaluate_profiles(
         name: {key: M.mean_se(vals) for key, vals in metrics.items()}
         for name, metrics in rows.items()
     }
+
+
+# --- C1 method comparison with partial elicitation (W-23) --------------------------------
+
+ProfileMethod = Callable[[StudentProfile, dict[str, Program]], StudentProfile]
+
+
+def mask_profile(
+    profile: StudentProfile, coverage: float, rng: np.random.Generator
+) -> StudentProfile:
+    """Keep a random `coverage` share of answered dimensions (at least one).
+
+    Simulates a student who has answered only some questions: cold start, or
+    dimensions skipped by the adaptive questionnaire (C1.3).
+    """
+    if not 0 < coverage <= 1:
+        raise ValueError("coverage must lie in (0, 1]")
+    keys = list(profile.needs)
+    n_keep = max(1, round(coverage * len(keys)))
+    keep = set(rng.choice(len(keys), size=n_keep, replace=False).tolist())
+    kept = [k for i, k in enumerate(keys) if i in keep]
+    return StudentProfile(
+        student_id=profile.student_id,
+        needs={k: profile.needs[k] for k in kept},
+        uncertainty={k: profile.uncertainty[k] for k in kept if k in profile.uncertainty},
+        anchors=list(profile.anchors),
+        familiar=list(profile.familiar),
+        hard_constraints=dict(profile.hard_constraints),
+    )
+
+
+def evaluate_profile_methods(
+    population: list[SyntheticStudent],
+    catalog: list[Program],
+    methods: dict[str, ProfileMethod],
+    baseline: str,
+    truth: str = "distance",
+    coverage: float = 1.0,
+    seed: int = 11,
+) -> dict[str, dict[str, tuple[float, float]]]:
+    """Per method: τ, RMSE, and the *paired* τ difference vs `baseline` (mean ± SE).
+
+    Every method sees the same masked profile for a given student, so the
+    paired difference removes between-student variance.
+    """
+    if baseline not in methods:
+        raise ValueError("baseline must be one of the methods")
+    by_id = {p.program_id: p for p in catalog}
+    taus: dict[str, list[float]] = {m: [] for m in methods}
+    rmses: dict[str, list[float]] = {m: [] for m in methods}
+    for idx, s in enumerate(population):
+        observed = mask_profile(s.observed_profile(), coverage, np.random.default_rng([seed, idx]))
+        true_u = utilities(s.true_needs, catalog, truth)
+        for name, method in methods.items():
+            est = method(observed, by_id).vector
+            taus[name].append(M.kendall_tau_b(utilities(est, catalog, truth), true_u))
+            rmses[name].append(M.rmse(est, s.true_needs))
+    base = np.array(taus[baseline])
+    return {
+        name: {
+            "kendall_tau": M.mean_se(taus[name]),
+            "rmse": M.mean_se(rmses[name]),
+            "tau_diff_vs_baseline": M.mean_se(list(np.array(taus[name]) - base)),
+        }
+        for name in methods
+    }

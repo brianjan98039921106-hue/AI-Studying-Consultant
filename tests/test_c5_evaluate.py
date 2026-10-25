@@ -139,3 +139,33 @@ def test_interactive_noise_lowers_unfamiliar_rate(setup):
     recs = {"clean": c2_v1_pipeline(n_shortlist=30), "noisy": c2_v1_pipeline(n_shortlist=30)}
     res = evaluate_lists(pop, cat, recs, k=5, familiarity_noise={"noisy": (0.5, 0.0)})
     assert res["noisy"]["unfamiliar_rate"][0] < res["clean"]["unfamiliar_rate"][0]
+
+
+# --- W-23 partial elicitation ------------------------------------------------------------
+
+
+def test_mask_profile_keeps_requested_share():
+    from aisc.simulation.evaluate import mask_profile
+
+    profile = StudentProfile("s", {k: 0.5 for k in ("a", "b", "c", "d")}, anchors=["x"])
+    assert len(mask_profile(profile, 0.5, np.random.default_rng(0)).needs) == 2
+    assert len(mask_profile(profile, 0.01, np.random.default_rng(0)).needs) == 1
+    assert mask_profile(profile, 1.0, np.random.default_rng(0)).needs == profile.needs
+    with pytest.raises(ValueError):
+        mask_profile(profile, 0.0, np.random.default_rng(0))
+
+
+def test_evaluate_profile_methods_paired_difference(setup):
+    from aisc.profiling import complete_neutral
+    from aisc.simulation.evaluate import evaluate_profile_methods
+
+    cat, pop = setup
+    methods = {
+        "neutral": lambda p, c: complete_neutral(p),
+        "same": lambda p, c: complete_neutral(p),
+    }
+    res = evaluate_profile_methods(pop[:15], cat, methods, baseline="neutral", coverage=0.5)
+    assert res["same"]["tau_diff_vs_baseline"][0] == pytest.approx(0.0)
+    assert res["neutral"]["kendall_tau"] == res["same"]["kendall_tau"]
+    with pytest.raises(ValueError):
+        evaluate_profile_methods(pop[:2], cat, methods, baseline="missing")

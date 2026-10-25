@@ -66,3 +66,23 @@ def test_pipeline_rejects_answers_to_unasked_programs(catalog):
     profile = StudentProfile("s", NEEDS)
     with pytest.raises(ValueError):
         interactive_discovery(profile, catalog, lambda ids: {"not-asked": "heard"}, n_shortlist=3)
+
+
+def test_pipeline_completes_unanswered_dimensions(catalog):
+    """B-C1-14: an unanswered dimension must not be treated as 0 ("no interest")."""
+    from aisc.dimensions import NEED_KEYS
+    from aisc.pipeline import prepare_profile
+
+    partial = StudentProfile("s", {"quant_intensity": 0.9}, {"quant_intensity": 0.2})
+    out = prepare_profile(partial, catalog)
+    assert set(out.needs) == set(NEED_KEYS)
+    assert out.needs["quant_intensity"] == pytest.approx(0.9)  # answered: unchanged
+    assert all(v > 0 for k, v in out.needs.items() if k != "quant_intensity")
+
+
+def test_pipeline_leaves_fully_answered_profiles_unchanged(catalog):
+    from aisc.dimensions import NEED_KEYS
+    from aisc.pipeline import prepare_profile
+
+    full = StudentProfile("s", {k: 0.3 for k in NEED_KEYS}, anchors=["syn-01"])
+    assert prepare_profile(full, catalog).needs == pytest.approx(full.needs)

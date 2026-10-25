@@ -98,12 +98,13 @@
 | 部件 | G0 | G1 | G2 | G3 |
 |---|---|---|---|---|
 | C0 | 部分（loader） | 部分 | — | — |
-| C1 | C1.1 v1 ✅（W-16a/b）；C1.2 v0 ✅ | C1.1 維度與大考中心先驗 ✅；C1.2 v0 ✅ | C1.2 v0 **未通過**：四組合下排序皆劣於只用陳述（F4a、F5）；陳述不準時僅 RMSE 改善（F4c），排序未改善（F4b 否決） | — |
+| C1 | ✅ C1.1 v1、C1.2 v1、C1.4 v1 | ✅ | C1.2 v0 未通過；**C1.2 v1 通過**（144 條件無顯著更差，[F18](../results/synthetic-l3-c1-v1-findings.md)）；C1.4 v1 通過（F11–F12） | — |
 | C2 | ✅ v0、v1 | ✅ v0、v1 | v0 **未通過**（F1）；**v1 通過**（熟悉度雜訊 ≤ 漏報 10%／誤報 5%，[F11–F15](../results/synthetic-l3-v2-findings.md)）；V-C2-3 卡在 C1（F16） | — |
 | C3 | — | — | — | — |
 | C4 | ✅ C4.1 | ✅ C4.1 | 需 C4.2（V-C4-2/3） | — |
 | C5 | ✅ C5.1–C5.3 | ✅ C5.1–C5.3（L2 30 項） | 不適用 | — |
 
-最新 L3 結果：[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
+最新 L3 結果：[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
 
 **L3 判定規則**：結論須在 2 種真相函數 × 2 種生成模型（× 3 種名氣權重）下方向一致才算成立。
+**調參規則**（F17）：一個生成模型挑選、另一個生成模型驗證、全新種子確認；選擇規則須在執行前寫入腳本（預先登記）。
