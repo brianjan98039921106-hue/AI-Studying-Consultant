@@ -6,6 +6,12 @@ program taxonomy. Programs are scored on the same dimensions, so a student's
 need vector and a program's attribute vector can be compared directly.
 
 Each dimension is scored on [0, 1].
+
+STATUS: v0, hand-designed and NOT validated (B-C1-1 in docs/REGISTER.md).
+C1.1 replaces/anchors these with a validated construct: Holland RIASEC
+interest types (via O*NET), plus domain dimensions that pass factor-analysis
+and reliability checks. Do not add dimensions without updating the rubric,
+synthetic data and tests together.
 """
 
 from __future__ import annotations

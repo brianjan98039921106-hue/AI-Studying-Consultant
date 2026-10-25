@@ -4,46 +4,46 @@
 >
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
-**Status:** v0.1 · research prototype · all program data in this repo is **synthetic**.
+**Status:** v0.2 · research prototype · all program data in this repo is **synthetic**.
 
 ## 要解決的問題
 
-台灣學生對研究所的理解，多半建立在台灣有限的學程分類上。美國的 program 細分程度高得多，但學生（和顧問）想找到更適合的 program，需要兩樣東西：
+台灣學生對研究所的理解，多半建立在台灣有限的學程分類上。要找到更適合的美國 program，需要**自我洞察**和**資訊接觸**，但兩者互為前提：不知道有哪些 program，就很難描述需求；描述不出需求，就搜尋不到新的 program。結果是學生在預設的學校清單裡打轉。
 
-1. **自我洞察**：知道自己真正想要什麼
-2. **資訊接觸**：知道有哪些 program 存在
+這個專案把它當成**冷啟動推薦 + 探索**問題，拆成六個可以獨立開發、獨立驗證的部件：
 
-兩者互為前提：不知道有哪些 program，就很難描述需求；描述不出需求，就搜尋不到新的 program。結果是學生在自己預設的學校清單裡打轉。
-
-這個專案把它當成一個**冷啟動推薦 + 探索**問題來處理：
-
-| 層 | 功能 | 狀態 |
+| 部件 | 功能 | 狀態 |
 |---|---|---|
-| L0 Program 知識庫 | 以 NCES CIP 分類為骨架的 program 屬性資料 | schema ✅ · 真實資料 ⬜ |
-| L1 學生側寫 | 以「需求維度」而非 program 名稱描述學生；**錨點拆解**從學生已知的 program 反推需求 | 錨點拆解 ✅ · 自適應問卷 ⬜ |
-| L2 探索推薦 | 需求空間決定**契合度**，標籤空間（CIP）決定**新穎度**，MMR 確保多樣性 | ✅ |
-| L3 錄取可行性 | P(admit) 估計 | ⬜ |
-| L4 申請組合 | Kapur & Hong (2022) college application problem：greedy + 精確 DP | ✅（已驗證） |
-| 顧問模式 | 側寫報告 + 推薦理由 | ⬜ |
+| C0 Program 知識庫 | CIP 分類骨架 + 兩種獨立來源測量學程屬性 | loader ✅ · 資料管線 ⬜ |
+| C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 | 錨點拆解 v0 ✅ |
+| C2 探索推薦 | 需求空間算契合、標籤空間算新穎、MMR 多樣化、可忠實分解的理由 | v0 ✅（3 個已知盲區） |
+| C3 錄取可行性 | 階層貝氏模型 + 選擇偏誤校正 + 校準 | ⬜ |
+| C4 申請組合 | Kapur & Hong 精確解 + 相關性評估 + 穩健選擇 | 精確解 ✅（已驗證） |
+| C5 模擬與評估 | 已知真相的合成學生，驗證所有部件 | ⬜（最優先） |
 
-完整架構與數學式：[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · 待辦：[docs/ROADMAP.md](docs/ROADMAP.md) · 驗證計畫：[docs/VALIDATION.md](docs/VALIDATION.md) · 相關研究：[docs/related-work.md](docs/related-work.md)
+## 文件導覽
+
+| 想知道 | 看這裡 |
+|---|---|
+| 整體架構、設計原則、部件圖 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
+| 每個部件的規格 | [docs/components/](docs/components/) |
+| 每個方法的理論來源與假設 | [docs/THEORY.md](docs/THEORY.md) |
+| 已知假設與演算法盲區 | [docs/REGISTER.md](docs/REGISTER.md) |
+| 驗證階梯、關卡、指標門檻 | [docs/VALIDATION.md](docs/VALIDATION.md) |
+| 工項與順序 | [docs/ROADMAP.md](docs/ROADMAP.md) |
 
 ## Quickstart
 
 ```bash
 pip install -e ".[dev]"
-pytest                       # 93 tests, incl. brute-force solver verification
+pytest -rx                   # 125 passed + 3 xfailed（xfail = 已知盲區探針）
 python examples/quickstart.py
 ```
 
-範例輸出（合成資料）：一位只知道「MS Finance」、但喜歡數學和一點程式的學生，系統推薦了 Financial Mathematics、Operations Research、Statistics 等不在商學院分類下的 program。
+## 驗證方式一覽
 
-## 已知限制（v0.1）
-
-- **資料是合成的**：屬性分數由人工設定，只用來測試演算法行為，不代表任何真實學校。
-- **新穎度權重尚未校準**：預設 `novelty_weight=0.4` 時，契合度高但同屬商學院的 program（如 MS Business Analytics）會被壓到後面。正確權重要靠 V4 使用者研究決定。
-- **錄取獨立假設**：L4 假設各校錄取彼此獨立，實際上高度相關，會高估「多申請夢幻校」的價值。
-- **需求維度是初版**：9 個維度（`src/aisc/needs.py`）尚未經過信效度檢驗。
+每個部件的每個版本都要通過六層驗證：**L1 理論符合 → L2 程式驗證 → L3 合成還原 → L4 盲區探針 → L5 實證 → L6 外部審查**。
+盲區探針以 `@pytest.mark.probe` + `xfail(strict=True)` 寫成測試：盲區修好時測試會轉為通過，CI 會要求同步移除標記並更新登錄表。
 
 ## License
 

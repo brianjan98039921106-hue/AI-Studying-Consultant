@@ -5,10 +5,11 @@ Run:  python examples/quickstart.py
 
 from pathlib import Path
 
+from aisc.catalog import load_programs
+from aisc.contracts import StudentProfile
 from aisc.discovery import recommend
 from aisc.portfolio import dp_varied_cost
 from aisc.profiling import blend_profile
-from aisc.schema import StudentProfile, load_programs
 
 ROOT = Path(__file__).resolve().parents[1]
 catalog = load_programs(ROOT / "data" / "synthetic" / "programs.jsonl")

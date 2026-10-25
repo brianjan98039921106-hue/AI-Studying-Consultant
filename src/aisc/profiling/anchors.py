@@ -1,20 +1,21 @@
-"""L1 profiling helpers.
+"""C1.2 Anchor decomposition (v0).
 
-MVP scope: anchor decomposition. The adaptive questionnaire is a TODO
-(see docs/ROADMAP.md, M2).
+A student who names programs they already like is revealing something
+about their needs even if they cannot articulate it. We infer a need vector
+from those anchors and blend it with stated needs by precision weighting
+(the posterior mean of two independent Gaussian measurements).
 
-Anchor decomposition: a student who names programs they already like is
-telling us something about their needs, even if they cannot articulate it.
-We infer a need vector from those anchors and blend it with whatever the
-student stated directly, weighting each by how confident we are.
+Known blind spot B-C1-2 (docs/REGISTER.md): Taiwanese applicants often pick
+anchors by brand/ranking, not by fit, so the anchor mean partly encodes
+prestige. v0 does not correct for this; C1.2 v1 adds a prestige covariate.
 """
 
 from __future__ import annotations
 
 import numpy as np
 
-from aisc.needs import NEED_KEYS
-from aisc.schema import Program, StudentProfile
+from aisc.contracts import Program, StudentProfile
+from aisc.dimensions import NEED_KEYS
 
 
 def needs_from_anchors(anchors: list[Program]) -> np.ndarray:
@@ -31,9 +32,9 @@ def blend_profile(
 ) -> StudentProfile:
     """Precision-weighted blend of stated needs and anchor-implied needs.
 
-    For each dimension, stated value s with std sigma_s and anchor value a
-    with std sigma_a combine as (s/sigma_s^2 + a/sigma_a^2) / (1/sigma_s^2 + 1/sigma_a^2).
-    The anchor estimate's std shrinks as more anchors are given.
+    For each dimension: (s/σs² + a/σa²) / (1/σs² + 1/σa²), with
+    σa = σ0 / sqrt(#anchors). Assumes the two measurements are independent
+    and unbiased (A-C1-3) — exactly the assumption B-C1-2 says is violated.
     """
     anchors = [catalog[pid] for pid in profile.anchors if pid in catalog]
     if not anchors:
@@ -53,5 +54,6 @@ def blend_profile(
         needs={k: float(np.clip(v, 0, 1)) for k, v in zip(NEED_KEYS, blended, strict=True)},
         uncertainty={k: float(v) for k, v in zip(NEED_KEYS, blended_sigma, strict=True)},
         anchors=list(profile.anchors),
+        familiar=list(profile.familiar),
         hard_constraints=dict(profile.hard_constraints),
     )

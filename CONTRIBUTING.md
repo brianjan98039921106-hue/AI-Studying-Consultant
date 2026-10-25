@@ -12,14 +12,25 @@ pytest && ruff check . && ruff format --check .
 - Every algorithm change ships with a test. Optimisation code is tested against brute force on small instances.
 - Keep `numpy` as the only runtime dependency until a clear need arises.
 
+## Component workflow
+Each change targets one component (C0–C5) and one work item (W-xx in `docs/ROADMAP.md`).
+
+1. **G0** — spec in `docs/components/`, theory source in `docs/THEORY.md`, assumptions in `docs/REGISTER.md`.
+2. Implement behind the contracts in `src/aisc/contracts.py`; keep the previous version as a reference.
+3. Run the validation ladder (`docs/VALIDATION.md`); record results in the PR template.
+4. New weakness found → register a B item → add a probe test (`@pytest.mark.probe`, `xfail(strict=True)`).
+5. Weakness fixed → probe passes → remove `xfail` and update the register in the same commit.
+
+Test files are named per component: `tests/test_c<N>_<name>.py`.
+
 ## Commits — Conventional Commits
 `feat:` new capability · `fix:` bug · `test:` tests only · `docs:` docs only · `data:` dataset changes · `refactor:` · `chore:`
 
-Example: `feat(discovery): add embedding-based novelty`
+Scope = component: `feat(c2): intensity-aware relevance (W-26, fixes B-C2-3)`
 
 ## Branches
 - `main` is always green.
-- Work on `feat/<topic>` branches; merge via pull request once CI passes.
+- Work on `w<NN>-<topic>` branches (e.g. `w26-intensity-relevance`); merge via pull request once CI passes.
 
 ## Data policy
 - `data/synthetic/` — fictional programs, `"synthetic": true`. Safe to commit.

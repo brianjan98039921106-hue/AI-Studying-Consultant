@@ -1,4 +1,4 @@
-"""V1: solver correctness.
+"""C4.1 verification (validation level L2).
 
 - Reproduce the published OptimalApplication.jl example.
 - Match exhaustive search on random small instances (same cost and varied cost).

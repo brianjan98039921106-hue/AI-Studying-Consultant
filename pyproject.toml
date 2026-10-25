@@ -21,6 +21,9 @@ packages = ["src/aisc"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+    "probe: blind-spot probe; xfail(strict=True) documents a known weakness (docs/REGISTER.md)",
+]
 
 [tool.ruff]
 line-length = 100

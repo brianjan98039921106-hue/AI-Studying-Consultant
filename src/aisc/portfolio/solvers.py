@@ -1,4 +1,4 @@
-"""L4 application portfolio optimisation (the college application problem).
+"""C4.1 application portfolio solvers (the college application problem).
 
 Choose a set S of programs to apply to, maximising the expected utility of
 the best admission:
@@ -18,10 +18,11 @@ arXiv:2205.01869; Julia implementation maxkapur/OptimalApplication.jl.
 - Different costs, budget H: NP-complete in general; exact pseudo-polynomial
   DP over integer costs below.
 
-Known limitation (see docs/ROADMAP.md, M4): admissions are assumed
-independent. In reality they are positively correlated through applicant
-quality, which makes the independent model over-optimistic about "reach"
-portfolios.
+Assumption A-C4-1 (docs/REGISTER.md): admissions are independent. In
+reality they are positively correlated through applicant quality, which
+makes this model over-optimistic about "reach" portfolios (B-C4-1).
+C4.2 measures the size of that error; it does not change these solvers,
+which stay as the verified reference.
 """
 
 from __future__ import annotations

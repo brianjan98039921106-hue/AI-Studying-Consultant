@@ -1,60 +1,96 @@
-# Architecture
+# 演算法架構 Algorithm Architecture
 
-## 1. Problem formulation
+> 讀法：先看 §1 設計原則與 §2 部件圖，再依需要看各部件規格（`docs/components/`）。
+> 每個部件的理論來源見 [THEORY.md](THEORY.md)，假設與盲區見 [REGISTER.md](REGISTER.md)，驗證方式見 [VALIDATION.md](VALIDATION.md)，工項見 [ROADMAP.md](ROADMAP.md)。
 
-Let $\mathcal{P}$ be the set of all US graduate programs, and $K_s \subset \mathcal{P}$ the programs student $s$ already knows ("anchors"). Each program $p$ has
+## 1. 設計原則
 
-- an attribute vector $x_p \in [0,1]^d$ on $d$ **need dimensions** (`src/aisc/needs.py`);
-- a **label** $\ell_p$: its 6-digit NCES CIP 2020 code.
+| ID | 原則 | 為什麼 | 落實方式 |
+|---|---|---|---|
+| D1 | **需求空間與標籤空間分離** | 學生不知道 program 名稱，但知道自己想做什麼。「契合」看內容，「新穎」看名稱 | C2 的 relevance 只用屬性向量，novelty 只用 CIP／熟悉度 |
+| D2 | **Program 屬性雙重測量** | 單一資料來源（官網文案或分類代碼）都有系統性偏誤，兩個獨立來源互相檢驗 | C0.2 職業橋接 vs C0.3 課程擷取，C0.4 比對一致性 |
+| D3 | **需求維度錨定在已驗證的構念** | 自訂維度沒有信效度保證 | C1.1 以 Holland RIASEC（O*NET 使用的興趣模型）為骨架，再加通過因素分析的領域維度 |
+| D4 | **不確定性端到端傳遞** | 點估計會讓下游過度自信 | C1 輸出後驗標準差、C3 輸出區間、C4 用區間做穩健選擇 |
+| D5 | **部件只透過資料契約溝通** | 單獨開發、單獨驗證、可替換 | `src/aisc/contracts.py`；部件之間不互相 import 內部函式 |
+| D6 | **先模擬驗證，再真人驗證** | 真人資料少且昂貴，演算法錯誤要先在已知真相的環境抓出來 | C5 模擬器提供已知的真實需求，每個部件都要先過 L3 |
+| D7 | **新穎 = 學生不知道，而非分類距離遠** | 分類距離只是代理變數 | C1.4 熟悉度擷取，C2.2 v1 改用「未知機率」 |
+| D8 | **每個版本保留參考實作** | 新版本必須能和舊版本、暴力法比對 | 例如 C4.1 精確解永遠保留，C4.2 只是評估它的誤差 |
 
-Each student has a latent need vector $w_s \in [0,1]^d$ with uncertainty $\sigma_s$.
+## 2. 部件圖
 
-**Goal.** Find programs in $\mathcal{P} \setminus K_s$ that score high on fit *and* that the student would not have found unaided.
+```mermaid
+flowchart LR
+    subgraph C0[C0 Program 知識庫]
+        C01[C0.1 分類骨架<br/>CIP 2020 + IPEDS] --> C02[C0.2 職業橋接<br/>CIP→SOC→O*NET]
+        C01 --> C03[C0.3 課程擷取<br/>官網 + 來源記錄]
+        C02 --> C04[C0.4 融合與品管]
+        C03 --> C04
+    end
+    subgraph C1[C1 學生側寫]
+        C11[C1.1 測量模型<br/>RIASEC + 領域維度] --> C13[C1.3 自適應提問]
+        C12[C1.2 錨點拆解<br/>+ 名校偏誤校正] --> C13
+        C14[C1.4 熟悉度擷取]
+    end
+    subgraph C2[C2 探索推薦]
+        C21[C2.1 契合度] --> C23[C2.3 重排序 MMR]
+        C22[C2.2 新穎度] --> C23
+        C23 --> C24[C2.4 推薦理由]
+    end
+    subgraph C3[C3 錄取可行性]
+        C31[C3.1 資料 + 選擇偏誤] --> C32[C3.2 階層貝氏模型] --> C33[C3.3 校準]
+    end
+    subgraph C4[C4 申請組合]
+        C44[C4.4 效用擷取] --> C41[C4.1 精確解]
+        C41 --> C42[C4.2 相關性評估]
+        C41 --> C43[C4.3 穩健選擇]
+    end
+    C04 -- Program --> C12 & C21 & C22
+    C13 -- StudentProfile --> C21
+    C14 -- familiar --> C22
+    C24 -- Recommendation --> C44
+    C33 -- AdmitEstimate --> C41
+    C5[C5 模擬與評估框架<br/>已知真相的合成學生] -. 驗證 .-> C0 & C1 & C2 & C3 & C4
+```
 
-The key design choice is to separate two spaces:
+## 3. 部件總表
 
-| Space | Represents | Used for |
+| 部件 | 輸入 → 輸出（契約） | 核心方法 | 規格 | 目前版本 |
+|---|---|---|---|---|
+| **C0** Program 知識庫 | 公開資料 → `Program` | 分類骨架 + 雙重測量 + 一致性品管 | [C0](components/C0-catalog.md) | loader 完成；資料管線未開始 |
+| **C1** 學生側寫 | 問卷回答、錨點、熟悉度 → `StudentProfile` | 心理計量測量模型 + 貝氏更新 + 資訊價值選題 | [C1](components/C1-profiling.md) | C1.2 v0（無偏誤校正） |
+| **C2** 探索推薦 | `StudentProfile` + `Program` → `Recommendation` | 契合度 × 新穎度 + MMR + 可忠實分解的理由 | [C2](components/C2-discovery.md) | v0 完成，3 個已知盲區 |
+| **C3** 錄取可行性 | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) | 未開始 |
+| **C4** 申請組合 | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) | C4.1 完成並驗證 |
+| **C5** 模擬與評估 | 合成族群 → 各部件指標 | 已知真相模擬 + 消融 + 盲區探針 | [C5](components/C5-simulation.md) | 未開始（最優先） |
+
+## 4. 數學定義（v0）
+
+**符號**：program $p$ 的屬性 $x_p \in [0,1]^d$、標籤 $\ell_p$（6 碼 CIP）；學生需求 $w \in [0,1]^d$、不確定性 $\sigma$；錨點集合 $K$、熟悉集合 $F$。
+
+| 部件 | 定義 | 程式 |
 |---|---|---|
-| Need space ($x_p$, $w_s$) | what the program teaches and leads to | **relevance** |
-| Label space ($\ell_p$) | what the program is *called* / where it sits in the taxonomy | **novelty** |
+| C1.2 | $\hat w = \dfrac{w^{s}/\sigma_s^2 + \bar x_K/\sigma_a^2}{1/\sigma_s^2 + 1/\sigma_a^2}$，$\sigma_a = \sigma_0/\sqrt{\lvert K\rvert}$ | `profiling/anchors.py` |
+| C2.1 | $\text{rel}(p) = \cos(\hat w, x_p)$ | `discovery/scoring.py` |
+| C2.2 | $\text{nov}(p) = 1 - \max_{q \in K \cup F} \text{sim}_\ell(p,q)$；$\text{sim}_\ell$ = 1（同 4 碼）/ 0.5（同 2 碼）/ 0；$p \in F \Rightarrow 0$ | `discovery/scoring.py` |
+| C2.3 | $\text{score} = (1-\alpha)\,\text{rel} + \alpha\,\text{nov}$；MMR：$\arg\max (1-\lambda)\text{score} - \lambda \max_{q \in S}\cos(x_p,x_q)$ | `discovery/rerank.py` |
+| C2.4 | $c_k = w_k x_{p,k} / (w \cdot x_p)$，$\sum_k c_k = 1$（精確分解） | `discovery/scoring.py` |
+| C4.1 | $v(S) = \sum_i u_{j_i} p_{j_i}\prod_{l<i}(1-p_{j_l})$；DP $V_j(b)=\max\{V_{j-1}(b),\, p_ju_j+(1-p_j)V_{j-1}(b-c_j)\}$ | `portfolio/solvers.py` |
 
-A good discovery is close in need space and far in label space from $K_s$.
+v1 的改動（例如 C2.1 改成考慮強度的距離、C2.2 改成未知機率）寫在各部件規格，並以 L4 探針測試鎖定。
 
-## 2. Layers
+## 5. 程式結構
 
-### L0 — Program knowledge base
-- Backbone: NCES CIP 2020 taxonomy; IPEDS Completions lists which institutions award master's degrees (award level 7) under each 6-digit CIP.
-- Attributes $x_p$: extracted from program websites (curriculum, career outcomes) — planned LLM-assisted extraction with human spot checks.
-- Logistics fields used as **hard constraints**, not dimensions: `spring_intake`, `stem_opt`, `tuition_usd`, `duration_months`.
-
-### L1 — Student profiling (`profiling.py`)
-- **Anchor decomposition** (implemented): $\hat{w}^{anchor} = \frac{1}{|K_s|}\sum_{p \in K_s} x_p$, blended with stated needs by precision weighting:
-  $$\hat{w} = \frac{w^{stated}/\sigma_{stated}^2 + \hat{w}^{anchor}/\sigma_{anchor}^2}{1/\sigma_{stated}^2 + 1/\sigma_{anchor}^2}, \quad \sigma_{anchor} = \sigma_0/\sqrt{|K_s|}$$
-- **Adaptive questionnaire** (M2): choose the next question to maximally reduce posterior uncertainty on the dimensions that most change the ranking.
-
-### L2 — Discovery (`discovery.py`)
-$$\text{rel}(p) = \cos(\hat{w}, x_p), \qquad \text{nov}(p) = 1 - \max_{a \in K_s} \text{sim}_\ell(p, a)$$
-with $\text{sim}_\ell = 1$ for the same 4-digit CIP group, $0.5$ for the same 2-digit family, else $0$.
-$$\text{score}(p) = (1-\alpha)\,\text{rel}(p) + \alpha\,\text{nov}(p)$$
-Final list by Maximal Marginal Relevance: at each step pick
-$\arg\max_p \,(1-\lambda)\,\text{score}(p) - \lambda \max_{q \in \text{selected}} \cos(x_p, x_q)$.
-
-### L3 — Admission feasibility (M4)
-$p_j = P(\text{admit} \mid s, j)$. Data is sparse and self-reported (GradCafe), so the plan is a Bayesian model with program-level priors, reporting intervals rather than point estimates.
-
-### L4 — Application portfolio (`portfolio.py`)
-Kapur & Hong (2022). Maximise $v(S) = \mathbb{E}[\max_{j \in S,\ \text{admitted}} u_j]$. With $S$ sorted by descending utility:
-$$v(S) = \sum_i u_{j_i}\, p_{j_i} \prod_{l<i} (1-p_{j_l})$$
-- Identical costs, at most $h$ applications: greedy is optimal, solutions nested in $h$.
-- Integer costs $c_j$, budget $H$: exact DP over schools sorted by ascending utility,
-  $V_j(b) = \max\{V_{j-1}(b),\ p_j u_j + (1-p_j)V_{j-1}(b-c_j)\}$, $O(mH)$.
-
-## 3. Module map
-
-| Module | Layer | Status |
-|---|---|---|
-| `needs.py` | shared | v0 dimensions |
-| `schema.py` | L0/L1 | done |
-| `profiling.py` | L1 | anchor decomposition |
-| `discovery.py` | L2 | done |
-| `portfolio.py` | L4 | done, verified |
+```
+src/aisc/
+  contracts.py      # 部件之間唯一的共用型別
+  dimensions.py     # 需求維度登錄（v0，待 C1.1 取代）
+  catalog/          # C0
+  profiling/        # C1
+  discovery/        # C2
+  feasibility/      # C3
+  portfolio/        # C4
+  simulation/       # C5
+tests/
+  test_contracts.py
+  test_c0_*.py … test_c4_*.py   # 每個部件一組；@pytest.mark.probe 為盲區探針
+```
