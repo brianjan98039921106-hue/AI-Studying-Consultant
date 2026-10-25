@@ -29,25 +29,39 @@ from aisc.simulation.truth import true_utility
 
 # Student archetypes (independent of the program prototypes, to avoid
 # generating students that trivially match catalogue families).
-ARCHETYPES: dict[str, dict[str, float]] = {
-    "quant_finance": {"quant": 0.8, "programming": 0.5, "business": 0.6, "finance": 0.9,
-                      "tech_product": 0.2, "research": 0.2, "entrepreneurship": 0.2,
-                      "policy_social": 0.1},
-    "tech_product": {"quant": 0.5, "programming": 0.7, "business": 0.5, "finance": 0.1,
-                     "tech_product": 0.9, "design": 0.4, "research": 0.1,
-                     "entrepreneurship": 0.6, "policy_social": 0.1},
-    "design_creative": {"quant": 0.2, "programming": 0.3, "business": 0.3,
-                        "tech_product": 0.6, "design": 0.9, "research": 0.2,
-                        "entrepreneurship": 0.5, "policy_social": 0.3},
-    "research_quant": {"quant": 0.9, "programming": 0.6, "business": 0.1, "finance": 0.2,
-                       "tech_product": 0.3, "research": 0.9, "policy_social": 0.2},
-    "social_policy": {"quant": 0.5, "programming": 0.3, "business": 0.3, "finance": 0.2,
-                      "tech_product": 0.1, "design": 0.2, "research": 0.5,
-                      "entrepreneurship": 0.1, "policy_social": 0.9},
-    "generalist_business": {"quant": 0.4, "programming": 0.2, "business": 0.9, "finance": 0.5,
-                            "tech_product": 0.4, "design": 0.2, "entrepreneurship": 0.6,
-                            "policy_social": 0.2},
+# Columns follow _ARCHETYPE_COLUMNS, which is checked against NEED_KEYS below.
+_ARCHETYPE_COLUMNS = (
+    "riasec_r",
+    "riasec_i",
+    "riasec_a",
+    "riasec_s",
+    "riasec_e",
+    "riasec_c",
+    "quant_intensity",
+    "programming_intensity",
+    "domain_finance",
+    "domain_tech_product",
+    "domain_operations",
+    "domain_design",
+    "domain_policy_social",
+    "research_orientation",
+    "entrepreneurship",
+)
+_ARCHETYPE_TABLE: dict[str, tuple[float, ...]] = {
+    #                      R   I   A   S   E   C   qnt prg fin tch ops dsg pol res ent
+    "quant_finance":       (.1, .7, .1, .1, .6, .6, .8, .5, .9, .2, .2, .0, .1, .2, .2),
+    "tech_product":        (.4, .6, .4, .2, .6, .3, .5, .7, .1, .9, .3, .4, .1, .1, .6),
+    "design_creative":     (.2, .3, .9, .5, .4, .1, .2, .3, .0, .6, .0, .9, .3, .2, .5),
+    "research_quant":      (.2, .9, .2, .1, .1, .5, .9, .6, .2, .3, .2, .0, .2, .9, .0),
+    "social_policy":       (.1, .5, .3, .9, .3, .3, .5, .3, .2, .1, .1, .2, .9, .5, .1),
+    "generalist_business": (.1, .3, .2, .4, .9, .5, .4, .2, .5, .4, .4, .2, .2, .0, .6),
+    "operations_systems":  (.6, .6, .1, .2, .4, .7, .7, .5, .1, .4, .9, .1, .1, .3, .2),
 }  # fmt: skip
+if _ARCHETYPE_COLUMNS != NEED_KEYS:
+    raise RuntimeError("Archetype table columns are out of sync with NEED_KEYS")
+ARCHETYPES: dict[str, dict[str, float]] = {
+    name: dict(zip(NEED_KEYS, values, strict=True)) for name, values in _ARCHETYPE_TABLE.items()
+}
 
 # The CIP family a student of each archetype would ideally have studied.
 NATURAL_FAMILY: dict[str, str] = {
@@ -57,6 +71,7 @@ NATURAL_FAMILY: dict[str, str] = {
     "research_quant": "27",
     "social_policy": "44",
     "generalist_business": "52",
+    "operations_systems": "14",
 }
 
 # Illustrative distribution of Taiwanese undergraduate backgrounds (A-C5-2).
@@ -88,7 +103,7 @@ class SimConfig:
     noise_sd: float = 0.15
     acquiescence: float = 0.05
     desirability: dict[str, float] = field(
-        default_factory=lambda: {"quant": 0.10, "business": 0.05}
+        default_factory=lambda: {"quant_intensity": 0.10, "riasec_e": 0.05}
     )
     reported_sigma: float = 0.3  # the uncertainty the stated profile claims
     truth: str = "distance"

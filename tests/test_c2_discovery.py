@@ -48,7 +48,12 @@ def test_contributions_are_faithful_decomposition(seed):
 def test_finance_student_discovers_non_business_programs(by_id, catalog):
     student = StudentProfile(
         student_id="t1",
-        needs={"quant": 0.8, "finance": 0.9, "business": 0.6, "programming": 0.5},
+        needs={
+            "quant_intensity": 0.8,
+            "domain_finance": 0.9,
+            "riasec_e": 0.6,
+            "programming_intensity": 0.5,
+        },
         anchors=["syn-01"],
     )
     recs = recommend(blend_profile(student, by_id), catalog, k=5, novelty_weight=0.4)
@@ -66,40 +71,46 @@ def test_pure_fit_returns_exact_match(by_id, catalog):
 
 def test_hard_constraints_filter(catalog):
     student = StudentProfile(
-        student_id="t3", needs={"quant": 0.8}, hard_constraints={"spring_intake": True}
+        student_id="t3", needs={"quant_intensity": 0.8}, hard_constraints={"spring_intake": True}
     )
     recs = recommend(student, catalog, k=12)
     assert recs and all(r.program.spring_intake is not False for r in recs)
 
 
 def test_min_relevance_floor(catalog):
-    student = StudentProfile(student_id="t4", needs={"design": 1.0})
+    student = StudentProfile(student_id="t4", needs={"domain_design": 1.0})
     recs = recommend(student, catalog, k=12, min_relevance=0.5)
     assert all(r.relevance >= 0.5 for r in recs)
 
 
 def test_invalid_weights_rejected(catalog):
     with pytest.raises(ValueError):
-        recommend(StudentProfile("x", {"quant": 1.0}), catalog, novelty_weight=1.5)
+        recommend(StudentProfile("x", {"quant_intensity": 1.0}), catalog, novelty_weight=1.5)
 
 
 # --- L4 blind-spot probes ---------------------------------------------------------
 
 
 @pytest.mark.probe
-@pytest.mark.xfail(strict=True, reason="B-C2-3: cosine ignores intensity mismatch")
+@pytest.mark.xfail(
+    strict=True, raises=AssertionError, reason="B-C2-3: cosine ignores intensity mismatch"
+)
 def test_probe_cosine_ignores_intensity():
     """Mild interest in math should not be a perfect match for the most
     math-intensive program. Cosine scores it 1.0."""
     student = np.zeros(len(NEED_KEYS))
     program = np.zeros(len(NEED_KEYS))
-    student[NEED_KEYS.index("quant")] = 0.2
-    program[NEED_KEYS.index("quant")] = 1.0
+    student[NEED_KEYS.index("quant_intensity")] = 0.2
+    program[NEED_KEYS.index("quant_intensity")] = 1.0
     assert relevance(student, program) < 0.9
 
 
 @pytest.mark.probe
-@pytest.mark.xfail(strict=True, reason="B-C2-2: novelty weight can push out the best-fit program")
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C2-2: novelty weight can push out the best-fit program",
+)
 def test_probe_best_fit_survives_novelty_weighting(by_id, catalog):
     """The single best-fit non-anchor program should stay in the top 5.
     With α=0.4 it is displaced only because it shares the anchor's CIP family."""

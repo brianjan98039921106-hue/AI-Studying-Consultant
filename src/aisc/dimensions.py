@@ -1,78 +1,100 @@
-"""Need dimensions: the shared attribute space for students and programs.
+"""Need dimensions v1: the shared attribute space for students and programs.
 
 Students are profiled on *needs* (what they want to do and learn), not on
-program names, because Taiwanese applicants usually do not know the US
-program taxonomy. Programs are scored on the same dimensions, so a student's
-need vector and a program's attribute vector can be compared directly.
+program names. Programs are scored on the same dimensions so the two can be
+compared directly. Every dimension is scored on [0, 1].
 
-Each dimension is scored on [0, 1].
+Four layers (docs/rubric.md, approved W-16a):
+    interest     Holland RIASEC — validated construct, links to O*NET (C0.2)
+                 on the program side and to the CEEC interest inventory
+                 (大考中心興趣量表) on the student side
+    intensity    how deep in maths / programming the student *wants* to go
+                 (preference, not ability: B-C1-8)
+    domain       subject area
+    orientation  research vs. industry path, entrepreneurship
 
-STATUS: v0, hand-designed and NOT validated (B-C1-1 in docs/REGISTER.md).
-C1.1 replaces/anchors these with a validated construct: Holland RIASEC
-interest types (via O*NET), plus domain dimensions that pass factor-analysis
-and reliability checks. Do not add dimensions without updating the rubric,
-synthetic data and tests together.
+Status: theory-anchored but not yet empirically validated. Overlaps
+pre-registered in docs/rubric.md §2 are tested by V-C1-7 (B-C1-1).
+Changing this list means updating the rubric, synthetic data and tests together.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 
+LAYERS: tuple[str, ...] = ("interest", "intensity", "domain", "orientation")
+
 
 @dataclass(frozen=True)
 class NeedDimension:
     key: str
+    layer: str
     label_zh: str
     label_en: str
-    low_anchor: str  # what a score of 0 means
-    high_anchor: str  # what a score of 1 means
+    student_source: str  # how C1 measures it
+    program_source: str  # how C0 measures it
 
+
+_RIASEC_STUDENT = "CEEC inventory score (optional prior) + short items"
+_RIASEC_PROGRAM = "C0.2 O*NET occupational interest profile"
+_RUBRIC = "C0.3 curriculum rubric (docs/rubric.md §4)"
 
 NEED_DIMENSIONS: tuple[NeedDimension, ...] = (
+    NeedDimension("riasec_r", "interest", "實用型", "Realistic", _RIASEC_STUDENT, _RIASEC_PROGRAM),
     NeedDimension(
-        "quant", "量化強度", "Quantitative intensity", "幾乎不用數學", "大量機率、最佳化、統計推論"
+        "riasec_i", "interest", "研究型", "Investigative", _RIASEC_STUDENT, _RIASEC_PROGRAM
+    ),
+    NeedDimension("riasec_a", "interest", "藝術型", "Artistic", _RIASEC_STUDENT, _RIASEC_PROGRAM),
+    NeedDimension("riasec_s", "interest", "社會型", "Social", _RIASEC_STUDENT, _RIASEC_PROGRAM),
+    NeedDimension(
+        "riasec_e", "interest", "企業型", "Enterprising", _RIASEC_STUDENT, _RIASEC_PROGRAM
     ),
     NeedDimension(
-        "programming", "程式強度", "Programming intensity", "不寫程式", "以寫程式與系統實作為主"
+        "riasec_c", "interest", "事務型", "Conventional", _RIASEC_STUDENT, _RIASEC_PROGRAM
     ),
     NeedDimension(
-        "business", "商業導向", "Business orientation", "與商業決策無關", "以商業決策與管理為核心"
+        "quant_intensity", "intensity", "數理強度", "Quantitative intensity",
+        "behaviourally anchored items", _RUBRIC,
     ),
     NeedDimension(
-        "finance", "金融領域", "Finance domain", "與金融無關", "以金融市場、投資、風險為主"
+        "programming_intensity", "intensity", "程式強度", "Programming intensity",
+        "behaviourally anchored items", _RUBRIC,
     ),
     NeedDimension(
-        "tech_product",
-        "科技產品",
-        "Tech / product domain",
-        "與科技產品無關",
-        "以科技產品與工程團隊為主",
+        "domain_finance", "domain", "金融", "Finance", "paired scenario items", _RUBRIC
     ),
     NeedDimension(
-        "design", "設計導向", "Design orientation", "不涉及設計", "以設計方法、使用者研究為核心"
+        "domain_tech_product", "domain", "科技產品", "Technology / product",
+        "paired scenario items", _RUBRIC,
     ),
     NeedDimension(
-        "research",
-        "研究導向",
-        "Research orientation",
-        "純實務、職涯導向",
-        "以研究、論文、博士銜接為主",
+        "domain_operations", "domain", "營運／供應鏈", "Operations / supply chain",
+        "paired scenario items", _RUBRIC,
     ),
     NeedDimension(
-        "entrepreneurship",
-        "創業導向",
-        "Entrepreneurship",
-        "沒有創業資源",
-        "有創業課程、孵化器、新創網絡",
+        "domain_design", "domain", "設計／使用者經驗", "Design / UX",
+        "paired scenario items", _RUBRIC,
     ),
     NeedDimension(
-        "policy_social",
-        "公共與社會",
-        "Policy / social impact",
-        "與公共議題無關",
-        "以政策、公共部門、社會影響為主",
+        "domain_policy_social", "domain", "公共政策／社會", "Public policy / social",
+        "paired scenario items", _RUBRIC,
     ),
-)
+    NeedDimension(
+        "research_orientation", "orientation", "研究取向", "Research orientation",
+        "scenario items", _RUBRIC,
+    ),
+    NeedDimension(
+        "entrepreneurship", "orientation", "創業取向", "Entrepreneurship",
+        "scenario items", _RUBRIC,
+    ),
+)  # fmt: skip
 
 NEED_KEYS: tuple[str, ...] = tuple(d.key for d in NEED_DIMENSIONS)
 N_NEEDS: int = len(NEED_KEYS)
+RIASEC_KEYS: tuple[str, ...] = tuple(d.key for d in NEED_DIMENSIONS if d.layer == "interest")
+
+
+def keys_in_layer(layer: str) -> tuple[str, ...]:
+    if layer not in LAYERS:
+        raise ValueError(f"Unknown layer {layer!r}; expected one of {LAYERS}")
+    return tuple(d.key for d in NEED_DIMENSIONS if d.layer == layer)

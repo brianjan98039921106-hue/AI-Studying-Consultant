@@ -83,7 +83,7 @@ v1 的改動（例如 C2.1 改成考慮強度的距離、C2.2 改成未知機率
 ```
 src/aisc/
   contracts.py      # 部件之間唯一的共用型別
-  dimensions.py     # 需求維度登錄（v0，待 C1.1 取代）
+  dimensions.py     # 需求維度登錄 v1：4 層 15 維（docs/rubric.md）
   catalog/          # C0
   profiling/        # C1
   discovery/        # C2
