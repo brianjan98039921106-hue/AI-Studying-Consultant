@@ -5,7 +5,14 @@ import pytest
 
 from aisc.contracts import StudentProfile
 from aisc.dimensions import NEED_KEYS
-from aisc.discovery import contributions, label_similarity, novelty, recommend, relevance
+from aisc.discovery import (
+    contributions,
+    discover,
+    label_similarity,
+    novelty,
+    recommend,
+    relevance,
+)
 from aisc.profiling import blend_profile
 
 # --- C2.1 / C2.2 / C2.4 units -------------------------------------------------
@@ -105,19 +112,37 @@ def test_probe_cosine_ignores_intensity():
     assert relevance(student, program) < 0.9
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
+_B_C2_2_V0 = pytest.mark.xfail(
     strict=True,
     raises=AssertionError,
-    reason="B-C2-2: novelty weight can push out the best-fit program",
+    reason="B-C2-2 (v0 reference only): novelty weight pushes out the best-fit program",
 )
-def test_probe_best_fit_survives_novelty_weighting(by_id, catalog):
-    """The single best-fit non-anchor program should stay in the top 5.
-    With α=0.4 it is displaced only because it shares the anchor's CIP family."""
+
+
+@pytest.mark.probe
+@pytest.mark.parametrize(
+    "version,familiar",
+    [
+        pytest.param("v0", [], marks=_B_C2_2_V0, id="v0-reference"),
+        pytest.param("v1", [], id="v1-unknown"),
+        pytest.param("v1", ["syn-04"], id="v1-known"),
+    ],
+)
+def test_probe_best_fit_survives(by_id, catalog, version, familiar):
+    """The single best-fit non-anchor program must remain visible (top 5).
+
+    v0 hides it with α=0.4 because it shares the anchor's CIP family; v0 stays
+    as the reference and keeps failing. v1 (sectioned) must show it — as a
+    discovery if unknown, in the known-good section if the student knows it.
+    """
     student = StudentProfile(
         student_id="probe",
         needs=dict(by_id["syn-04"].attributes),  # wants exactly MS Business Analytics
         anchors=["syn-01"],  # knows MS Finance (same CIP family 52)
+        familiar=familiar,
     )
-    recs = recommend(student, catalog, k=5, novelty_weight=0.4)
-    assert "syn-04" in [r.program.program_id for r in recs]
+    if version == "v0":
+        shown = [r.program.program_id for r in recommend(student, catalog, k=5, novelty_weight=0.4)]
+    else:
+        shown = discover(student, catalog, k_new=5, k_known=5).all_ids
+    assert "syn-04" in shown

@@ -123,6 +123,24 @@ class Recommendation:
     contributions: dict[str, float] = field(default_factory=dict)  # for C2.4 explainer
 
 
+@dataclass(frozen=True)
+class DiscoveryResult:
+    """C2.3 v1 output: two sections instead of one novelty-penalised list.
+
+    `discoveries`: programs the student did not report knowing, by fit.
+    `known_good`:  programs the student reported knowing that also fit well
+                   (confirmation, not a discovery). Anchors appear in neither.
+    """
+
+    discoveries: list[Recommendation]
+    known_good: list[Recommendation]
+    asked: list[str] = field(default_factory=list)  # program_ids shown in the familiarity check
+
+    @property
+    def all_ids(self) -> list[str]:
+        return [r.program.program_id for r in self.discoveries + self.known_good]
+
+
 # --- C3 output -------------------------------------------------------------
 
 
