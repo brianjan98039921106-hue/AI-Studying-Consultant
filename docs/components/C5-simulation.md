@@ -27,7 +27,7 @@
 | C5.2 | ✅ | `simulation/metrics.py` |
 | C5.3 | 🟡 執行器 + 基準完成，消融介面待擴充 | `simulation/evaluate.py`、`scripts/run_l3_baseline.py` |
 | C5.4 | ⬜ | — |
-| C5.5 | ⬜（W-13：無原型的連續分布） | — |
+| C5.5 | ✅ v1（logistic-normal，RIASEC 六角形相關） | `SimConfig(needs_model="continuous")` |
 
 ## 驗證
 | 層級 | 內容 |

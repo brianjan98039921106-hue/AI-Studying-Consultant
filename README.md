@@ -32,7 +32,7 @@
 | 驗證階梯、關卡、指標門檻 | [docs/VALIDATION.md](docs/VALIDATION.md) |
 | 工項與順序 | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | 需求維度與評分準則 | [docs/rubric.md](docs/rubric.md) |
-| 最新 L3 合成驗證結論 | [results/synthetic-l3-v1-findings.md](results/synthetic-l3-v1-findings.md) |
+| 最新 L3 合成驗證結論 | [results/synthetic-l3-v1-continuous-findings.md](results/synthetic-l3-v1-continuous-findings.md) |
 
 ## Quickstart
 
@@ -40,7 +40,9 @@
 pip install -e ".[dev]"
 pytest -rx                   # 176 passed + 3 xfailed（xfail = 已知盲區探針）
 python examples/quickstart.py
-python scripts/run_l3_baseline.py --tag v1   # L3 合成驗證，約 5 分鐘
+python scripts/run_l3_baseline.py --tag v1 --needs-model archetype    # L3，約 5 分鐘
+python scripts/run_l3_baseline.py --tag v1-continuous --needs-model continuous
+python scripts/compare_l3.py results/synthetic-l3-v1.md results/synthetic-l3-v1-continuous.md
 ```
 
 ## 驗證方式一覽

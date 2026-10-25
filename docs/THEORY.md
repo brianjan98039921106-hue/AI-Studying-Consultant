@@ -69,6 +69,7 @@
 | 模型誤設測試 | 統計模擬研究的標準做法：資料生成模型 ≠ 估計模型 | 避免 S-1 循環驗證 |
 | 資料洩漏 | Kaufman et al. (2012), *ACM TKDD*, "Leakage in Data Mining" | S-3 |
 | 合成需求分布 | 潛在類別混合（原型 + 個體雜訊） | A-C5-1 需求由少數原型加雜訊產生 |
+| 第二套需求分布（C5.5） | 無原型的 logistic-normal：潛在常態經 sigmoid 轉換；RIASEC 六型的潛在相關依 Holland 六角形（相鄰 > 相隔 > 相對），見 Holland (1997) 與 Tracey & Rounds (1993), *Psychological Bulletin* 的結構驗證 | A-C5-6 相關強度（相鄰 0.3、相隔 0、相對 −0.2）為設定值；A-C5-7 理想科系由最強需求決定 |
 | 熟悉度生成 | Logistic 模型：知名度、與學生背景同分類、台灣常見分類 | A-C5-2 |
 | 錨點選擇 | 離散選擇模型 multinomial logit（McFadden, 1974）：效用 = 契合度與名氣的加權 | A-C5-3 錨點只能從熟悉的學程中選 |
 | 陳述需求的作答風格 | 默許傾向、社會期許（Podsakoff et al., 2003） | A-C5-4 偏誤可加成到真實需求上 |
