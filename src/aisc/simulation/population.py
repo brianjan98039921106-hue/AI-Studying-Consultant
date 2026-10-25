@@ -2,7 +2,10 @@
 
 Generative story for one student (each step is a registered assumption):
 
-1. Archetype -> true needs w*            (A-C5-1: prototype + individual noise)
+1. True needs w*, from one of two model families (W-13, S-1):
+     "archetype"  : prototype + individual noise          (A-C5-1)
+     "continuous" : logistic-normal, no prototypes, RIASEC
+                    hexagon correlations                  (A-C5-6, A-C5-7)
 2. Undergraduate background CIP family   (matches the archetype only with
                                           probability `background_match_prob`:
                                           the core "wrong major" situation)
@@ -23,7 +26,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 from aisc.contracts import Program, StudentProfile
-from aisc.dimensions import NEED_KEYS
+from aisc.dimensions import NEED_KEYS, RIASEC_KEYS
 from aisc.simulation.catalog_gen import TW_COMMON_CIP
 from aisc.simulation.truth import true_utility
 
@@ -74,6 +77,48 @@ NATURAL_FAMILY: dict[str, str] = {
     "operations_systems": "14",
 }
 
+# Continuous model (A-C5-7): which CIP family each need points to. The ideal
+# family of a student is the family of their strongest mapped need.
+NEED_TO_FAMILY: dict[str, str] = {
+    "domain_finance": "52",
+    "riasec_e": "52",
+    "domain_tech_product": "11",
+    "programming_intensity": "11",
+    "domain_operations": "14",
+    "domain_design": "50",
+    "riasec_a": "50",
+    "domain_policy_social": "44",
+    "riasec_s": "44",
+    "research_orientation": "27",
+    "quant_intensity": "27",
+}
+
+NEEDS_MODELS: tuple[str, ...] = ("archetype", "continuous")
+
+
+def riasec_hexagon_corr(adjacent: float = 0.3, alternate: float = 0.0, opposite: float = -0.2):
+    """6x6 circulant correlation following Holland's hexagon (A-C5-6)."""
+    by_distance = {0: 1.0, 1: adjacent, 2: alternate, 3: opposite}
+    corr = np.array([[by_distance[min(abs(i - j), 6 - abs(i - j))] for j in range(6)]
+                     for i in range(6)])  # fmt: skip
+    if np.linalg.eigvalsh(corr).min() <= 0:
+        raise ValueError("RIASEC correlation matrix is not positive definite")
+    return corr
+
+
+def _continuous_cov() -> np.ndarray:
+    cov = np.eye(len(NEED_KEYS))
+    idx = [NEED_KEYS.index(k) for k in RIASEC_KEYS]
+    cov[np.ix_(idx, idx)] = riasec_hexagon_corr()
+    return cov
+
+
+def natural_family_from_needs(w: np.ndarray) -> str:
+    keys = list(NEED_TO_FAMILY)
+    vals = [w[NEED_KEYS.index(k)] for k in keys]
+    return NEED_TO_FAMILY[keys[int(np.argmax(vals))]]
+
+
 # Illustrative distribution of Taiwanese undergraduate backgrounds (A-C5-2).
 TW_BACKGROUND_DIST: dict[str, float] = {
     "52": 0.45,
@@ -107,8 +152,14 @@ class SimConfig:
     )
     reported_sigma: float = 0.3  # the uncertainty the stated profile claims
     truth: str = "distance"
+    # true-needs model family (W-13)
+    needs_model: str = "archetype"
+    continuous_mu: float = -0.4  # sigmoid(-0.4 + z): mean need ≈ 0.41
+    continuous_scale: float = 1.0
 
     def __post_init__(self) -> None:
+        if self.needs_model not in NEEDS_MODELS:
+            raise ValueError(f"needs_model must be one of {NEEDS_MODELS}")
         if not 0 <= self.prestige_weight <= 1:
             raise ValueError("prestige_weight must lie in [0, 1]")
         if not 0 <= self.background_match_prob <= 1:
@@ -162,17 +213,25 @@ def generate_population(
     bg_probs = np.array([TW_BACKGROUND_DIST[f] for f in bg_families])
     bg_probs = bg_probs / bg_probs.sum()
     desirability = np.array([cfg.desirability.get(k, 0.0) for k in NEED_KEYS])
+    chol = np.linalg.cholesky(_continuous_cov()) if cfg.needs_model == "continuous" else None
 
     students: list[SyntheticStudent] = []
     for s in range(cfg.n_students):
         # 1. true needs
-        arche = arche_names[rng.integers(len(arche_names))]
-        proto = np.array([ARCHETYPES[arche].get(k, 0.0) for k in NEED_KEYS])
-        w = np.clip(proto + rng.normal(0.0, cfg.individual_sd, size=proto.shape), 0.0, 1.0)
+        if chol is None:
+            arche = arche_names[rng.integers(len(arche_names))]
+            proto = np.array([ARCHETYPES[arche].get(k, 0.0) for k in NEED_KEYS])
+            w = np.clip(proto + rng.normal(0.0, cfg.individual_sd, size=proto.shape), 0.0, 1.0)
+            natural = NATURAL_FAMILY[arche]
+        else:
+            arche = "continuous"
+            z = chol @ rng.standard_normal(len(NEED_KEYS))
+            w = 1.0 / (1.0 + np.exp(-(cfg.continuous_mu + cfg.continuous_scale * z)))
+            natural = natural_family_from_needs(w)
 
         # 2. background
         if rng.random() < cfg.background_match_prob:
-            background = NATURAL_FAMILY[arche]
+            background = natural
         else:
             background = bg_families[rng.choice(len(bg_families), p=bg_probs)]
 

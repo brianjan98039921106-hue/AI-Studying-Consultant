@@ -153,3 +153,68 @@ def test_response_bias_shifts_stated_needs(sim_catalog):
 def test_config_validation(bad):
     with pytest.raises(ValueError):
         SimConfig(**bad)
+
+
+# --- W-13 continuous needs model (C5.5) ------------------------------------------------
+
+
+def test_hexagon_correlation_structure():
+    from aisc.simulation.population import riasec_hexagon_corr
+
+    c = riasec_hexagon_corr()
+    assert c[0, 1] == c[0, 5] == pytest.approx(0.3)  # R-I, R-C adjacent
+    assert c[0, 2] == pytest.approx(0.0)  # R-A alternate
+    assert c[0, 3] == pytest.approx(-0.2)  # R-S opposite
+    with pytest.raises(ValueError):
+        riasec_hexagon_corr(adjacent=0.9, opposite=0.9)  # not positive definite
+
+
+def test_continuous_model_reproduces_hexagon_ordering(sim_catalog):
+    """Adjacent RIASEC types must correlate more than opposite ones (A-C5-6)."""
+    from aisc.dimensions import RIASEC_KEYS
+
+    pop = _pop(sim_catalog, n_students=1500, needs_model="continuous")
+    w = np.array([s.true_needs for s in pop])
+    idx = [NEED_KEYS.index(k) for k in RIASEC_KEYS]
+    corr = np.corrcoef(w[:, idx].T)
+    adjacent = np.mean([corr[i, (i + 1) % 6] for i in range(6)])
+    opposite = np.mean([corr[i, (i + 3) % 6] for i in range(6)])
+    assert adjacent > 0.15 and opposite < -0.05
+
+
+def test_continuous_model_has_no_archetypes_and_valid_range(sim_catalog):
+    pop = _pop(sim_catalog, n_students=300, needs_model="continuous")
+    assert {s.archetype for s in pop} == {"continuous"}
+    w = np.array([s.true_needs for s in pop])
+    assert np.all((w > 0) & (w < 1))
+    assert 0.3 < w.mean() < 0.5
+
+
+def test_continuous_model_is_not_clustered(sim_catalog):
+    """Archetype needs collapse onto ~7 centres; continuous needs must not."""
+    arche = np.array([s.true_needs for s in _pop(sim_catalog, n_students=400)])
+    cont = np.array(
+        [s.true_needs for s in _pop(sim_catalog, n_students=400, needs_model="continuous")]
+    )
+
+    def nearest_neighbour_spread(w):
+        d = np.linalg.norm(w[:, None, :] - w[None, :, :], axis=-1)
+        np.fill_diagonal(d, np.inf)
+        return d.min(axis=1).mean() / d[np.isfinite(d)].mean()
+
+    assert nearest_neighbour_spread(cont) > nearest_neighbour_spread(arche)
+
+
+def test_natural_family_follows_strongest_need():
+    from aisc.simulation.population import natural_family_from_needs
+
+    w = np.full(len(NEED_KEYS), 0.1)
+    w[NEED_KEYS.index("domain_design")] = 0.9
+    assert natural_family_from_needs(w) == "50"
+    w[NEED_KEYS.index("quant_intensity")] = 0.95
+    assert natural_family_from_needs(w) == "27"
+
+
+def test_unknown_needs_model_rejected():
+    with pytest.raises(ValueError):
+        SimConfig(needs_model="nope")

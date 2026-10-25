@@ -25,7 +25,12 @@ from aisc.simulation.evaluate import (
     popular_baseline,
     similar_baseline,
 )
-from aisc.simulation.population import ARCHETYPES, SimConfig, generate_population
+from aisc.simulation.population import (
+    ARCHETYPES,
+    NEEDS_MODELS,
+    SimConfig,
+    generate_population,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 TRUTHS = ("distance", "cosine")
@@ -82,6 +87,7 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--students", type=int, default=400)
     parser.add_argument("--tag", default="v1", help="result version label")
+    parser.add_argument("--needs-model", default="archetype", choices=NEEDS_MODELS)
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args()
     if args.out is None:
@@ -92,8 +98,10 @@ def main() -> None:
         f"# L3 合成驗證 {args.tag}：C1.2 v0 與 C2 v0",
         "",
         f"- 產生日期：{date.today().isoformat()} · "
-        f"指令：`python scripts/run_l3_baseline.py --tag {args.tag}`",
-        f"- 需求維度：{N_NEEDS} 維（`aisc.dimensions`）；學生原型：{len(ARCHETYPES)} 類",
+        f"指令：`python scripts/run_l3_baseline.py --tag {args.tag} "
+        f"--needs-model {args.needs_model}`",
+        f"- 需求維度：{N_NEEDS} 維（`aisc.dimensions`）；需求生成模型：`{args.needs_model}`"
+        + (f"（{len(ARCHETYPES)} 類原型）" if args.needs_model == "archetype" else "（無原型）"),
         f"- 目錄：{len(catalog)} 個合成學程（12 個原型 × 10，族內 sd=0.12）",
         f"- 學生：每組設定 {args.students} 位 · 推薦長度 k={K} · 「相關」= 真實效用前 10%",
         "- 數值為平均 ± 標準誤。**這是合成資料，參數未校準（B-C5-2），只用來淘汰錯誤設計。**",
@@ -103,7 +111,12 @@ def main() -> None:
     for truth in TRUTHS:
         lines += [f"## 真相函數：{truth}", ""]
         for pw in PRESTIGE_WEIGHTS:
-            cfg = SimConfig(n_students=args.students, prestige_weight=pw, truth=truth)
+            cfg = SimConfig(
+                n_students=args.students,
+                prestige_weight=pw,
+                truth=truth,
+                needs_model=args.needs_model,
+            )
             pop = generate_population(catalog, cfg, np.random.default_rng(1))
 
             lines += [f"### 名氣權重 π = {pw}", "", "**C1 側寫還原（V-C1-1、V-C1-2）**", ""]
@@ -136,7 +149,11 @@ def main() -> None:
         for pw in (0.0, 0.5):
             for noise in NOISE_LEVELS:
                 cfg = SimConfig(
-                    n_students=args.students, prestige_weight=pw, truth=truth, noise_sd=noise
+                    n_students=args.students,
+                    prestige_weight=pw,
+                    truth=truth,
+                    noise_sd=noise,
+                    needs_model=args.needs_model,
                 )
                 pop = generate_population(catalog, cfg, np.random.default_rng(1))
                 r = evaluate_profiles(pop, catalog, truth)
