@@ -70,6 +70,7 @@ flowchart LR
 | 部件 | 定義 | 程式 |
 |---|---|---|
 | C1.2 | $\hat w = \dfrac{w^{s}/\sigma_s^2 + \bar x_K/\sigma_a^2}{1/\sigma_s^2 + 1/\sigma_a^2}$，$\sigma_a = \sigma_0/\sqrt{\lvert K\rvert}$ | `profiling/anchors.py` |
+| C1.2 v1 | 錨點先驗 $\bar x_K$、$\sigma_K = \frac{\sigma_0}{\sqrt{\lvert K\rvert}}(1+\beta\max(0,z_{\text{prestige}}))$；未作答維度：中性先驗 $(0.5, 0.3)$ 與錨點先驗精度加權；已作答維度：陳述值，錨點標準差 × `answered_scale`（預設 ∞） | `profiling/anchors.py` |
 | C2.1 | $\text{rel}(p) = \cos(\hat w, x_p)$ | `discovery/scoring.py` |
 | C2.2 | $\text{nov}(p) = 1 - \max_{q \in K \cup F} \text{sim}_\ell(p,q)$；$\text{sim}_\ell$ = 1（同 4 碼）/ 0.5（同 2 碼）/ 0；$p \in F \Rightarrow 0$ | `discovery/scoring.py` |
 | C2.3 | $\text{score} = (1-\alpha)\,\text{rel} + \alpha\,\text{nov}$；MMR：$\arg\max (1-\lambda)\text{score} - \lambda \max_{q \in S}\cos(x_p,x_q)$ | `discovery/rerank.py` |

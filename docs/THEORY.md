@@ -27,6 +27,7 @@
 | 作答偏誤 | Podsakoff et al. (2003), *J. Applied Psychology*：共同方法偏誤、社會期許 | A-C1-2 作答誠實且不受題目措辭影響 |
 | 偏好建構 | Payne, Bettman & Johnson (1992), *Annual Review of Psychology*；Lichtenstein & Slovic (2006), *The Construction of Preference* | A-C1-4（被此理論**否定**）：偏好在提問前就存在 |
 | 錨點拆解 | 兩個獨立高斯測量的貝氏合併（precision weighting） | A-C1-3 陳述與錨點是獨立、無偏的測量 |
+| 錨點拆解 v1（W-23） | 角色改變：錨點只作為**尚未作答維度**的先驗（缺值補全），已作答維度以陳述為主、錨點僅以大幅放大的標準差參與；錨點平均名氣高於目錄平均時再放大標準差（名氣偏誤校正）。依據：L3 F4a、F5、F9（錨點合併在已作答維度上一致傷害排序） | A-C1-10 名氣可由外部資料衡量；A-C1-11 未作答維度的預設值（中性 0.5）不偏向任何學程 |
 | 自適應提問 | 電腦化適性測驗 CAT：van der Linden & Glas (2000)；適應式效用擷取：Chajewska, Koller & Parr (2000), AAAI | A-C1-5 作答模型設定正確 |
 | 冷啟動提問 | Christakopoulou, Radlinski & Hofmann (2016), KDD；Zuo et al. (2022) 階層式提問 | 同上 |
 | 定錨效應 | Tversky & Kahneman (1974), *Science* | 說明為何錨點會扭曲判斷（B-C1-2） |
