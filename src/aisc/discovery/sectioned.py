@@ -41,6 +41,7 @@ def shortlist(
     """
     if n < 0:
         raise ValueError("n must be non-negative")
+    profile.require_complete("C2 shortlist")
     return [p.program_id for _, p in _ranked(profile, catalog, min_relevance)[:n]]
 
 
@@ -55,6 +56,7 @@ def discover(
     """Split fit-ranked programs by the student's reported familiarity."""
     if k_new < 0 or k_known < 0:
         raise ValueError("k_new and k_known must be non-negative")
+    profile.require_complete("C2 discover")
     familiar = set(profile.familiar)
     target = profile.vector
     new: list[Recommendation] = []

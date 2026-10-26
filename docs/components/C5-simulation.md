@@ -25,7 +25,7 @@
 |---|---|---|
 | C5.1 | ✅ v1（原型混合） | `simulation/population.py`、`catalog_gen.py`、`truth.py` |
 | C5.2 | ✅ | `simulation/metrics.py` |
-| C5.3 | 🟡 執行器 + 基準完成，消融介面待擴充 | `simulation/evaluate.py`、`scripts/run_l3_baseline.py` |
+| C5.3 | 🟡 執行器 + 基準 + 端到端實驗完成，消融介面待擴充 | `simulation/evaluate.py`、`scripts/run_l3_*.py` |
 | C5.4 | ⬜ | — |
 | C5.5 | ✅ v1（logistic-normal，RIASEC 六角形相關） | `SimConfig(needs_model="continuous")` |
 

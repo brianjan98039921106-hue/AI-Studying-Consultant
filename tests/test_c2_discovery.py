@@ -13,7 +13,7 @@ from aisc.discovery import (
     recommend,
     relevance,
 )
-from aisc.profiling import blend_profile
+from aisc.profiling import blend_profile, complete_neutral
 
 # --- C2.1 / C2.2 / C2.4 units -------------------------------------------------
 
@@ -77,22 +77,30 @@ def test_pure_fit_returns_exact_match(by_id, catalog):
 
 
 def test_hard_constraints_filter(catalog):
-    student = StudentProfile(
-        student_id="t3", needs={"quant_intensity": 0.8}, hard_constraints={"spring_intake": True}
+    student = complete_neutral(
+        StudentProfile(
+            student_id="t3",
+            needs={"quant_intensity": 0.8},
+            hard_constraints={"spring_intake": True},
+        )
     )
     recs = recommend(student, catalog, k=12)
     assert recs and all(r.program.spring_intake is not False for r in recs)
 
 
 def test_min_relevance_floor(catalog):
-    student = StudentProfile(student_id="t4", needs={"domain_design": 1.0})
+    student = complete_neutral(StudentProfile(student_id="t4", needs={"domain_design": 1.0}))
     recs = recommend(student, catalog, k=12, min_relevance=0.5)
     assert all(r.relevance >= 0.5 for r in recs)
 
 
 def test_invalid_weights_rejected(catalog):
     with pytest.raises(ValueError):
-        recommend(StudentProfile("x", {"quant_intensity": 1.0}), catalog, novelty_weight=1.5)
+        recommend(
+            complete_neutral(StudentProfile("x", {"quant_intensity": 1.0})),
+            catalog,
+            novelty_weight=1.5,
+        )
 
 
 # --- L4 blind-spot probes ---------------------------------------------------------

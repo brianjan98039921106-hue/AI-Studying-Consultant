@@ -15,6 +15,7 @@ A recommender that profiles Taiwanese grad-school applicants by *needs* (not pro
 - Fixing a blind spot = remove the `xfail`, update the register status and `docs/VALIDATION.md` §5 in the same commit.
 - Keep reference implementations (e.g. C4.1 exact solvers, C2 v0 scorers) when adding v1; ablations compare against them.
 - Never report a novelty gain without the matching relevance number.
+- Status lives in one file per kind (see CONTRIBUTING.md "Single sources of truth"); new findings get a row in `results/FINDINGS.md`. Verify every number written into a findings file against the raw results before committing.
 - Simulation (L3) conclusions must hold under both truth functions and both generator families (`needs_model`).
 - Tuning parameters in simulation: write the selection rule into the script first (pre-registration), select on one generator, validate on the other, then confirm on fresh seeds. A candidate chosen after seeing held-out results must be re-confirmed on new seeds before use.
 

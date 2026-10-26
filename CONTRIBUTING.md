@@ -23,6 +23,18 @@ Each change targets one component (C0–C5) and one work item (W-xx in `docs/ROA
 
 Test files are named per component: `tests/test_c<N>_<name>.py`.
 
+## Single sources of truth
+Each kind of status lives in exactly one file; other files link to it instead of copying it.
+
+| Status | File |
+|---|---|
+| Blind spots, assumptions, system risks | `docs/REGISTER.md` |
+| Findings (F-numbers) | `results/FINDINGS.md` |
+| Work items | `docs/ROADMAP.md` |
+| Component gates | `docs/VALIDATION.md` §5 |
+
+`tests/test_docs_consistency.py` fails CI if a document cites an undefined ID, a link is broken, or a still-failing probe is marked fixed in the register.
+
 ## Commits — Conventional Commits
 `feat:` new capability · `fix:` bug · `test:` tests only · `docs:` docs only · `data:` dataset changes · `refactor:` · `chore:`
 

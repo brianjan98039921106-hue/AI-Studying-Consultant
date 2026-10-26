@@ -12,6 +12,8 @@
 
 這個專案把它當成**冷啟動推薦 + 探索**問題，拆成六個可以獨立開發、獨立驗證的部件：
 
+摘要如下；**正式狀態以 [docs/VALIDATION.md §5](docs/VALIDATION.md) 為準**。
+
 | 部件 | 功能 | 狀態 |
 |---|---|---|
 | C0 Program 知識庫 | CIP 分類骨架 + 兩種獨立來源測量學程屬性 | loader ✅ · 資料管線 ⬜ |
@@ -32,23 +34,25 @@
 | 驗證階梯、關卡、指標門檻 | [docs/VALIDATION.md](docs/VALIDATION.md) |
 | 工項與順序 | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | 需求維度與評分準則 | [docs/rubric.md](docs/rubric.md) |
-| 最新 L3 合成驗證結論 | [C2 分區呈現](results/synthetic-l3-v2-findings.md)、[C1 錨點拆解 v1](results/synthetic-l3-c1-v1-findings.md)、[C1 自適應問卷](results/synthetic-l3-adaptive-findings.md) |
+| **所有發現的狀態總表** | [results/FINDINGS.md](results/FINDINGS.md) |
+| 最新 L3 合成驗證結論 | [端到端](results/synthetic-l3-e2e-findings.md)、[C2 分區呈現](results/synthetic-l3-v2-findings.md)、[C1 錨點拆解 v1](results/synthetic-l3-c1-v1-findings.md)、[C1 自適應問卷](results/synthetic-l3-adaptive-findings.md) |
 
 ## Quickstart
 
 ```bash
 pip install -e ".[dev]"
-pytest -rx                   # 227 passed + 4 xfailed（xfail = 已知盲區探針）
+pytest -rx                   # xfail = 已知盲區探針（預期中的失敗）
 python examples/quickstart.py
 python scripts/run_l3_baseline.py --tag v2 --needs-model archetype    # L3，約 6 分鐘
 python scripts/run_l3_baseline.py --tag v2-continuous --needs-model continuous
 python scripts/compare_l3.py results/synthetic-l3-v2.md results/synthetic-l3-v2-continuous.md
+python scripts/run_l3_e2e.py           # 端到端：問卷 → 補全 → 熟悉度 → 分區，約 6 分鐘
 ```
 
 ## 驗證方式一覽
 
 每個部件的每個版本都要通過六層驗證：**L1 理論符合 → L2 程式驗證 → L3 合成還原 → L4 盲區探針 → L5 實證 → L6 外部審查**。
-盲區探針以 `@pytest.mark.probe` + `xfail(strict=True)` 寫成測試：盲區修好時測試會轉為通過，CI 會要求同步移除標記並更新登錄表。
+盲區探針以 `@pytest.mark.probe` + `xfail(strict=True, raises=AssertionError)` 寫成測試：只有行為斷言失敗才算「預期中的失敗」，程式錯誤不會被掩蓋；盲區修好時測試轉為通過，CI 會要求同步移除標記並更新登錄表。`tests/test_docs_consistency.py` 另外檢查文件之間是否互相矛盾。
 
 ## License
 
