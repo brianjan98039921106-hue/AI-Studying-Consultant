@@ -18,7 +18,7 @@
 |---|---|---|
 | C0 Program 知識庫 | CIP 分類骨架 + 兩種獨立來源測量學程屬性 | loader ✅ · 資料管線 ⬜ |
 | C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 | 15 維需求空間 ✅ · 大考中心分數先驗 ✅ · 熟悉度擷取 ✅ · 錨點拆解 v1 ✅ · 自適應問卷 v1（節省 13–28% 題目，未達 30% 門檻） |
-| C2 探索推薦 | 依契合排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區 | **v1 ✅ L3 通過**；v0 保留為參考 |
+| C2 探索推薦 | 依契合排序（cosine 與強度差距的混合計分），再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區 | **v1 ✅ L3 通過**；v0 保留為參考 |
 | C3 錄取可行性 | 階層貝氏模型 + 選擇偏誤校正 + 校準 | ⬜ |
 | C4 申請組合 | Kapur & Hong 精確解 + 相關性評估 + 穩健選擇 | 精確解 ✅（已驗證） |
 | C5 模擬與評估 | 已知真相的合成學生，驗證所有部件 | 產生器、指標、執行器 ✅ · 首次 L3 報告 ✅ |
@@ -35,7 +35,7 @@
 | 工項與順序 | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | 需求維度與評分準則 | [docs/rubric.md](docs/rubric.md) |
 | **所有發現的狀態總表** | [results/FINDINGS.md](results/FINDINGS.md) |
-| 最新 L3 合成驗證結論 | [端到端](results/synthetic-l3-e2e-findings.md)、[C2 分區呈現](results/synthetic-l3-v2-findings.md)、[C1 錨點拆解 v1](results/synthetic-l3-c1-v1-findings.md)、[C1 自適應問卷](results/synthetic-l3-adaptive-findings.md) |
+| 最新 L3 合成驗證結論 | [C2 計分器](results/synthetic-l3-c2-scorer-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C2 分區呈現](results/synthetic-l3-v2-findings.md)、[C1 錨點拆解 v1](results/synthetic-l3-c1-v1-findings.md)、[C1 自適應問卷](results/synthetic-l3-adaptive-findings.md) |
 
 ## Quickstart
 

@@ -4,6 +4,10 @@ Replaces v0's additive novelty score, which L3 rejected (F1: it lowered both
 relevance and novel-relevant rate under every simulator setting). v0
 (`rerank.recommend`) is kept as the reference implementation.
 
+Relevance comes from a C2.1 `Scorer` (default `scorers.DEFAULT_SCORER`); each
+Recommendation's `contributions` is that scorer's exact additive explanation, so
+the values sum to `relevance` (B-C2-6).
+
 Pipeline position:
     shortlist()  -> candidates for the C1.4 familiarity check
     discover()   -> after the check, split candidates into
@@ -12,27 +16,43 @@ Pipeline position:
 
 from __future__ import annotations
 
+import numpy as np
+
 from aisc.contracts import DiscoveryResult, Program, Recommendation, StudentProfile
+from aisc.discovery import scorers as _scorers
 from aisc.discovery.constraints import passes_constraints
-from aisc.discovery.scoring import contributions, relevance
 
 
-def _ranked(profile: StudentProfile, catalog: list[Program], min_relevance: float):
+def _resolve(scorer: _scorers.Scorer | None) -> _scorers.Scorer:
+    return scorer if scorer is not None else _scorers.DEFAULT_SCORER
+
+
+def _ranked(
+    profile: StudentProfile,
+    catalog: list[Program],
+    min_relevance: float,
+    scorer: _scorers.Scorer,
+):
     anchors = set(profile.anchors)
-    target = profile.vector
-    scored = []
-    for p in catalog:
-        if p.program_id in anchors or not passes_constraints(p, profile.hard_constraints):
-            continue
-        rel = relevance(target, p.vector)
-        if rel >= min_relevance:
-            scored.append((rel, p))
+    pool = [
+        p
+        for p in catalog
+        if p.program_id not in anchors and passes_constraints(p, profile.hard_constraints)
+    ]
+    if not pool:
+        return []
+    scores = scorer.score_matrix(profile.vector, np.array([p.vector for p in pool]))
+    scored = [(float(s), p) for s, p in zip(scores, pool, strict=True) if s >= min_relevance]
     scored.sort(key=lambda t: (-t[0], t[1].program_id))
     return scored
 
 
 def shortlist(
-    profile: StudentProfile, catalog: list[Program], n: int = 25, min_relevance: float = 0.0
+    profile: StudentProfile,
+    catalog: list[Program],
+    n: int = 25,
+    min_relevance: float = 0.0,
+    scorer: _scorers.Scorer | None = None,
 ) -> list[str]:
     """Top-n programs by fit (anchors excluded): the ones to ask about in C1.4.
 
@@ -42,7 +62,8 @@ def shortlist(
     if n < 0:
         raise ValueError("n must be non-negative")
     profile.require_complete("C2 shortlist")
-    return [p.program_id for _, p in _ranked(profile, catalog, min_relevance)[:n]]
+    ranked = _ranked(profile, catalog, min_relevance, _resolve(scorer))
+    return [p.program_id for _, p in ranked[:n]]
 
 
 def discover(
@@ -52,16 +73,18 @@ def discover(
     k_known: int = 5,
     min_relevance: float = 0.0,
     asked: list[str] | None = None,
+    scorer: _scorers.Scorer | None = None,
 ) -> DiscoveryResult:
     """Split fit-ranked programs by the student's reported familiarity."""
     if k_new < 0 or k_known < 0:
         raise ValueError("k_new and k_known must be non-negative")
     profile.require_complete("C2 discover")
+    scorer = _resolve(scorer)
     familiar = set(profile.familiar)
     target = profile.vector
     new: list[Recommendation] = []
     known: list[Recommendation] = []
-    for rel, p in _ranked(profile, catalog, min_relevance):
+    for rel, p in _ranked(profile, catalog, min_relevance, scorer):
         is_known = p.program_id in familiar
         bucket = known if is_known else new
         limit = k_known if is_known else k_new
@@ -72,7 +95,7 @@ def discover(
                     relevance=rel,
                     novelty=0.0 if is_known else 1.0,
                     score=rel,
-                    contributions=contributions(target, p.vector),
+                    contributions=scorer.explain(target, p.vector),
                 )
             )
         if len(new) >= k_new and len(known) >= k_known:
