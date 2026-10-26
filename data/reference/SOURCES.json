@@ -1,0 +1,38 @@
+{
+  "built": "2026-10-26",
+  "scope_version": "mvp-v1",
+  "ipeds_year": "2025",
+  "onet_release": "unknown (ratings dated up to 02/2026)",
+  "inputs": {
+    "cip2020": {
+      "file_name": "CIPCode2020.csv",
+      "source_url": "https://nces.ed.gov/ipeds/cipcode/resources.aspx?y=56",
+      "retrieved_at": "2026-10-26",
+      "sha256": "6cf0882c1f5beb94981d0a1a72285ab5cf633759f45433fb909afbfb6d6b2657"
+    },
+    "cip_soc_crosswalk": {
+      "file_name": "CIP2020_SOC2018_Crosswalk.xlsx",
+      "source_url": "https://nces.ed.gov/IPEDS/CIPCODE/Files/CIP2020_SOC2018_Crosswalk.xlsx",
+      "retrieved_at": "2026-10-26",
+      "sha256": "ba3d59a191b9d977a5c457a66b9348c4f2f7963aafacf72c0b80113b46bf0ab8"
+    },
+    "onet_interests": {
+      "file_name": "career_interest_types.csv",
+      "source_url": "https://www.onetcenter.org/database.html",
+      "retrieved_at": "2026-10-26",
+      "sha256": "19f452d51b81a4d59389b500f85baf252563858f596124fe446dd436a9f41206"
+    },
+    "ipeds_completions": {
+      "file_name": "c2025_a.csv",
+      "source_url": "https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx",
+      "retrieved_at": "2026-10-26",
+      "sha256": "239e38041e2bbf49323e61e8c72a2b11920f1ab24cea5b2090a97238b3777de5"
+    },
+    "ipeds_directory": {
+      "file_name": "hd2025.csv",
+      "source_url": "https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx",
+      "retrieved_at": "2026-10-26",
+      "sha256": "3f48135a1de007d68f110635a18fe23e93c2ad85f760c08755827657fccb076f"
+    }
+  }
+}

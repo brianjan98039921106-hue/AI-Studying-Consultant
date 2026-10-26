@@ -5,7 +5,7 @@
 >
 > **狀態**：✅ 成立 · ⚠️ 降級（部分成立） · ❌ 否決 · 🔀 拆分 · 💭 推論（未直接驗證）
 > **判定規則**（自 W-13 起）：須在 2 種真相函數 × 2 種生成模型下方向一致。早於 W-13 的發現已在跨生成模型重驗中重新判定。
-> **全部是合成資料結果**，參數未校準（B-C5-2），只用來淘汰設計，不證明設計在真實學生上有效。
+> **除「C0 參考資料」一節外，全部是合成資料結果**，參數未校準（B-C5-2），只用來淘汰設計，不證明設計在真實學生上有效。
 
 ## 結論檔
 
@@ -19,7 +19,19 @@
 | ad | [synthetic-l3-adaptive-findings.md](synthetic-l3-adaptive-findings.md) | W-25 |
 | e2e | [synthetic-l3-e2e-findings.md](synthetic-l3-e2e-findings.md) | 檢查整合 |
 | sc | [synthetic-l3-c2-scorer-findings.md](synthetic-l3-c2-scorer-findings.md) | W-26 |
+| ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
 | nz | [synthetic-l3-noise-findings.md](synthetic-l3-noise-findings.md) | C1.3 v2 |
+
+## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
+
+| ID | 結論 | 狀態 | 證據 | 對目前設計 |
+|---|---|---|---|---|
+| F48 | MVP 範圍：77 個有碩士的 CIP、1,270 所學校、4,471 筆「學校 × CIP」、270,050 個碩士學位 | ✅ | ref（獨立重算一致） | C0.1 v1 完成 |
+| F49 | 學位集中在通用代碼：52.0201 占 36.9%，前三族群占 79.2%；數據代碼只有 254 所學校 | ✅ | ref | 熱門度不可當排序依據 |
+| F50 | 4 個「其他」代碼沒有職業對照，占 8.3% 的學位 | ✅ | ref | B-C0-9 |
+| F51 | 58／73 個 CIP 對照到大學教師職業，把職業剖面推向 Social（平均 −0.10，最大 0.32） | ✅ | ref | B-C0-8 |
+| F52 | Conventional 維度在範圍內幾乎無區辨度（跨 CIP 標準差 0.082） | ✅ | ref | C0.4 融合時 C 以課程向量為主 |
+| F53 | 資訊科學族群（11.01、11.04）比預期寬，多為電腦科學／IT 學位 | 💭 | ref | 範圍待使用者決定 |
 
 ## C2 探索推薦
 

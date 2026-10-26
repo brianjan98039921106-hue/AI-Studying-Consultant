@@ -11,6 +11,8 @@
 | 碩士學程清單 | IPEDS Completions（award level 7 = master's） | A-C0-4 有畢業生紀錄才算存在 |
 | 職業橋接 | NCES／BLS CIP 2020 ↔ SOC 2018 對照表 | A-C0-2 對照表反映畢業生會進入的職業 |
 | 職業興趣剖面 | O*NET Occupational Interest Profiles（RIASEC） | A-C0-3 職業的興趣剖面可轉嫁到對應學程 |
+| MVP 範圍篩選（W-14） | CIP 2020 代碼前綴清單（`data/reference/mvp_scope.json`），award level 7、第一主修（MAJORNUM=1）、最近一年畢業人數 > 0 | A-C0-4、A-C0-7 |
+| 職業剖面量尺與合成（W-15 v1） | O*NET 職業興趣量尺 OI 為 1–7（Rounds et al., 1999, *Development of Occupational Interest Profiles for O\*NET*），線性轉為 $(v-1)/6 \in [0,1]$；同一 SOC 下多個 O\*NET-SOC 細項取平均，一個 CIP 對應多個 SOC 時等權平均（v1；v2 以就業人數加權） | A-C0-2、A-C0-3、A-C0-6 |
 | LLM 屬性擷取 | 擷取式 NLP；幻覺風險見 Ji et al. (2023), *ACM Computing Surveys* | A-C0-5 擷取結果可由原文佐證 |
 | 一致性檢驗 | 心理計量的收斂效度（convergent validity）；評分者一致性 Cohen's κ | — |
 
