@@ -22,6 +22,7 @@ from datetime import date
 from pathlib import Path
 
 from aisc.catalog.occupation import (
+    RIASEC,
     RIASEC_KEYS,
     load_cip_soc_crosswalk,
     load_onet_interests,
@@ -96,6 +97,10 @@ def main() -> None:
     _write_csv(args.out / "cip_soc_mvp.csv", [
         {"cip": c, "soc": s, "soc_has_onet": s in socs}
         for c in sorted(fam) for s in sorted(xw.get(c, set()))
+    ])  # fmt: skip
+    used = sorted({s for c in fam for s in xw.get(c, set()) if s in socs})
+    _write_csv(args.out / "soc_profiles_mvp.csv", [
+        {"soc": s, **{n.lower(): f"{socs[s][n]:.4f}" for n in RIASEC}} for s in used
     ])  # fmt: skip
     _write_csv(args.out / "occupation_profiles_mvp.csv", [
         {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in RIASEC_KEYS},

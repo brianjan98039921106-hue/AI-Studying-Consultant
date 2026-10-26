@@ -357,3 +357,56 @@ def test_build_reference_script_end_to_end(tmp_path, cip_file):
     assert by_cip["30.7102"]["n_soc"] == "0"
     text = report.read_text(encoding="utf-8")
     assert "30.7102" in text and "52.0205" in text  # CIPs without a profile are listed
+
+
+# --- probes on the committed real reference tables -----------------------------------
+
+
+def _ref(name):
+    with open(ROOT / "data" / "reference" / name, encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C0-8: postsecondary-teacher SOCs in the crosswalk pull x_occ toward Social",
+)
+def test_probe_teacher_occupations_do_not_dominate_occupation_profiles():
+    """Most master's graduates do not become professors, yet the crosswalk maps most
+    academic CIPs to '... Teachers, Postsecondary' (25-1xxx). Dropping those SOCs
+    should not move any profile's Social score by more than 0.10."""
+    soc = {r["soc"]: float(r["social"]) for r in _ref("soc_profiles_mvp.csv")}
+    offered = {r["cip"] for r in _ref("ipeds_masters_mvp.csv")}
+    pairs: dict[str, list[str]] = {}
+    for r in _ref("cip_soc_mvp.csv"):
+        if r["cip"] in offered and r["soc"] in soc:
+            pairs.setdefault(r["cip"], []).append(r["soc"])
+    shifts = []
+    for socs in pairs.values():
+        rest = [s for s in socs if not s.startswith("25-1")]
+        if rest and len(rest) < len(socs):
+            all_s = sum(soc[s] for s in socs) / len(socs)
+            shifts.append(abs(all_s - sum(soc[s] for s in rest) / len(rest)) / 6)
+    assert shifts, "expected CIPs mixing teacher and non-teacher SOCs"
+    assert max(shifts) <= 0.10
+
+
+def test_committed_reference_tables_are_consistent():
+    """L2 on the committed tables: provenance present, joins closed, ranges valid."""
+    src = json.loads((ROOT / "data" / "reference" / "SOURCES.json").read_text())
+    assert len(src["inputs"]) == 5
+    for v in src["inputs"].values():
+        assert v["source_url"].startswith("https://") and len(v["sha256"]) == 64
+    cips = {r["cip"]: r for r in _ref("cip2020_mvp.csv")}
+    rows = _ref("ipeds_masters_mvp.csv")
+    assert {r["cip"] for r in rows} <= set(cips)
+    assert all(int(r["masters_awards"]) > 0 for r in rows)
+    assert len({(r["unitid"], r["cip"]) for r in rows}) == len(rows)
+    for r in _ref("occupation_profiles_mvp.csv"):
+        assert r["cip"] in cips
+        vals = [
+            r[k] for k in ("riasec_r", "riasec_i", "riasec_a", "riasec_s", "riasec_e", "riasec_c")
+        ]
+        assert all(v == "" for v in vals) or all(0 <= float(v) <= 1 for v in vals)
