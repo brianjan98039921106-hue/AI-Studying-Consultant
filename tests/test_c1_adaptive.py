@@ -125,27 +125,38 @@ def test_pipeline_questionnaire_respects_budget(catalog):
 # --- calibration ------------------------------------------------------------------------
 
 
-def _coverage(true_noise: float, n_students: int = 150) -> float:
+def _coverage(
+    true_noise: float,
+    n_students: int = 150,
+    *,
+    assumed: float = 0.25,
+    needs_model: str = "continuous",
+    noise_model: str = "fixed",
+    edge_only: bool = False,
+) -> float:
     """Share of dimensions whose 90% posterior interval contains the true need,
-    after all 45 items, when the estimator assumes item noise 0.25."""
+    after all 45 items. `edge_only` restricts to true needs < 0.15 or > 0.85."""
     from aisc.simulation.catalog_gen import synthetic_catalog
     from aisc.simulation.population import SimConfig, generate_population
     from aisc.simulation.respondent import make_item_responder
 
     cat = synthetic_catalog(np.random.default_rng(0), n_per_family=2)
     pop = generate_population(
-        cat, SimConfig(n_students=n_students, needs_model="continuous"), np.random.default_rng(4)
+        cat, SimConfig(n_students=n_students, needs_model=needs_model), np.random.default_rng(4)
     )
     hits = total = 0
     for i, st in enumerate(pop):
         answer = make_item_responder(st, np.random.default_rng([2, i]), noise_sd=true_noise)
-        s = AdaptiveSession(PRIOR, cat, strategy="variance", item_noise_sd=0.25)
+        s = AdaptiveSession(
+            PRIOR, cat, strategy="variance", item_noise_sd=assumed, noise_model=noise_model
+        )
         while not s.done():
             item = s.next_item()
             s.record(item, answer(item))
-        lo, hi = s.mean - 1.645 * np.sqrt(s.var), s.mean + 1.645 * np.sqrt(s.var)
-        hits += int(np.sum((lo <= st.true_needs) & (st.true_needs <= hi)))
-        total += len(NEED_KEYS)
+        lo, hi = s.interval(0.90)
+        keep = (st.true_needs < 0.15) | (st.true_needs > 0.85) if edge_only else slice(None)
+        hits += int(np.sum(((lo <= st.true_needs) & (st.true_needs <= hi))[keep]))
+        total += int(np.size(st.true_needs[keep]))
     return hits / total
 
 
@@ -162,3 +173,16 @@ def test_posterior_is_calibrated_when_noise_is_correctly_specified():
 def test_probe_posterior_calibrated_under_misspecified_noise():
     """True item noise 0.40, assumed 0.25: 90% intervals should still cover >= 85%."""
     assert _coverage(true_noise=0.40) >= 0.85
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C1-16: Gaussian likelihood ignores censoring at the scale ends",
+)
+def test_probe_edge_dimensions_calibrated_under_censoring():
+    """Noise correctly assumed (0.40); dimensions with true need near 0 or 1 should
+    still have >= 85% coverage of their 90% intervals (archetype students)."""
+    cov = _coverage(0.40, assumed=0.40, needs_model="archetype", edge_only=True)
+    assert cov >= 0.85

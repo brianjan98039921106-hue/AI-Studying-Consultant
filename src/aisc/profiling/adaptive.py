@@ -18,12 +18,31 @@ Item-selection strategies (A-C1-14 for the last two):
 
 The scorer is injected (`score_fn(w, X) -> scores`) so that C1 never imports
 C2; the pipeline passes C2's relevance.
+
+Item noise (C1.3 v2):
+- "fixed"      v1 reference: item noise sd is assumed (default 0.25). Overconfident
+               when the real noise is larger (B-C1-5).
+- "estimated"  repeated items on the same dimension differ only by noise, so the
+               pooled within-dimension sum of squares estimates the noise variance,
+               shrunk toward the assumed value by an inverse-gamma prior worth
+               `noise_prior_df` pseudo degrees of freedom:
+                   sigma2_hat = (df0 * s0^2 + SS) / (df0 + df)
+               After every answer all dimension posteriors are recomputed from the
+               prior with sigma_hat (A-C1-15, A-C1-16).
+- "censored"   responses are clipped to [0, 1], so answers at 0 or 1 are censored
+               observations (Tobit likelihood, B-C1-16). Needs live on a grid over
+               [0, 1], sigma on a log grid with the same scaled-inverse-chi^2 prior;
+               the joint posterior is computed exactly on the grid and sigma is
+               integrated out (A-C1-17). Look-ahead (voi) uses a normal
+               approximation of the grid posterior.
 """
 
 from __future__ import annotations
 
+import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from statistics import NormalDist
 
 import numpy as np
 
@@ -31,6 +50,25 @@ from aisc.contracts import Program, StudentProfile
 from aisc.dimensions import NEED_KEYS
 
 STRATEGIES: tuple[str, ...] = ("random", "variance", "discriminative", "voi")
+NOISE_MODELS: tuple[str, ...] = ("fixed", "estimated", "censored")
+_W_GRID = np.linspace(0.0, 1.0, 201)
+_S_GRID = np.exp(np.linspace(np.log(0.03), np.log(1.0), 48))
+
+
+def _log_norm_cdf(z: np.ndarray) -> np.ndarray:
+    return np.log(np.vectorize(lambda t: 0.5 * math.erfc(-t / math.sqrt(2.0)))(z))
+
+
+# Censored-observation log likelihoods on the (sigma, w) grid; fixed, so precomputed.
+_LL_AT_0 = _log_norm_cdf(-_W_GRID[None, :] / _S_GRID[:, None])
+_LL_AT_1 = _log_norm_cdf(-(1.0 - _W_GRID[None, :]) / _S_GRID[:, None])
+
+
+def _logsumexp(a: np.ndarray, axis: int) -> np.ndarray:
+    m = np.max(a, axis=axis, keepdims=True)
+    return np.squeeze(m, axis=axis) + np.log(np.sum(np.exp(a - m), axis=axis))
+
+
 ScoreFn = Callable[[np.ndarray, np.ndarray], np.ndarray]
 
 
@@ -71,12 +109,18 @@ class AdaptiveSession:
     voi_samples: int = 8
     rng: np.random.Generator = field(default_factory=lambda: np.random.default_rng(0))
     prior_sd: float = 0.3
+    noise_model: str = "fixed"
+    noise_prior_df: float = 4.0
 
     def __post_init__(self) -> None:
         if self.strategy not in STRATEGIES:
             raise ValueError(f"strategy must be one of {STRATEGIES}")
         if self.item_noise_sd <= 0:
             raise ValueError("item_noise_sd must be positive")
+        if self.noise_model not in NOISE_MODELS:
+            raise ValueError(f"noise_model must be one of {NOISE_MODELS}")
+        if self.noise_prior_df <= 0:
+            raise ValueError("noise_prior_df must be positive")
         missing = set(NEED_KEYS) - set(self.prior.needs)
         if missing:
             raise ValueError(
@@ -91,6 +135,83 @@ class AdaptiveSession:
         for item in self.bank:
             self.remaining[item.dimension].append(item)
         self.asked: list[tuple[Item, float]] = []
+        self._prior_mean = self.mean.copy()
+        self._prior_var = self.var.copy()
+        self._responses: dict[int, list[float]] = {i: [] for i in range(len(NEED_KEYS))}
+        self.noise_sd = self.item_noise_sd  # current estimate (constant when "fixed")
+        if self.noise_model == "censored":
+            self._init_grid()
+
+    # --- censored (grid) model -------------------------------------------------
+    def _init_grid(self) -> None:
+        w = _W_GRID[None, :]
+        self._log_prior_w = -0.5 * (w - self._prior_mean[:, None]) ** 2 / self._prior_var[:, None]
+        s2, nu0, s02 = _S_GRID**2, self.noise_prior_df, self.item_noise_sd**2
+        # scaled inverse chi^2 density on sigma^2, times the Jacobians d(sigma^2)/d(log sigma)
+        self._log_prior_s = -(nu0 / 2 + 1) * np.log(s2) - nu0 * s02 / (2 * s2) + np.log(s2)
+        self._loglik = np.zeros((len(NEED_KEYS), len(_S_GRID), len(_W_GRID)))
+        self._post_w = None
+        self._grid_update()
+
+    @staticmethod
+    def _censored_loglik(y: float) -> np.ndarray:
+        if y <= 0.0:
+            return _LL_AT_0
+        if y >= 1.0:
+            return _LL_AT_1
+        w, sd = _W_GRID[None, :], _S_GRID[:, None]
+        return -0.5 * ((y - w) / sd) ** 2 - np.log(sd) - 0.5 * math.log(2 * math.pi)
+
+    def _grid_update(self) -> None:
+        logsumexp = _logsumexp
+        lj = self._log_prior_w[:, None, :] + self._loglik  # (dims, sigma, w)
+        lm = logsumexp(lj, axis=2)  # (dims, sigma): per-dimension marginal likelihood
+        log_ps = self._log_prior_s + lm.sum(axis=0) - logsumexp(self._log_prior_w, axis=1).sum()
+        ps = np.exp(log_ps - logsumexp(log_ps, axis=0))  # posterior over sigma
+        cond = np.exp(lj - lm[:, :, None])  # p(w | sigma, y) per dimension
+        self._post_w = np.einsum("s,dsw->dw", ps, cond)
+        self.mean = self._post_w @ _W_GRID
+        self.var = np.maximum(self._post_w @ _W_GRID**2 - self.mean**2, 1e-12)
+        self.noise_sd = float(np.sqrt(ps @ _S_GRID**2))
+        self._post_s = ps
+
+    def interval(self, level: float = 0.90, kind: str = "hpd") -> tuple[np.ndarray, np.ndarray]:
+        """Posterior interval per dimension.
+
+        Gaussian models: mean +/- z * sd (`kind` is ignored). Censored model:
+        "hpd" (default) = highest-density interval on the grid, which can include
+        the scale end when the posterior piles up there; "equal" = equal-tailed,
+        which by construction excludes a true value lying exactly on 0 or 1.
+        """
+        if not 0 < level < 1:
+            raise ValueError("level must be in (0, 1)")
+        if kind not in ("hpd", "equal"):
+            raise ValueError("kind must be 'hpd' or 'equal'")
+        if self.noise_model != "censored":
+            z = NormalDist().inv_cdf(0.5 + level / 2)
+            sd = np.sqrt(self.var)
+            return self.mean - z * sd, self.mean + z * sd
+        if kind == "hpd":
+            lo, hi = np.empty(len(NEED_KEYS)), np.empty(len(NEED_KEYS))
+            for i, pw in enumerate(self._post_w):
+                order = np.argsort(-pw)
+                n = int(np.searchsorted(np.cumsum(pw[order]), level * pw.sum())) + 1
+                sel = _W_GRID[order[:n]]
+                lo[i], hi[i] = sel.min(), sel.max()
+            return lo, hi
+        cdf = np.cumsum(self._post_w, axis=1)
+        a = (1 - level) / 2
+        lo = np.array([np.interp(a, c, _W_GRID) for c in cdf])
+        hi = np.array([np.interp(1 - a, c, _W_GRID) for c in cdf])
+        return lo, hi
+
+    def noise_estimate(self) -> tuple[float, float]:
+        """(sigma_hat, within-dimension degrees of freedom used)."""
+        ss = sum(float(np.sum((np.array(r) - np.mean(r)) ** 2))
+                 for r in self._responses.values() if len(r) > 1)  # fmt: skip
+        df = sum(len(r) - 1 for r in self._responses.values() if len(r) > 1)
+        s2 = (self.noise_prior_df * self.item_noise_sd**2 + ss) / (self.noise_prior_df + df)
+        return float(np.sqrt(s2)), float(df)
 
     # --- state ---------------------------------------------------------------------
 
@@ -125,7 +246,7 @@ class AdaptiveSession:
         z = self.rng.standard_normal(self.voi_samples)  # common random numbers across items
         best, best_val = avail[0], -1.0
         for d in avail:
-            pred_sd = np.sqrt(self.var[d] + self.item_noise_sd**2)
+            pred_sd = np.sqrt(self.var[d] + self.noise_sd**2)
             change = 0.0
             for zs in z:
                 y = self.mean[d] + pred_sd * zs
@@ -142,7 +263,7 @@ class AdaptiveSession:
     # --- update --------------------------------------------------------------------
 
     def _updated_mean(self, d: int, y: float) -> float:
-        w_prior, w_obs = 1.0 / self.var[d], 1.0 / self.item_noise_sd**2
+        w_prior, w_obs = 1.0 / self.var[d], 1.0 / self.noise_sd**2
         return (self.mean[d] * w_prior + y * w_obs) / (w_prior + w_obs)
 
     def record(self, item: Item, response: float) -> None:
@@ -151,10 +272,29 @@ class AdaptiveSession:
         if not 0 <= response <= 1:
             raise ValueError("responses must lie in [0, 1]")
         d = NEED_KEYS.index(item.dimension)
-        self.mean[d] = self._updated_mean(d, response)
-        self.var[d] = 1.0 / (1.0 / self.var[d] + 1.0 / self.item_noise_sd**2)
+        self._responses[d].append(response)
+        if self.noise_model == "fixed":
+            # v1 reference path: incremental conjugate update with the assumed noise.
+            self.mean[d] = self._updated_mean(d, response)
+            self.var[d] = 1.0 / (1.0 / self.var[d] + 1.0 / self.noise_sd**2)
+        elif self.noise_model == "estimated":
+            self.noise_sd, _ = self.noise_estimate()
+            self._recompute()
+        else:
+            self._loglik[d] += self._censored_loglik(response)
+            self._grid_update()
         self.remaining[item.dimension].remove(item)
         self.asked.append((item, response))
+
+    def _recompute(self) -> None:
+        """All dimension posteriors from the prior and every response, with noise_sd."""
+        w_obs = 1.0 / self.noise_sd**2
+        for i, resp in self._responses.items():
+            w_prior = 1.0 / self._prior_var[i]
+            n = len(resp)
+            total = w_prior + n * w_obs
+            self.mean[i] = (self._prior_mean[i] * w_prior + w_obs * sum(resp)) / total
+            self.var[i] = 1.0 / total
 
     def profile(self) -> StudentProfile:
         return StudentProfile(
