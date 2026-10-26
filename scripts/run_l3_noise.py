@@ -17,6 +17,18 @@ PRE-REGISTERED RULES (written before the first L3 run, 2026-10-26):
   Reported only: biases ON; noise varying by dimension within a student
   (violates A-C1-15); coverage of edge dimensions (true need < 0.15 or > 0.85).
 
+  AMENDMENT (2026-10-26, before any output of this script was seen; run 1 was
+  stopped with no results written): exploratory diagnostics on the exploratory
+  seeds showed that under the neutral prior N(0.5, 0.3^2), dimensions with true
+  need near 0 or 1 are under-covered even with the true noise and the censored
+  likelihood (archetype, noise 0.40: edge coverage 0.747), and that this goes away
+  with a wider prior (sd 0.5: 0.89). That is prior misspecification (B-C1-17), not
+  item noise. To isolate the noise model, the PRIMARY Part A prior is now
+  population-matched: per-dimension mean and sd of the true needs of an
+  independent draw of 2000 students from the same generator (population seed +
+  1000), as in simulation-based calibration (Talts et al. 2018). The neutral
+  prior is reported only. All other rules are unchanged.
+
   Part B - ranking guard. Pipeline prior (C1.2 v1 from anchors only), strategy
   "voi", DEFAULT_SCORER, biases ON, 2 truths x true noise {0.25, 0.40}. Metric:
   Kendall tau between C2's ranking of the posterior mean and the true-utility
@@ -92,10 +104,26 @@ def noise_for(cond, rng):
     return float(cond)
 
 
-def calibration(catalog, gen, cond, n, seeds, biases):
+def population_prior(catalog, gen, pop_seed) -> StudentProfile:
+    """Moment-matched normal prior from an independent population draw (amendment)."""
+    cfg = SimConfig(n_students=2000, needs_model=gen)
+    W = np.array([st.true_needs for st in generate_population(
+        catalog, cfg, np.random.default_rng(pop_seed + 1000))])  # fmt: skip
+    return StudentProfile(
+        "population",
+        dict(zip(NEED_KEYS, map(float, W.mean(0)), strict=True)),
+        uncertainty=dict(zip(NEED_KEYS, map(float, W.std(0)), strict=True)),
+    )
+
+
+def calibration(catalog, gen, cond, n, seeds, biases, prior_kind="population"):
     cfg = SimConfig(n_students=n, needs_model=gen)
     pop = generate_population(catalog, cfg, np.random.default_rng(seeds[0]))
-    bank, prior = default_item_bank(), complete_neutral(StudentProfile("s", {}))
+    bank = default_item_bank()
+    if prior_kind == "population":
+        prior = population_prior(catalog, gen, seeds[0])
+    else:
+        prior = complete_neutral(StudentProfile("s", {}))
     cov = {name(m): [] for m in MODELS}
     edge = {name(m): [] for m in MODELS}
     sig = {name(m): [] for m in MODELS}
@@ -204,6 +232,10 @@ def main() -> None:
                 jobs[("calb", gen, c)] = ex.submit(
                     calibration, catalog, gen, c, args.students, seeds, True
                 )
+            for c in NOISE_CONDS:
+                jobs[("caln", gen, c)] = ex.submit(
+                    calibration, catalog, gen, c, args.students, seeds, False, "neutral"
+                )
             for t, z in product(TRUTHS, GUARD_NOISES):
                 jobs[("gd", gen, (t, z))] = ex.submit(
                     guard, catalog, gen, t, z, args.guard_students, seeds
@@ -211,6 +243,8 @@ def main() -> None:
         res = {key: f.result() for key, f in jobs.items()}
     cal = {g: {k[2]: v for k, v in res.items() if k[0] == "cal" and k[1] == g} for g in GENERATORS}
     cal_b = {g: {k[2]: v for k, v in res.items() if k[0] == "calb" and k[1] == g}
+             for g in GENERATORS}  # fmt: skip
+    cal_n = {g: {k[2]: v for k, v in res.items() if k[0] == "caln" and k[1] == g}
              for g in GENERATORS}  # fmt: skip
     gd = {g: {k[2]: v for k, v in res.items() if k[0] == "gd" and k[1] == g} for g in GENERATORS}
 
@@ -230,7 +264,7 @@ def main() -> None:
         "# L3：C1.3 v2 題目雜訊模型（B-C1-5、B-C1-16）",
         "",
         f"- 產生日期：{date.today().isoformat()} · 指令：`{cmd}`",
-        f"- 校準：每條件 {args.students} 位學生、中性先驗、最大變異選題、45 題全答；"
+        f"- 校準：每條件 {args.students} 位學生、母體配適先驗（修正案）、最大變異選題、45 題全答；"
         f"守門：每條件 {args.guard_students} 位學生、錨點先驗、voi 選題、預設計分器、作答偏誤開啟",
         "- 預先登記的規則：見 `scripts/run_l3_noise.py` 檔頭",
         "",
@@ -258,11 +292,12 @@ def main() -> None:
         L += [f"## 生成模型：{gen}（{role}）", ""]
         for title, table, conds in [
             (
-                "校準：90% 區間涵蓋率（作答偏誤關閉；主要判定）",
+                "校準：90% 區間涵蓋率（母體配適先驗、作答偏誤關閉；主要判定）",
                 cal[gen],
                 NOISE_CONDS + REPORT_CONDS,
             ),
             ("校準：作答偏誤開啟（只報告）", cal_b[gen], NOISE_CONDS),
+            ("校準：中性先驗 N(0.5, 0.3²)（只報告；B-C1-17）", cal_n[gen], NOISE_CONDS),
         ]:
             L += [f"### {title}", "", "格式：涵蓋率 ± SE · 端點維度涵蓋率 · 平均 σ̂", ""]
             L += ["| 模型 | " + " | ".join(f"雜訊 {c}" for c in conds) + " |"]

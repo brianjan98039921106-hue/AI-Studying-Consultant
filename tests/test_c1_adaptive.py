@@ -186,3 +186,149 @@ def test_probe_edge_dimensions_calibrated_under_censoring():
     still have >= 85% coverage of their 90% intervals (archetype students)."""
     cov = _coverage(0.40, assumed=0.40, needs_model="archetype", edge_only=True)
     assert cov >= 0.85
+
+
+# --- C1.3 v2 noise models -------------------------------------------------------
+
+
+def _answer_all(s: AdaptiveSession, values: dict[str, list[float]]) -> None:
+    """Answer the items of each dimension in bank order with the given values."""
+    seen: dict[str, int] = {}
+    while not s.done():
+        item = s.next_item()
+        k = seen.get(item.dimension, 0)
+        seen[item.dimension] = k + 1
+        s.record(item, values[item.dimension][k])
+
+
+def test_noise_model_validation(catalog):
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_model="psychic")
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_prior_df=0)
+    s = AdaptiveSession(PRIOR, catalog)
+    with pytest.raises(ValueError):
+        s.interval(1.0)
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_model="censored").interval(0.9, kind="odd")
+
+
+def test_fixed_noise_model_is_unchanged_v1(catalog):
+    """The reference path must reproduce the v1 incremental update exactly."""
+    rng = np.random.default_rng(3)
+    vals = {k: list(rng.random(3)) for k in NEED_KEYS}
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance")
+    _answer_all(s, vals)
+    for i, k in enumerate(NEED_KEYS):
+        v = 1 / (1 / 0.09 + 3 / 0.25**2)
+        assert s.var[i] == pytest.approx(v)
+        assert s.mean[i] == pytest.approx(v * (0.5 / 0.09 + sum(vals[k]) / 0.25**2))
+    assert s.noise_sd == 0.25
+
+
+def test_estimated_noise_formula(catalog):
+    rng = np.random.default_rng(4)
+    vals = {k: list(rng.random(3)) for k in NEED_KEYS}
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated",
+                        noise_prior_df=4.0)  # fmt: skip
+    _answer_all(s, vals)
+    ss = sum(float(np.sum((np.array(v) - np.mean(v)) ** 2)) for v in vals.values())
+    df = 15 * 2
+    sigma = np.sqrt((4.0 * 0.25**2 + ss) / (4.0 + df))
+    assert s.noise_sd == pytest.approx(sigma)
+    assert s.noise_estimate() == pytest.approx((sigma, df))
+    # every dimension's posterior is recomputed with the final sigma, not the running one
+    for i, k in enumerate(NEED_KEYS):
+        v = 1 / (1 / 0.09 + 3 / sigma**2)
+        assert s.var[i] == pytest.approx(v)
+        assert s.mean[i] == pytest.approx(v * (0.5 / 0.09 + sum(vals[k]) / sigma**2))
+
+
+def test_estimated_noise_with_single_answers_stays_at_prior_value(catalog):
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated")
+    for _ in range(15):  # variance strategy asks one item per dimension first
+        s.record(s.next_item(), 0.9)
+    assert s.noise_estimate() == (pytest.approx(0.25), 0.0)
+
+
+@pytest.mark.parametrize("noise", [0.10, 0.40])
+def test_estimated_noise_tracks_spread_of_repeated_answers(catalog, noise):
+    rng = np.random.default_rng(5)
+    vals = {k: list(np.clip(0.5 + rng.normal(0, noise, 3), 0, 1)) for k in NEED_KEYS}
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated")
+    _answer_all(s, vals)
+    assert abs(s.noise_sd - noise) < 0.4 * noise + 0.03
+
+
+def test_censored_model_matches_gaussian_away_from_the_ends(catalog):
+    """With answers far from 0/1 and a sharp noise prior, the grid posterior
+    equals the conjugate Gaussian one (prior truncation is negligible at 0.5)."""
+    vals = {k: [0.45, 0.5, 0.55] for k in NEED_KEYS}
+    g = AdaptiveSession(PRIOR, catalog, strategy="variance")
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored",
+                        noise_prior_df=1e6)  # fmt: skip
+    _answer_all(g, vals)
+    _answer_all(c, vals)
+    assert c.noise_sd == pytest.approx(0.25, abs=0.01)
+    assert c.mean == pytest.approx(g.mean, abs=2e-3)
+    assert np.sqrt(c.var) == pytest.approx(np.sqrt(g.var), rel=0.03)
+    lo, hi = c.interval(0.9, kind="equal")
+    glo, ghi = g.interval(0.9)
+    assert lo == pytest.approx(glo, abs=0.01) and hi == pytest.approx(ghi, abs=0.01)
+
+
+def test_censored_answers_at_the_end_stay_on_the_scale(catalog):
+    """Three answers of 1.0 mean 'at least 1': the censored posterior piles up at the
+    scale end (mode 1, HPD reaching 1) without the Gaussian interval's impossible
+    values above 1. Other dimensions have interior answers so sigma is identified."""
+    rng = np.random.default_rng(8)
+    vals = {k: list(np.clip(0.5 + rng.normal(0, 0.25, 3), 0.01, 0.99)) for k in NEED_KEYS}
+    vals["quant_intensity"] = [1.0, 1.0, 1.0]
+    q = NEED_KEYS.index("quant_intensity")
+    g = AdaptiveSession(PRIOR, catalog, strategy="variance")
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored")
+    _answer_all(g, vals)
+    _answer_all(c, vals)
+    assert g.interval(0.9)[1][q] > 1.0
+    assert np.argmax(c._post_w[q]) == len(c._post_w[q]) - 1
+    lo, hi = c.interval(0.9)
+    assert hi[q] == 1.0 and lo[q] > 0.5
+    assert np.all((c.mean >= 0) & (c.mean <= 1))
+
+
+def test_censored_straight_lining_is_treated_as_uninformative(catalog):
+    """Documented behaviour (B-C1-16 note): when every answer sits on the scale end,
+    sigma is not identified and the posterior widens instead of sharpening."""
+    vals = {k: [1.0, 1.0, 1.0] for k in NEED_KEYS}
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored")
+    _answer_all(c, vals)
+    assert c.noise_sd > 0.4
+    assert np.all(np.sqrt(c.var) > 0.15)
+
+
+def test_censored_noise_estimate_is_not_shrunk_by_clipping(catalog):
+    """B-C1-16 mechanism (a): clipped answers fool the Gaussian estimate, not the censored one."""
+    rng = np.random.default_rng(6)
+    true_w = rng.choice([0.05, 0.95], size=15)
+    vals = {k: list(np.clip(w + rng.normal(0, 0.4, 3), 0, 1))
+            for k, w in zip(NEED_KEYS, true_w, strict=True)}  # fmt: skip
+    e = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated")
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored")
+    _answer_all(e, vals)
+    _answer_all(c, vals)
+    assert abs(c.noise_sd - 0.4) < abs(e.noise_sd - 0.4)
+
+
+def test_pipeline_passes_noise_model(catalog):
+    from aisc.pipeline import run_questionnaire
+
+    calls = []
+
+    def answer(item):
+        calls.append(item)
+        return 0.5
+
+    out = run_questionnaire(
+        StudentProfile("s", {}), catalog, answer, budget=4, noise_model="censored"
+    )
+    assert len(calls) == 4 and set(out.uncertainty) == set(NEED_KEYS)
