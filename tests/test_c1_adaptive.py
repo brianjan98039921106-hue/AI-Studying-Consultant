@@ -375,3 +375,74 @@ def test_pipeline_passes_noise_model(catalog):
         StudentProfile("s", {}), catalog, answer, budget=4, noise_model="censored"
     )
     assert len(calls) == 4 and set(out.uncertainty) == set(NEED_KEYS)
+
+
+def _mean_sigma_after_one_pass(noise_model: str, center: str, n_students: int = 60) -> float:
+    """Anchor prior, one answer per dimension (15 items), archetype, true noise 0.25."""
+    from aisc.pipeline import prepare_profile
+    from aisc.simulation.catalog_gen import synthetic_catalog
+    from aisc.simulation.population import SimConfig, generate_population
+    from aisc.simulation.respondent import make_item_responder
+
+    cat = synthetic_catalog(np.random.default_rng(0), n_per_family=2)
+    pop = generate_population(
+        cat, SimConfig(n_students=n_students, needs_model="archetype"), np.random.default_rng(11)
+    )
+    sig = []
+    for i, st in enumerate(pop):
+        answer = make_item_responder(st, np.random.default_rng([5, i]), noise_sd=0.25)
+        prior = prepare_profile(StudentProfile(st.student_id, {}, anchors=list(st.anchors)), cat)
+        s = AdaptiveSession(prior, cat, strategy="variance", noise_model=noise_model,
+                            noise_prior_center=center)  # fmt: skip
+        for _ in range(15):
+            item = s.next_item()
+            s.record(item, answer(item))
+        sig.append(s.noise_sd)
+    return float(np.mean(sig))
+
+
+@pytest.mark.probe
+@pytest.mark.parametrize(
+    ("noise_model", "center"),
+    [
+        pytest.param(
+            "censored",
+            "scale",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=AssertionError,
+                reason="B-C1-18: censored model reads anchor-prior misfit as item noise",
+            ),
+        ),
+        ("censored_within", "rms"),
+    ],
+)
+def test_probe_noise_estimate_ignores_prior_misfit(noise_model, center):
+    """After one answer per dimension there is no within-dimension evidence about
+    noise; the estimate should stay within 15% of the true 0.25."""
+    assert abs(_mean_sigma_after_one_pass(noise_model, center) - 0.25) <= 0.0375
+
+
+def test_rms_centre_sets_prior_root_mean_square(catalog):
+    s = AdaptiveSession(PRIOR, catalog, noise_model="censored_within", noise_prior_df=4.0,
+                        noise_prior_center="rms")  # fmt: skip
+    assert s.noise_sd == pytest.approx(0.25, rel=0.03)  # no answers: prior RMS
+    t = AdaptiveSession(PRIOR, catalog, noise_model="censored", noise_prior_df=4.0)
+    assert t.noise_sd > 0.33  # "scale": RMS ~ 0.25 * sqrt(2)
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_model="censored", noise_prior_df=2.0,
+                        noise_prior_center="rms")  # fmt: skip
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_prior_center="median")
+
+
+def test_censored_within_ignores_single_answers_for_sigma(catalog):
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored_within",
+                        noise_prior_center="rms")  # fmt: skip
+    before = s._post_s.copy()
+    for _ in range(15):
+        s.record(s.next_item(), 1.0)
+    assert s._post_s == pytest.approx(before)
+    item = s.next_item()
+    s.record(item, 0.0)  # a contradicting repeat is evidence of noise
+    assert s.noise_sd > 0.25

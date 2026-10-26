@@ -34,7 +34,20 @@ Item noise (C1.3 v2):
                [0, 1], sigma on a log grid with the same scaled-inverse-chi^2 prior;
                the joint posterior is computed exactly on the grid and sigma is
                integrated out (A-C1-17). Look-ahead (voi) uses a normal
-               approximation of the grid posterior.
+               approximation of the grid posterior. Sigma is learned from every
+               answer's distance to the prior, so prior misfit is read as noise
+               (B-C1-18).
+- "censored_within"  as "censored", but sigma is learned only from repeated
+               answers on the same dimension: each dimension contributes the
+               conditional likelihood p(y_2..n | y_1, sigma) under a flat need prior,
+               which is exactly uninformative with one answer (A-C1-18). The need
+               posterior given sigma still uses the real prior.
+
+Grid models, sigma prior: scaled inverse chi^2 with `noise_prior_df` and scale
+`item_noise_sd` ("scale", run 1) or with root-mean-square `item_noise_sd` ("rms").
+With "scale" and small df the prior's RMS is well above item_noise_sd
+(df=4: 1.41x; df=2: unbounded), so early posteriors are wider than the v1
+reference and lean harder on the prior (B-C1-18).
 """
 
 from __future__ import annotations
@@ -50,7 +63,8 @@ from aisc.contracts import Program, StudentProfile
 from aisc.dimensions import NEED_KEYS
 
 STRATEGIES: tuple[str, ...] = ("random", "variance", "discriminative", "voi")
-NOISE_MODELS: tuple[str, ...] = ("fixed", "estimated", "censored")
+NOISE_MODELS: tuple[str, ...] = ("fixed", "estimated", "censored", "censored_within")
+GRID_MODELS: tuple[str, ...] = ("censored", "censored_within")
 _W_GRID = np.linspace(0.0, 1.0, 201)
 _S_GRID = np.exp(np.linspace(np.log(0.03), np.log(1.0), 48))
 
@@ -111,6 +125,7 @@ class AdaptiveSession:
     prior_sd: float = 0.3
     noise_model: str = "fixed"
     noise_prior_df: float = 4.0
+    noise_prior_center: str = "scale"
 
     def __post_init__(self) -> None:
         if self.strategy not in STRATEGIES:
@@ -121,6 +136,10 @@ class AdaptiveSession:
             raise ValueError(f"noise_model must be one of {NOISE_MODELS}")
         if self.noise_prior_df <= 0:
             raise ValueError("noise_prior_df must be positive")
+        if self.noise_prior_center not in ("scale", "rms"):
+            raise ValueError("noise_prior_center must be 'scale' or 'rms'")
+        if self.noise_prior_center == "rms" and self.noise_prior_df <= 2:
+            raise ValueError("noise_prior_center='rms' needs noise_prior_df > 2")
         missing = set(NEED_KEYS) - set(self.prior.needs)
         if missing:
             raise ValueError(
@@ -139,7 +158,7 @@ class AdaptiveSession:
         self._prior_var = self.var.copy()
         self._responses: dict[int, list[float]] = {i: [] for i in range(len(NEED_KEYS))}
         self.noise_sd = self.item_noise_sd  # current estimate (constant when "fixed")
-        if self.noise_model == "censored":
+        if self.noise_model in GRID_MODELS:
             self._init_grid()
 
     # --- censored (grid) model -------------------------------------------------
@@ -147,9 +166,13 @@ class AdaptiveSession:
         w = _W_GRID[None, :]
         self._log_prior_w = -0.5 * (w - self._prior_mean[:, None]) ** 2 / self._prior_var[:, None]
         s2, nu0, s02 = _S_GRID**2, self.noise_prior_df, self.item_noise_sd**2
+        if self.noise_prior_center == "rms":
+            # E[sigma^2] = nu0 s0^2 / (nu0 - 2): make the prior root-mean-square item_noise_sd
+            s02 = s02 * (nu0 - 2) / nu0
         # scaled inverse chi^2 density on sigma^2, times the Jacobians d(sigma^2)/d(log sigma)
         self._log_prior_s = -(nu0 / 2 + 1) * np.log(s2) - nu0 * s02 / (2 * s2) + np.log(s2)
         self._loglik = np.zeros((len(NEED_KEYS), len(_S_GRID), len(_W_GRID)))
+        self._first_ll = np.zeros_like(self._loglik)
         self._post_w = None
         self._grid_update()
 
@@ -166,7 +189,15 @@ class AdaptiveSession:
         logsumexp = _logsumexp
         lj = self._log_prior_w[:, None, :] + self._loglik  # (dims, sigma, w)
         lm = logsumexp(lj, axis=2)  # (dims, sigma): per-dimension marginal likelihood
-        log_ps = self._log_prior_s + lm.sum(axis=0) - logsumexp(self._log_prior_w, axis=1).sum()
+        if self.noise_model == "censored":
+            log_ps = self._log_prior_s + lm.sum(axis=0)
+        else:  # censored_within: conditional likelihood of repeats, flat need prior
+            rep = [i for i, r in self._responses.items() if len(r) > 1]
+            log_ps = self._log_prior_s.copy()
+            if rep:
+                full = logsumexp(self._loglik[rep], axis=2)
+                first = logsumexp(self._first_ll[rep], axis=2)
+                log_ps = log_ps + (full - first).sum(axis=0)
         ps = np.exp(log_ps - logsumexp(log_ps, axis=0))  # posterior over sigma
         cond = np.exp(lj - lm[:, :, None])  # p(w | sigma, y) per dimension
         self._post_w = np.einsum("s,dsw->dw", ps, cond)
@@ -187,7 +218,7 @@ class AdaptiveSession:
             raise ValueError("level must be in (0, 1)")
         if kind not in ("hpd", "equal"):
             raise ValueError("kind must be 'hpd' or 'equal'")
-        if self.noise_model != "censored":
+        if self.noise_model not in GRID_MODELS:
             z = NormalDist().inv_cdf(0.5 + level / 2)
             sd = np.sqrt(self.var)
             return self.mean - z * sd, self.mean + z * sd
@@ -281,7 +312,10 @@ class AdaptiveSession:
             self.noise_sd, _ = self.noise_estimate()
             self._recompute()
         else:
-            self._loglik[d] += self._censored_loglik(response)
+            ll = self._censored_loglik(response)
+            if len(self._responses[d]) == 1:
+                self._first_ll[d] = ll
+            self._loglik[d] += ll
             self._grid_update()
         self.remaining[item.dimension].remove(item)
         self.asked.append((item, response))

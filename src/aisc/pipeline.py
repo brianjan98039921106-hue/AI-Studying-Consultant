@@ -53,6 +53,7 @@ def run_questionnaire(
     scorer: Scorer | None = None,
     noise_model: str = "fixed",
     noise_prior_df: float = 4.0,
+    noise_prior_center: str = "scale",
 ) -> StudentProfile:
     """Ask up to `budget` items chosen by C1.3 and return the posterior profile."""
     if budget < 0:
@@ -66,6 +67,7 @@ def run_questionnaire(
         rng=rng if rng is not None else np.random.default_rng(0),
         noise_model=noise_model,
         noise_prior_df=noise_prior_df,
+        noise_prior_center=noise_prior_center,
     )
     for _ in range(budget):
         item = session.next_item()

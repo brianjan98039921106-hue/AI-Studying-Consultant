@@ -43,7 +43,26 @@ PRE-REGISTERED RULES (written before the first L3 run, 2026-10-26):
      re-run steps 1-2; the same candidate must be chosen (or another candidate
      that also passes both generators, reported as such) and pass both.
 
+  RUN 1 OUTCOME (seeds 0/31/32): no candidate eligible -> default stays "fixed".
+  censored(df0) passed calibration on both generators but failed the ranking
+  guard on archetype at Q=15 (B-C1-18); estimated(df0) failed calibration.
+
+  RUN 2 (pre-registered 2026-10-26, after run 1, before any run-2 output;
+  --protocol run2). New candidates: censored_within(df0, rms) for df0 in
+  {4, 8, 16}: sigma learned only from within-dimension repeats, sigma prior with
+  root-mean-square 0.25. Reported comparators: fixed, censored(4) from run 1.
+  Exploratory diagnostics behind these candidates used the exploratory seeds
+  only. Rules 1-2 unchanged (Part A with the population-matched prior, Part B
+  guard vs fixed). Because run-1 held-out results were seen, run 2 uses fresh
+  seeds for selection and validation (--catalog-seed 400 --pop-seed 401
+  --resp-seed 402) and rule 3 confirms on further fresh seeds
+  (--catalog-seed 500 --pop-seed 501 --resp-seed 502).
+
     python scripts/run_l3_noise.py
+    python scripts/run_l3_noise.py --protocol run2 --catalog-seed 400 --pop-seed 401 \
+        --resp-seed 402 --out results/synthetic-l3-noise-run2.md
+    python scripts/run_l3_noise.py --protocol run2 --catalog-seed 500 --pop-seed 501 \
+        --resp-seed 502 --out results/synthetic-l3-noise-run2-confirm.md
     python scripts/run_l3_noise.py --catalog-seed 300 --pop-seed 301 --resp-seed 302 \\
         --out results/synthetic-l3-noise-confirm.md
 """
@@ -76,12 +95,24 @@ TRUTHS = ("distance", "cosine")
 GUARD_NOISES = (0.25, 0.40)
 GUARD_Q = (15, 45)
 ASSUMED = 0.25
-MODELS = [("fixed", 4.0)] + [(m, d) for m in ("estimated", "censored") for d in (2.0, 4.0, 8.0)]
+RUN1_MODELS = [("fixed", 4.0, "scale")] + [
+    (m, d, "scale") for m in ("estimated", "censored") for d in (2.0, 4.0, 8.0)
+]
+RUN2_MODELS = [("fixed", 4.0, "scale"), ("censored", 4.0, "scale")] + [
+    ("censored_within", d, "rms") for d in (4.0, 8.0, 16.0)
+]
+PROTOCOLS = {  # (models, candidates = indices eligible for selection)
+    "run1": (RUN1_MODELS, list(range(1, len(RUN1_MODELS)))),
+    "run2": (RUN2_MODELS, [2, 3, 4]),
+}
 LO, HI = 0.85, 0.95
 
 
 def name(model) -> str:
-    return model[0] if model[0] == "fixed" else f"{model[0]}({model[1]:g})"
+    m, d, c = model
+    if m == "fixed":
+        return m
+    return f"{m}({d:g}{', rms' if c == 'rms' else ''})"
 
 
 def responder(st, rng, noise, acq=0.0, desir=None):
@@ -116,7 +147,7 @@ def population_prior(catalog, gen, pop_seed) -> StudentProfile:
     )
 
 
-def calibration(catalog, gen, cond, n, seeds, biases, prior_kind="population"):
+def calibration(catalog, gen, cond, n, seeds, biases, prior_kind="population", models=()):
     cfg = SimConfig(n_students=n, needs_model=gen)
     pop = generate_population(catalog, cfg, np.random.default_rng(seeds[0]))
     bank = default_item_bank()
@@ -124,9 +155,9 @@ def calibration(catalog, gen, cond, n, seeds, biases, prior_kind="population"):
         prior = population_prior(catalog, gen, seeds[0])
     else:
         prior = complete_neutral(StudentProfile("s", {}))
-    cov = {name(m): [] for m in MODELS}
-    edge = {name(m): [] for m in MODELS}
-    sig = {name(m): [] for m in MODELS}
+    cov = {name(m): [] for m in models}
+    edge = {name(m): [] for m in models}
+    sig = {name(m): [] for m in models}
     for idx, st in enumerate(pop):
         rng = np.random.default_rng([seeds[1], idx])
         ans = responder(
@@ -138,10 +169,10 @@ def calibration(catalog, gen, cond, n, seeds, biases, prior_kind="population"):
         )
         answers = {it.item_id: ans(it) for it in bank}  # common random numbers
         e = (st.true_needs < 0.15) | (st.true_needs > 0.85)
-        for m in MODELS:
+        for m in models:
             s = AdaptiveSession(
                 prior, catalog, strategy="variance", item_noise_sd=ASSUMED,
-                noise_model=m[0], noise_prior_df=m[1],
+                noise_model=m[0], noise_prior_df=m[1], noise_prior_center=m[2],
             )  # fmt: skip
             while not s.done():
                 it = s.next_item()
@@ -157,12 +188,12 @@ def calibration(catalog, gen, cond, n, seeds, biases, prior_kind="population"):
     }
 
 
-def guard(catalog, gen, truth, noise, n, seeds):
+def guard(catalog, gen, truth, noise, n, seeds, models=()):
     cfg = SimConfig(n_students=n, prestige_weight=0.5, truth=truth, needs_model=gen)
     pop = generate_population(catalog, cfg, np.random.default_rng(seeds[0]))
     X = np.array([p.vector for p in catalog])
     bank = default_item_bank()
-    taus = {name(m): {q: [] for q in GUARD_Q} for m in MODELS}
+    taus = {name(m): {q: [] for q in GUARD_Q} for m in models}
     for idx, st in enumerate(pop):
         ans = responder(
             st, np.random.default_rng([seeds[1], idx]), noise, cfg.acquiescence, cfg.desirability
@@ -172,11 +203,11 @@ def guard(catalog, gen, truth, noise, n, seeds):
             StudentProfile(st.student_id, {}, anchors=list(st.anchors)), catalog
         )
         true_u = utilities(st.true_needs, catalog, truth)
-        for m in MODELS:
+        for m in models:
             s = AdaptiveSession(
                 prior, catalog, strategy="voi", item_noise_sd=ASSUMED,
                 score_fn=DEFAULT_SCORER.score_matrix, noise_model=m[0], noise_prior_df=m[1],
-                rng=np.random.default_rng([seeds[1], idx, 7]),
+                noise_prior_center=m[2], rng=np.random.default_rng([seeds[1], idx, 7]),
             )  # fmt: skip
             for q in range(1, max(GUARD_Q) + 1):
                 it = s.next_item()
@@ -217,28 +248,30 @@ def main() -> None:
     ap.add_argument("--pop-seed", type=int, default=31)
     ap.add_argument("--resp-seed", type=int, default=32)
     ap.add_argument("--workers", type=int, default=2)
+    ap.add_argument("--protocol", choices=sorted(PROTOCOLS), default="run1")
     ap.add_argument("--out", type=Path, default=ROOT / "results" / "synthetic-l3-noise.md")
     args = ap.parse_args()
     catalog = synthetic_catalog(np.random.default_rng(args.catalog_seed), n_per_family=10)
     seeds = (args.pop_seed, args.resp_seed)
+    models, cand_idx = PROTOCOLS[args.protocol]
     jobs = {}
     with ProcessPoolExecutor(max_workers=args.workers) as ex:
         for gen in GENERATORS:
             for c in NOISE_CONDS + REPORT_CONDS:
                 jobs[("cal", gen, c)] = ex.submit(
-                    calibration, catalog, gen, c, args.students, seeds, False
+                    calibration, catalog, gen, c, args.students, seeds, False, "population", models
                 )
             for c in NOISE_CONDS:
                 jobs[("calb", gen, c)] = ex.submit(
-                    calibration, catalog, gen, c, args.students, seeds, True
+                    calibration, catalog, gen, c, args.students, seeds, True, "population", models
                 )
             for c in NOISE_CONDS:
                 jobs[("caln", gen, c)] = ex.submit(
-                    calibration, catalog, gen, c, args.students, seeds, False, "neutral"
+                    calibration, catalog, gen, c, args.students, seeds, False, "neutral", models
                 )
             for t, z in product(TRUTHS, GUARD_NOISES):
                 jobs[("gd", gen, (t, z))] = ex.submit(
-                    guard, catalog, gen, t, z, args.guard_students, seeds
+                    guard, catalog, gen, t, z, args.guard_students, seeds, models
                 )
         res = {key: f.result() for key, f in jobs.items()}
     cal = {g: {k[2]: v for k, v in res.items() if k[0] == "cal" and k[1] == g} for g in GENERATORS}
@@ -248,7 +281,7 @@ def main() -> None:
              for g in GENERATORS}  # fmt: skip
     gd = {g: {k[2]: v for k, v in res.items() if k[0] == "gd" and k[1] == g} for g in GENERATORS}
 
-    cands = [name(m) for m in MODELS[1:]]
+    cands = [name(models[i]) for i in cand_idx]
     ok = {
         g: {k: (passes_cal(cal[g], k), passes_guard(gd[g], k)) for k in cands} for g in GENERATORS
     }
@@ -258,10 +291,10 @@ def main() -> None:
 
     cmd = (
         f"python scripts/run_l3_noise.py --catalog-seed {args.catalog_seed} "
-        f"--pop-seed {args.pop_seed} --resp-seed {args.resp_seed}"
+        f"--pop-seed {args.pop_seed} --resp-seed {args.resp_seed} --protocol {args.protocol}"
     )
     L = [
-        "# L3：C1.3 v2 題目雜訊模型（B-C1-5、B-C1-16）",
+        f"# L3：C1.3 v2 題目雜訊模型（B-C1-5、B-C1-16、B-C1-18）· {args.protocol}",
         "",
         f"- 產生日期：{date.today().isoformat()} · 指令：`{cmd}`",
         f"- 校準：每條件 {args.students} 位學生、母體配適先驗（修正案）、最大變異選題、45 題全答；"
@@ -302,7 +335,7 @@ def main() -> None:
             L += [f"### {title}", "", "格式：涵蓋率 ± SE · 端點維度涵蓋率 · 平均 σ̂", ""]
             L += ["| 模型 | " + " | ".join(f"雜訊 {c}" for c in conds) + " |"]
             L += ["|---" * (len(conds) + 1) + "|"]
-            for m in MODELS:
+            for m in models:
                 k = name(m)
                 cells = [
                     f"{table[c][k]['cov'][0]:.3f}±{table[c][k]['cov'][1]:.3f} · "
@@ -315,7 +348,7 @@ def main() -> None:
         cols = [(t, z, q) for (t, z) in gd[gen] for q in GUARD_Q]
         L += ["| 模型 | " + " | ".join(f"{t} σ={z} Q={q}" for t, z, q in cols) + " |"]
         L += ["|---" * (len(cols) + 1) + "|"]
-        for m in MODELS:
+        for m in models:
             k = name(m)
             cells = []
             for t, z, q in cols:
