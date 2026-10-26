@@ -39,8 +39,8 @@ flowchart LR
 | **W-11** ✅ | 指標庫 | C5.2 | RMSE、Kendall τ-b、Recall@k、相關率＋新穎相關率、最佳契合保留、覆蓋率、熱門度 KL、Brier、區間涵蓋率 | L2 手算測試 ✅（τ-b 與 scipy 交叉驗證） | — | W-01 |
 | W-12 🟡 | 消融執行器 + 盲區情境集 | C5.3/C5.4 | 執行器 + 2 個基準 + 首次 L3 報告 ✅；盲區情境集 ⬜ | L2 | 全部 B 項目 | W-10、W-11 |
 | **W-13** ✅ | 第二套生成模型（不同家族） | C5.5 | 無原型的 logistic-normal，RIASEC 依 Holland 六角形相關；`compare_l3.py` 比較工具 | L2 ✅（含「非叢集」檢查）、L3 ✅ | **S-1**（部分） | W-10 |
-| W-14 | CIP 2020 + IPEDS 擷取與篩選 | C0.1 | `data/reference/`（附來源與日期） | L2 | B-C0-4 | — |
-| W-15 | 職業橋接 v1 | C0.2 | $x^{occ}$（RIASEC） | G0 規格 → L2 | A-C0-2/3 | W-14 |
+| W-14 🟡 | CIP 2020 + IPEDS 擷取與篩選 | C0.1 | `catalog/reference.py`、`scripts/build_reference.py`、`data/reference/mvp_scope.json`；`data/reference/`（附來源、日期、SHA-256） | L2 ✅（格式樣本）；待官方檔案 | B-C0-4、B-C0-6、B-C0-7 | — |
+| W-15 🟡 | 職業橋接 v1 | C0.2 | `catalog/occupation.py`；$x^{occ}$（RIASEC，等權） | G0 ✅ → L2 ✅；待官方檔案；L4：B-C0-1 探針 | A-C0-2/3/6、B-C0-1/2 | W-14 |
 | **W-16a** ✅ | 需求維度設計 | C1.1 | [rubric.md](rubric.md)：四層 15 維、學生端題型、學程端評分準則 | G0 ✅（2026-10-25 確認 Q1–Q4） | **B-C1-1**、B-C1-7/8 | — |
 | **W-16b** ✅ | 維度程式遷移 + 大考中心分數先驗 | C1.1 | `dimensions.py` 15 維（含分層）、合成原型與 7 類學生原型、`profiling/ceec.py`；重跑 L3 v1 | L2 ✅、L3 ✅ | B-C1-1、B-C1-7 | W-16a |
 

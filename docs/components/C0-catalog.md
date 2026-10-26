@@ -29,5 +29,11 @@ B-C0-1 CIP 太粗 · B-C0-2 對照表是規範性的 · B-C0-3 幻覺與誇大 �
 | L4 | 探針：同 CIP 不同性質的學程應得到不同 $x_p$ | B-C0-1 |
 | L5 | 黃金標準一致率、評分者 κ、收斂效度 | V-C0-2 … V-C0-5 |
 
+## 實作狀態
+| 子部件 | 程式 | 狀態 |
+|---|---|---|
+| C0.1 | `catalog/reference.py`、`scripts/build_reference.py`；範圍 `data/reference/mvp_scope.json` | 程式與 L2 ✅；官方檔案到位後產生 `data/reference/` |
+| C0.2 v1 | `catalog/occupation.py`（等權、OI 1–7 → [0, 1]） | 程式與 L2 ✅；B-C0-1 探針（同 CIP 無法區分） |
+
 ## 工項
 W-14、W-15、W-20、W-21、W-22（見 [ROADMAP](../ROADMAP.md)）

@@ -1,0 +1,29 @@
+{
+  "version": "mvp-v1",
+  "decided": "2026-10-26",
+  "description": "CIP 2020 prefixes for the MVP catalogue: business x data x engineering management, master's (IPEDS award level 7). Every prefix must match at least one code in the official CIP 2020 file; titles come from that file, not from this list.",
+  "award_level": 7,
+  "majornum": 1,
+  "families": [
+    {"name": "business_management", "prefixes": ["52.02"], "why": "general management, operations, supply chain, project management"},
+    {"name": "business_economics", "prefixes": ["52.06"], "why": "business/managerial economics"},
+    {"name": "entrepreneurship", "prefixes": ["52.07"], "why": "matches the entrepreneurship dimension"},
+    {"name": "finance", "prefixes": ["52.08"], "why": "domain_finance"},
+    {"name": "international_business", "prefixes": ["52.11"], "why": "common choice for Taiwanese business graduates"},
+    {"name": "information_systems", "prefixes": ["52.12"], "why": "MIS / information systems"},
+    {"name": "management_science", "prefixes": ["52.13"], "why": "management science, business statistics, actuarial"},
+    {"name": "marketing", "prefixes": ["52.14"], "why": "marketing, marketing analytics"},
+    {"name": "data_science", "prefixes": ["30.70"], "why": "data science (new in CIP 2020)"},
+    {"name": "data_analytics", "prefixes": ["30.71"], "why": "data, business and financial analytics (new in CIP 2020)"},
+    {"name": "statistics", "prefixes": ["27.05"], "why": "statistics"},
+    {"name": "applied_mathematics", "prefixes": ["27.03"], "why": "applied, computational and financial mathematics"},
+    {"name": "information_science", "prefixes": ["11.01", "11.04"], "why": "computer and information sciences general, information science"},
+    {"name": "systems_engineering", "prefixes": ["14.27"], "why": "systems engineering"},
+    {"name": "industrial_engineering", "prefixes": ["14.35"], "why": "industrial engineering"},
+    {"name": "operations_research", "prefixes": ["14.37"], "why": "operations research"},
+    {"name": "engineering_management", "prefixes": ["15.15"], "why": "engineering/industrial management"},
+    {"name": "systems_science", "prefixes": ["30.06"], "why": "systems science and theory"},
+    {"name": "economics", "prefixes": ["45.06"], "why": "economics incl. econometrics and quantitative economics"}
+  ],
+  "excluded_on_purpose": "accounting (52.03), HR (52.10), hospitality (52.09), real estate (52.15), pure computer science (11.07), public policy (44.05), design (50.04) — see B-C0-6"
+}
