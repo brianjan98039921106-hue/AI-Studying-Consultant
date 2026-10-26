@@ -125,27 +125,38 @@ def test_pipeline_questionnaire_respects_budget(catalog):
 # --- calibration ------------------------------------------------------------------------
 
 
-def _coverage(true_noise: float, n_students: int = 150) -> float:
+def _coverage(
+    true_noise: float,
+    n_students: int = 150,
+    *,
+    assumed: float = 0.25,
+    needs_model: str = "continuous",
+    noise_model: str = "fixed",
+    edge_only: bool = False,
+) -> float:
     """Share of dimensions whose 90% posterior interval contains the true need,
-    after all 45 items, when the estimator assumes item noise 0.25."""
+    after all 45 items. `edge_only` restricts to true needs < 0.15 or > 0.85."""
     from aisc.simulation.catalog_gen import synthetic_catalog
     from aisc.simulation.population import SimConfig, generate_population
     from aisc.simulation.respondent import make_item_responder
 
     cat = synthetic_catalog(np.random.default_rng(0), n_per_family=2)
     pop = generate_population(
-        cat, SimConfig(n_students=n_students, needs_model="continuous"), np.random.default_rng(4)
+        cat, SimConfig(n_students=n_students, needs_model=needs_model), np.random.default_rng(4)
     )
     hits = total = 0
     for i, st in enumerate(pop):
         answer = make_item_responder(st, np.random.default_rng([2, i]), noise_sd=true_noise)
-        s = AdaptiveSession(PRIOR, cat, strategy="variance", item_noise_sd=0.25)
+        s = AdaptiveSession(
+            PRIOR, cat, strategy="variance", item_noise_sd=assumed, noise_model=noise_model
+        )
         while not s.done():
             item = s.next_item()
             s.record(item, answer(item))
-        lo, hi = s.mean - 1.645 * np.sqrt(s.var), s.mean + 1.645 * np.sqrt(s.var)
-        hits += int(np.sum((lo <= st.true_needs) & (st.true_needs <= hi)))
-        total += len(NEED_KEYS)
+        lo, hi = s.interval(0.90)
+        keep = (st.true_needs < 0.15) | (st.true_needs > 0.85) if edge_only else slice(None)
+        hits += int(np.sum(((lo <= st.true_needs) & (st.true_needs <= hi))[keep]))
+        total += int(np.size(st.true_needs[keep]))
     return hits / total
 
 
@@ -162,3 +173,276 @@ def test_posterior_is_calibrated_when_noise_is_correctly_specified():
 def test_probe_posterior_calibrated_under_misspecified_noise():
     """True item noise 0.40, assumed 0.25: 90% intervals should still cover >= 85%."""
     assert _coverage(true_noise=0.40) >= 0.85
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C1-17: neutral normal prior under-covers needs near the scale ends",
+)
+def test_probe_edge_dimensions_calibrated_under_neutral_prior():
+    """Noise correctly assumed (0.40), neutral prior N(0.5, 0.3^2): dimensions with
+    true need near 0 or 1 should still have >= 85% coverage of their 90% intervals
+    (archetype students). Measured 0.743; the censored likelihood alone does not
+    fix it (0.747), a wider prior does (sd 0.5: 0.89)."""
+    cov = _coverage(0.40, assumed=0.40, needs_model="archetype", edge_only=True)
+    assert cov >= 0.85
+
+
+def _mean_sigma_hat(noise_model: str, true_noise: float = 0.40, n_students: int = 80) -> float:
+    from aisc.simulation.catalog_gen import synthetic_catalog
+    from aisc.simulation.population import SimConfig, generate_population
+    from aisc.simulation.respondent import make_item_responder
+
+    cat = synthetic_catalog(np.random.default_rng(0), n_per_family=2)
+    pop = generate_population(
+        cat, SimConfig(n_students=n_students, needs_model="archetype"), np.random.default_rng(9)
+    )
+    sig = []
+    for i, st in enumerate(pop):
+        answer = make_item_responder(st, np.random.default_rng([3, i]), noise_sd=true_noise)
+        s = AdaptiveSession(PRIOR, cat, strategy="variance", noise_model=noise_model)
+        while not s.done():
+            item = s.next_item()
+            s.record(item, answer(item))
+        sig.append(s.noise_sd)
+    return float(np.mean(sig))
+
+
+@pytest.mark.probe
+@pytest.mark.parametrize(
+    "noise_model",
+    [
+        pytest.param(
+            "estimated",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=AssertionError,
+                reason="B-C1-16: Gaussian noise estimate is shrunk by clipping at 0 and 1",
+            ),
+        ),
+        "censored",
+    ],
+)
+def test_probe_noise_estimate_survives_censoring(noise_model):
+    """True item noise 0.40 (assumed 0.25), archetype students: the mean noise
+    estimate should be within 15% of the truth."""
+    assert abs(_mean_sigma_hat(noise_model) - 0.40) <= 0.06
+
+
+# --- C1.3 v2 noise models -------------------------------------------------------
+
+
+def _answer_all(s: AdaptiveSession, values: dict[str, list[float]]) -> None:
+    """Answer the items of each dimension in bank order with the given values."""
+    seen: dict[str, int] = {}
+    while not s.done():
+        item = s.next_item()
+        k = seen.get(item.dimension, 0)
+        seen[item.dimension] = k + 1
+        s.record(item, values[item.dimension][k])
+
+
+def test_noise_model_validation(catalog):
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_model="psychic")
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_prior_df=0)
+    s = AdaptiveSession(PRIOR, catalog)
+    with pytest.raises(ValueError):
+        s.interval(1.0)
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_model="censored").interval(0.9, kind="odd")
+
+
+def test_fixed_noise_model_is_unchanged_v1(catalog):
+    """The reference path must reproduce the v1 incremental update exactly."""
+    rng = np.random.default_rng(3)
+    vals = {k: list(rng.random(3)) for k in NEED_KEYS}
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance")
+    _answer_all(s, vals)
+    for i, k in enumerate(NEED_KEYS):
+        v = 1 / (1 / 0.09 + 3 / 0.25**2)
+        assert s.var[i] == pytest.approx(v)
+        assert s.mean[i] == pytest.approx(v * (0.5 / 0.09 + sum(vals[k]) / 0.25**2))
+    assert s.noise_sd == 0.25
+
+
+def test_estimated_noise_formula(catalog):
+    rng = np.random.default_rng(4)
+    vals = {k: list(rng.random(3)) for k in NEED_KEYS}
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated",
+                        noise_prior_df=4.0)  # fmt: skip
+    _answer_all(s, vals)
+    ss = sum(float(np.sum((np.array(v) - np.mean(v)) ** 2)) for v in vals.values())
+    df = 15 * 2
+    sigma = np.sqrt((4.0 * 0.25**2 + ss) / (4.0 + df))
+    assert s.noise_sd == pytest.approx(sigma)
+    assert s.noise_estimate() == pytest.approx((sigma, df))
+    # every dimension's posterior is recomputed with the final sigma, not the running one
+    for i, k in enumerate(NEED_KEYS):
+        v = 1 / (1 / 0.09 + 3 / sigma**2)
+        assert s.var[i] == pytest.approx(v)
+        assert s.mean[i] == pytest.approx(v * (0.5 / 0.09 + sum(vals[k]) / sigma**2))
+
+
+def test_estimated_noise_with_single_answers_stays_at_prior_value(catalog):
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated")
+    for _ in range(15):  # variance strategy asks one item per dimension first
+        s.record(s.next_item(), 0.9)
+    assert s.noise_estimate() == (pytest.approx(0.25), 0.0)
+
+
+@pytest.mark.parametrize("noise", [0.10, 0.40])
+def test_estimated_noise_tracks_spread_of_repeated_answers(catalog, noise):
+    rng = np.random.default_rng(5)
+    vals = {k: list(np.clip(0.5 + rng.normal(0, noise, 3), 0, 1)) for k in NEED_KEYS}
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated")
+    _answer_all(s, vals)
+    assert abs(s.noise_sd - noise) < 0.4 * noise + 0.03
+
+
+def test_censored_model_matches_gaussian_away_from_the_ends(catalog):
+    """With answers far from 0/1 and a sharp noise prior, the grid posterior
+    equals the conjugate Gaussian one (prior truncation is negligible at 0.5)."""
+    vals = {k: [0.45, 0.5, 0.55] for k in NEED_KEYS}
+    g = AdaptiveSession(PRIOR, catalog, strategy="variance")
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored",
+                        noise_prior_df=1e6)  # fmt: skip
+    _answer_all(g, vals)
+    _answer_all(c, vals)
+    assert c.noise_sd == pytest.approx(0.25, abs=0.01)
+    assert c.mean == pytest.approx(g.mean, abs=2e-3)
+    assert np.sqrt(c.var) == pytest.approx(np.sqrt(g.var), rel=0.03)
+    lo, hi = c.interval(0.9, kind="equal")
+    glo, ghi = g.interval(0.9)
+    assert lo == pytest.approx(glo, abs=0.01) and hi == pytest.approx(ghi, abs=0.01)
+
+
+def test_censored_answers_at_the_end_stay_on_the_scale(catalog):
+    """Three answers of 1.0 mean 'at least 1': the censored posterior piles up at the
+    scale end (mode 1, HPD reaching 1) without the Gaussian interval's impossible
+    values above 1. Other dimensions have interior answers so sigma is identified."""
+    rng = np.random.default_rng(8)
+    vals = {k: list(np.clip(0.5 + rng.normal(0, 0.25, 3), 0.01, 0.99)) for k in NEED_KEYS}
+    vals["quant_intensity"] = [1.0, 1.0, 1.0]
+    q = NEED_KEYS.index("quant_intensity")
+    g = AdaptiveSession(PRIOR, catalog, strategy="variance")
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored")
+    _answer_all(g, vals)
+    _answer_all(c, vals)
+    assert g.interval(0.9)[1][q] > 1.0
+    assert np.argmax(c._post_w[q]) == len(c._post_w[q]) - 1
+    lo, hi = c.interval(0.9)
+    assert hi[q] == 1.0 and lo[q] > 0.5
+    assert np.all((c.mean >= 0) & (c.mean <= 1))
+
+
+def test_censored_straight_lining_is_treated_as_uninformative(catalog):
+    """Documented behaviour (B-C1-16 note): when every answer sits on the scale end,
+    sigma is not identified and the posterior widens instead of sharpening."""
+    vals = {k: [1.0, 1.0, 1.0] for k in NEED_KEYS}
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored")
+    _answer_all(c, vals)
+    assert c.noise_sd > 0.4
+    assert np.all(np.sqrt(c.var) > 0.15)
+
+
+def test_censored_noise_estimate_is_not_shrunk_by_clipping(catalog):
+    """B-C1-16 mechanism (a): clipped answers fool the Gaussian estimate, not the censored one."""
+    rng = np.random.default_rng(6)
+    true_w = rng.choice([0.05, 0.95], size=15)
+    vals = {k: list(np.clip(w + rng.normal(0, 0.4, 3), 0, 1))
+            for k, w in zip(NEED_KEYS, true_w, strict=True)}  # fmt: skip
+    e = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="estimated")
+    c = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored")
+    _answer_all(e, vals)
+    _answer_all(c, vals)
+    assert abs(c.noise_sd - 0.4) < abs(e.noise_sd - 0.4)
+
+
+def test_pipeline_passes_noise_model(catalog):
+    from aisc.pipeline import run_questionnaire
+
+    calls = []
+
+    def answer(item):
+        calls.append(item)
+        return 0.5
+
+    out = run_questionnaire(
+        StudentProfile("s", {}), catalog, answer, budget=4, noise_model="censored"
+    )
+    assert len(calls) == 4 and set(out.uncertainty) == set(NEED_KEYS)
+
+
+def _mean_sigma_after_one_pass(noise_model: str, center: str, n_students: int = 60) -> float:
+    """Anchor prior, one answer per dimension (15 items), archetype, true noise 0.25."""
+    from aisc.pipeline import prepare_profile
+    from aisc.simulation.catalog_gen import synthetic_catalog
+    from aisc.simulation.population import SimConfig, generate_population
+    from aisc.simulation.respondent import make_item_responder
+
+    cat = synthetic_catalog(np.random.default_rng(0), n_per_family=2)
+    pop = generate_population(
+        cat, SimConfig(n_students=n_students, needs_model="archetype"), np.random.default_rng(11)
+    )
+    sig = []
+    for i, st in enumerate(pop):
+        answer = make_item_responder(st, np.random.default_rng([5, i]), noise_sd=0.25)
+        prior = prepare_profile(StudentProfile(st.student_id, {}, anchors=list(st.anchors)), cat)
+        s = AdaptiveSession(prior, cat, strategy="variance", noise_model=noise_model,
+                            noise_prior_center=center)  # fmt: skip
+        for _ in range(15):
+            item = s.next_item()
+            s.record(item, answer(item))
+        sig.append(s.noise_sd)
+    return float(np.mean(sig))
+
+
+@pytest.mark.probe
+@pytest.mark.parametrize(
+    ("noise_model", "center"),
+    [
+        pytest.param(
+            "censored",
+            "scale",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=AssertionError,
+                reason="B-C1-18: censored model reads anchor-prior misfit as item noise",
+            ),
+        ),
+        ("censored_within", "rms"),
+    ],
+)
+def test_probe_noise_estimate_ignores_prior_misfit(noise_model, center):
+    """After one answer per dimension there is no within-dimension evidence about
+    noise; the estimate should stay within 15% of the true 0.25."""
+    assert abs(_mean_sigma_after_one_pass(noise_model, center) - 0.25) <= 0.0375
+
+
+def test_rms_centre_sets_prior_root_mean_square(catalog):
+    s = AdaptiveSession(PRIOR, catalog, noise_model="censored_within", noise_prior_df=4.0,
+                        noise_prior_center="rms")  # fmt: skip
+    assert s.noise_sd == pytest.approx(0.25, rel=0.03)  # no answers: prior RMS
+    t = AdaptiveSession(PRIOR, catalog, noise_model="censored", noise_prior_df=4.0)
+    assert t.noise_sd > 0.33  # "scale": RMS ~ 0.25 * sqrt(2)
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_model="censored", noise_prior_df=2.0,
+                        noise_prior_center="rms")  # fmt: skip
+    with pytest.raises(ValueError):
+        AdaptiveSession(PRIOR, catalog, noise_prior_center="median")
+
+
+def test_censored_within_ignores_single_answers_for_sigma(catalog):
+    s = AdaptiveSession(PRIOR, catalog, strategy="variance", noise_model="censored_within",
+                        noise_prior_center="rms")  # fmt: skip
+    before = s._post_s.copy()
+    for _ in range(15):
+        s.record(s.next_item(), 1.0)
+    assert s._post_s == pytest.approx(before)
+    item = s.next_item()
+    s.record(item, 0.0)  # a contradicting repeat is evidence of noise
+    assert s.noise_sd > 0.25

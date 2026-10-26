@@ -57,6 +57,7 @@
 | V-C1-2 | L3 | **主要指標**：用估計需求 vs 真實需求產生的推薦排序一致性（Kendall τ）；RMSE 與 τ 衝突時以 τ 為準（[F9](../results/synthetic-l3-v1-continuous-findings.md)） | ≥ 0.7 |
 | V-C1-3 | L3 | 自適應 vs 隨機選題：達到「隨機 15 題」τ 所需題數 | 自適應少 ≥ 30% ❌（W-25：連續模型最多 +19%，兩次執行；[F24](../results/synthetic-l3-adaptive-findings.md)） |
 | V-C1-4 | L3 | 作答模型誤設時（題目雜訊低估、作答偏誤）的還原誤差 | 不得崩壞（RMSE ≤ 0.25）✅ 自適應策略 15 題時 0.207–0.249（F27） |
+| V-C1-8 | L3 | 後驗 90% 區間涵蓋率（母體配適先驗、四種雜訊條件） | 0.85–0.95，且排序 τ 不得顯著劣於 v1 ❌（C1.3 v2：可校準的模型都傷排序，[F43–F46](../results/synthetic-l3-noise-findings.md)） |
 | V-C1-5 | L5 | 各維度內部一致性 Cronbach's α | ≥ 0.7 |
 | V-C1-6 | L5 | 一週再測信度 | ≥ 0.7 |
 | V-C1-7 | L5 | 維度重疊（因素分析／相關） | 任兩維度相關 < 0.8 |
@@ -99,13 +100,13 @@
 | 部件 | G0 | G1 | G2 | G3 |
 |---|---|---|---|---|
 | C0 | 部分（loader） | 部分 | — | — |
-| C1 | ✅ C1.1、C1.2 v1、C1.3 v1、C1.4 v1 | ✅ | C1.2 v1、C1.4 v1 通過；**C1.3 v1 未達 V-C1-3**（節省 13–28%，門檻 30%，F24）、V-C1-4 通過 | — |
+| C1 | ✅ C1.1、C1.2 v1、C1.3 v1、C1.4 v1 | ✅ | C1.2 v1、C1.4 v1 通過；**C1.3 v1 未達 V-C1-3**（節省 13–28%，門檻 30%，F24）、V-C1-4 通過；C1.3 v2 雜訊模型兩次預先登記 L3 皆無合格候選，**V-C1-8 未達**（F43–F46），預設維持 v1 | — |
 | C2 | ✅ v0、v1 | ✅ v0、v1；C2.1 計分器 ✅ | v0 未通過（F1）；**v1 通過**（F11–F15）；C2.1 blend(0.25) 通過預先登記選擇、保留驗證與新種子確認（[F37](../results/synthetic-l3-c2-scorer-findings.md)）；V-C2-3 卡在 C1（F16） | — |
 | C3 | — | — | — | — |
 | C4 | ✅ C4.1 | ✅ C4.1 | 需 C4.2（V-C4-2/3） | — |
 | C5 | ✅ C5.1–C5.3 | ✅ C5.1–C5.3（L2 30 項） | 不適用 | — |
 
-所有發現的狀態：[results/FINDINGS.md](../results/FINDINGS.md)。最新 L3 結果：[端到端](../results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
+所有發現的狀態：[results/FINDINGS.md](../results/FINDINGS.md)。最新 L3 結果：[C1.3 v2 雜訊模型](../results/synthetic-l3-noise-findings.md)、[端到端](../results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
 
 **L3 判定規則**：結論須在 2 種真相函數 × 2 種生成模型（× 3 種名氣權重）下方向一致才算成立。
 **調參規則**（F17）：一個生成模型挑選、另一個生成模型驗證、全新種子確認；選擇規則須在執行前寫入腳本（預先登記）。

@@ -19,6 +19,7 @@
 | ad | [synthetic-l3-adaptive-findings.md](synthetic-l3-adaptive-findings.md) | W-25 |
 | e2e | [synthetic-l3-e2e-findings.md](synthetic-l3-e2e-findings.md) | 檢查整合 |
 | sc | [synthetic-l3-c2-scorer-findings.md](synthetic-l3-c2-scorer-findings.md) | W-26 |
+| nz | [synthetic-l3-noise-findings.md](synthetic-l3-noise-findings.md) | C1.3 v2 |
 
 ## C2 探索推薦
 
@@ -68,6 +69,12 @@
 | F27 | 誤設下 RMSE ≤ 0.25（自適應策略 15 題時） | ✅ | ad | V-C1-4 通過 |
 | F28 | 最大變異選題在第 1 題偶爾劣於隨機（平手順序固定） | ✅ | ad | 預設改用 voi |
 | F29 | 15 維都影響排序，「只問關鍵題」的空間有限 | 💭 | ad | 30% 門檻是否合理待 W-41 |
+| F42 | 常態雜訊估計無法校準：截斷讓雜訊被低估（真實 0.40 → σ̂ 約 0.28） | ✅ | nz（第一次，兩個生成模型） | B-C1-16 |
+| F43 | 截斷概似能校準：所有條件涵蓋率 0.854–0.937 | ✅ | nz（兩次執行） | 保留為非預設選項 |
+| F44 | 截斷模型以排序為代價：原型 Q=15 時 τ −0.039～−0.091 | ✅ | nz（兩次執行） | B-C1-18；未設為預設 |
+| F45 | 只用重複題學雜訊消除大部分前期損失，但 Q=45、雜訊 0.40 時仍略差（−0.015） | ✅ | nz（第二次，單次） | 仍未通過守門 |
+| F46 | 校準與排序有結構性衝突：v1 低估雜訊反而少靠有偏誤的錨點先驗 | 💭 | nz（三種模型方向一致） | 先驗品質（B-C1-17）是下一個槓桿 |
+| F47 | 作答偏誤會破壞截斷模型在低雜訊時的校準（0.837） | ✅（只報告） | nz | — |
 
 ## 端到端（系統層）
 

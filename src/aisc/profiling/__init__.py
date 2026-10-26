@@ -10,6 +10,7 @@ Sub-components (docs/components/C1-profiling.md):
 """
 
 from aisc.profiling.adaptive import (
+    NOISE_MODELS,
     STRATEGIES,
     AdaptiveSession,
     Item,
@@ -29,6 +30,7 @@ from aisc.profiling.familiarity import LEVELS, STRICT_KNOWN, apply_familiarity, 
 __all__ = [
     "AdaptiveSession",
     "Item",
+    "NOISE_MODELS",
     "STRATEGIES",
     "cosine_scores",
     "default_item_bank",
