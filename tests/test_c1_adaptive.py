@@ -179,13 +179,56 @@ def test_probe_posterior_calibrated_under_misspecified_noise():
 @pytest.mark.xfail(
     strict=True,
     raises=AssertionError,
-    reason="B-C1-16: Gaussian likelihood ignores censoring at the scale ends",
+    reason="B-C1-17: neutral normal prior under-covers needs near the scale ends",
 )
-def test_probe_edge_dimensions_calibrated_under_censoring():
-    """Noise correctly assumed (0.40); dimensions with true need near 0 or 1 should
-    still have >= 85% coverage of their 90% intervals (archetype students)."""
+def test_probe_edge_dimensions_calibrated_under_neutral_prior():
+    """Noise correctly assumed (0.40), neutral prior N(0.5, 0.3^2): dimensions with
+    true need near 0 or 1 should still have >= 85% coverage of their 90% intervals
+    (archetype students). Measured 0.743; the censored likelihood alone does not
+    fix it (0.747), a wider prior does (sd 0.5: 0.89)."""
     cov = _coverage(0.40, assumed=0.40, needs_model="archetype", edge_only=True)
     assert cov >= 0.85
+
+
+def _mean_sigma_hat(noise_model: str, true_noise: float = 0.40, n_students: int = 80) -> float:
+    from aisc.simulation.catalog_gen import synthetic_catalog
+    from aisc.simulation.population import SimConfig, generate_population
+    from aisc.simulation.respondent import make_item_responder
+
+    cat = synthetic_catalog(np.random.default_rng(0), n_per_family=2)
+    pop = generate_population(
+        cat, SimConfig(n_students=n_students, needs_model="archetype"), np.random.default_rng(9)
+    )
+    sig = []
+    for i, st in enumerate(pop):
+        answer = make_item_responder(st, np.random.default_rng([3, i]), noise_sd=true_noise)
+        s = AdaptiveSession(PRIOR, cat, strategy="variance", noise_model=noise_model)
+        while not s.done():
+            item = s.next_item()
+            s.record(item, answer(item))
+        sig.append(s.noise_sd)
+    return float(np.mean(sig))
+
+
+@pytest.mark.probe
+@pytest.mark.parametrize(
+    "noise_model",
+    [
+        pytest.param(
+            "estimated",
+            marks=pytest.mark.xfail(
+                strict=True,
+                raises=AssertionError,
+                reason="B-C1-16: Gaussian noise estimate is shrunk by clipping at 0 and 1",
+            ),
+        ),
+        "censored",
+    ],
+)
+def test_probe_noise_estimate_survives_censoring(noise_model):
+    """True item noise 0.40 (assumed 0.25), archetype students: the mean noise
+    estimate should be within 15% of the truth."""
+    assert abs(_mean_sigma_hat(noise_model) - 0.40) <= 0.06
 
 
 # --- C1.3 v2 noise models -------------------------------------------------------
