@@ -37,7 +37,8 @@ def test_discover_partitions_by_familiarity(catalog):
     for section in (res.discoveries, res.known_good):
         scores = [r.relevance for r in section]
         assert scores == sorted(scores, reverse=True)
-        assert all(sum(r.contributions.values()) == pytest.approx(1.0) for r in section)
+        # contributions are the scorer's exact additive explanation (B-C2-6)
+        assert all(sum(r.contributions.values()) == pytest.approx(r.relevance) for r in section)
 
 
 def test_discover_respects_constraints_and_floor(catalog):
@@ -111,3 +112,18 @@ def test_missing_dimensions_reported():
     p = StudentProfile("s", {"quant_intensity": 0.5})
     assert len(p.missing_dimensions) == len(NEED_KEYS) - 1
     assert complete_neutral(p).missing_dimensions == []
+
+
+def test_explicit_scorer_changes_ranking_and_explanations(catalog):
+    from aisc.discovery import COSINE, layered
+
+    profile = full(anchors=["syn-01"])
+    a = discover(profile, catalog, k_new=12, scorer=COSINE)
+    b = discover(profile, catalog, k_new=12, scorer=layered(2.0))
+    for res in (a, b):
+        assert all(sum(r.contributions.values()) == pytest.approx(r.relevance)
+                   for r in res.discoveries)  # fmt: skip
+    assert [r.relevance for r in a.discoveries] != [r.relevance for r in b.discoveries]
+    assert shortlist(profile, catalog, n=5, scorer=COSINE) == [
+        r.program.program_id for r in a.discoveries[:5]
+    ]

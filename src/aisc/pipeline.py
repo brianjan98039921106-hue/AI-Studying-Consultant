@@ -18,7 +18,8 @@ from collections.abc import Callable
 import numpy as np
 
 from aisc.contracts import DiscoveryResult, Program, StudentProfile
-from aisc.discovery import discover, relevance_matrix, shortlist
+from aisc.discovery import Scorer, discover, shortlist
+from aisc.discovery import scorers as _scorers
 from aisc.profiling import AdaptiveSession, Item, apply_familiarity, blend_profile_v1
 
 AskFn = Callable[[list[str]], dict[str, str]]
@@ -26,8 +27,8 @@ AnswerFn = Callable[[Item], float]
 
 
 def c2_scores(w: np.ndarray, X: np.ndarray) -> np.ndarray:
-    """C2.1 relevance for every catalogue row: the scorer C1.3 must optimise for."""
-    return relevance_matrix(w, X)
+    """Default C2.1 relevance for every catalogue row: what C1.3 optimises for."""
+    return _scorers.DEFAULT_SCORER.score_matrix(w, X)
 
 
 def prepare_profile(profile: StudentProfile, catalog: list[Program]) -> StudentProfile:
@@ -49,6 +50,7 @@ def run_questionnaire(
     strategy: str = "voi",
     item_noise_sd: float = 0.25,
     rng: np.random.Generator | None = None,
+    scorer: Scorer | None = None,
 ) -> StudentProfile:
     """Ask up to `budget` items chosen by C1.3 and return the posterior profile."""
     if budget < 0:
@@ -58,7 +60,7 @@ def run_questionnaire(
         catalog=catalog,
         strategy=strategy,
         item_noise_sd=item_noise_sd,
-        score_fn=c2_scores,
+        score_fn=scorer.score_matrix if scorer is not None else c2_scores,
         rng=rng if rng is not None else np.random.default_rng(0),
     )
     for _ in range(budget):
@@ -77,9 +79,12 @@ def interactive_discovery(
     k_new: int = 10,
     k_known: int = 5,
     min_relevance: float = 0.0,
+    scorer: Scorer | None = None,
 ) -> DiscoveryResult:
     profile = prepare_profile(profile, catalog)
-    candidates = shortlist(profile, catalog, n=n_shortlist, min_relevance=min_relevance)
+    candidates = shortlist(
+        profile, catalog, n=n_shortlist, min_relevance=min_relevance, scorer=scorer
+    )
     report = ask(candidates) if candidates else {}
     unexpected = set(report) - set(candidates)
     if unexpected:
@@ -92,4 +97,5 @@ def interactive_discovery(
         k_known=k_known,
         min_relevance=min_relevance,
         asked=candidates,
+        scorer=scorer,
     )

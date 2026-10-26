@@ -108,11 +108,15 @@ def test_invalid_weights_rejected(catalog):
 
 @pytest.mark.probe
 @pytest.mark.xfail(
-    strict=True, raises=AssertionError, reason="B-C2-3: cosine ignores intensity mismatch"
+    strict=True,
+    raises=AssertionError,
+    reason="B-C2-3 (v0 reference only): cosine ignores intensity mismatch",
 )
 def test_probe_cosine_ignores_intensity():
     """Mild interest in math should not be a perfect match for the most
-    math-intensive program. Cosine scores it 1.0."""
+    math-intensive program. Cosine (v0 `relevance`, kept as reference) scores it 1.0.
+    The absolute threshold only makes sense on the cosine scale; the scale-free
+    restatement below is what W-26 fixed."""
     student = np.zeros(len(NEED_KEYS))
     program = np.zeros(len(NEED_KEYS))
     student[NEED_KEYS.index("quant_intensity")] = 0.2
@@ -154,3 +158,57 @@ def test_probe_best_fit_survives(by_id, catalog, version, familiar):
     else:
         shown = discover(student, catalog, k_new=5, k_known=5).all_ids
     assert "syn-04" in shown
+
+
+# --- B-C2-3 restated scale-free (W-26) ------------------------------------------------
+#
+# The original probe above uses an absolute threshold (< 0.9) that only makes sense on
+# the cosine scale. To compare scorers on different scales, the same blind spot is
+# restated as a ranking property: when two programs point in the same direction as the
+# student and differ only in magnitude, the one whose magnitude matches the student
+# must rank strictly first. Cosine ties in exactly these cases (verified while writing
+# this probe: with a non-zero background on other dimensions cosine already prefers the
+# matched program, so those cases would not test the blind spot).
+
+
+def _single_dim_case(student_level, other_level):
+    q = NEED_KEYS.index("quant_intensity")
+    w, a, b = (np.zeros(len(NEED_KEYS)) for _ in range(3))
+    w[q], a[q], b[q] = student_level, student_level, other_level
+    return w, np.vstack([a, b])
+
+
+def _parallel_case(student_level, other_level):
+    """Student mild on every dimension; programs identical in direction."""
+    w = np.full(len(NEED_KEYS), student_level)
+    return w, np.vstack([w.copy(), np.full(len(NEED_KEYS), other_level)])
+
+
+@pytest.mark.probe
+@pytest.mark.parametrize(
+    "case",
+    [
+        _single_dim_case(0.2, 1.0),
+        _single_dim_case(1.0, 0.2),
+        _single_dim_case(0.5, 1.0),
+        _parallel_case(0.3, 0.9),
+    ],
+    ids=["over-intense", "under-intense", "mild-vs-max", "mild-everywhere"],
+)
+def test_probe_intensity_matched_program_ranks_first(case):
+    from aisc.discovery import DEFAULT_SCORER
+
+    w, X = case
+    scores = DEFAULT_SCORER.score_matrix(w, X)
+    assert scores[0] > scores[1]
+
+
+def test_default_scorer_preference_is_weak_on_the_absolute_scale():
+    """Documents, rather than hides, how small the W-26 correction is: on the
+    original probe the default scorer gives 0.989 instead of cosine's 1.0, so it
+    would still fail the original absolute threshold (< 0.9)."""
+    from aisc.discovery import DEFAULT_SCORER
+
+    w, X = _single_dim_case(0.2, 1.0)
+    assert DEFAULT_SCORER.score(w, X[1]) == pytest.approx(0.75 + 0.25 * (1 - 0.64 / 15))
+    assert DEFAULT_SCORER.score(w, X[1]) > 0.9
