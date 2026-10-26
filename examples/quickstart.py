@@ -9,7 +9,7 @@ from pathlib import Path
 from aisc.catalog import load_programs
 from aisc.contracts import AdmitEstimate, StudentProfile
 from aisc.discovery import recommend
-from aisc.pipeline import interactive_discovery
+from aisc.pipeline import interactive_discovery, prepare_profile
 from aisc.portfolio import dp_varied_cost
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -17,7 +17,8 @@ catalog = load_programs(ROOT / "data" / "synthetic" / "programs.jsonl")
 by_id = {p.program_id: p for p in catalog}
 
 # A student who only has "MS Finance" in mind but likes maths and some coding.
-# Stated needs only: C1.2 anchor blending is not used because it failed L3 (F4a, F5).
+# Only 4 of 15 dimensions are answered: the pipeline completes the rest with C1.2 v1
+# (anchors as a prior for unanswered dimensions only; answered ones stay as stated).
 student = StudentProfile(
     student_id="demo",
     needs={
@@ -52,7 +53,7 @@ show("你已經知道、而且確實適合 (known & good fit)", result.known_goo
 # Reference only: C2 v0 (additive novelty + MMR) was rejected at L3 (F1).
 show(
     "Reference: C2 v0, REJECTED at L3",
-    recommend(student, catalog, k=5, novelty_weight=0.4),
+    recommend(prepare_profile(student, catalog), catalog, k=5, novelty_weight=0.4),
 )
 
 # C3 does not exist yet: admission probabilities are explicit assumptions.

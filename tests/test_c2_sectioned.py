@@ -5,12 +5,18 @@ import pytest
 from aisc.contracts import StudentProfile
 from aisc.discovery import discover, relevance, shortlist
 from aisc.pipeline import interactive_discovery
+from aisc.profiling import complete_neutral
 
 NEEDS = {"quant_intensity": 0.8, "domain_finance": 0.9, "riasec_e": 0.6}
 
 
+def full(**kwargs) -> StudentProfile:
+    """Explicitly completed profile: C2 refuses incomplete ones (B-C1-14)."""
+    return complete_neutral(StudentProfile("s", NEEDS, **kwargs))
+
+
 def test_shortlist_is_fit_ranked_and_excludes_anchors(catalog):
-    profile = StudentProfile("s", NEEDS, anchors=["syn-01"])
+    profile = full(anchors=["syn-01"])
     ids = shortlist(profile, catalog, n=5)
     assert len(ids) == 5 and "syn-01" not in ids
     by_id = {p.program_id: p for p in catalog}
@@ -19,7 +25,7 @@ def test_shortlist_is_fit_ranked_and_excludes_anchors(catalog):
 
 
 def test_discover_partitions_by_familiarity(catalog):
-    profile = StudentProfile("s", NEEDS, anchors=["syn-01"], familiar=["syn-02", "syn-12"])
+    profile = full(anchors=["syn-01"], familiar=["syn-02", "syn-12"])
     res = discover(profile, catalog, k_new=4, k_known=3)
     new = [r.program.program_id for r in res.discoveries]
     known = [r.program.program_id for r in res.known_good]
@@ -35,7 +41,7 @@ def test_discover_partitions_by_familiarity(catalog):
 
 
 def test_discover_respects_constraints_and_floor(catalog):
-    profile = StudentProfile("s", NEEDS, hard_constraints={"spring_intake": True})
+    profile = full(hard_constraints={"spring_intake": True})
     res = discover(profile, catalog, k_new=12, min_relevance=0.6)
     assert all(r.program.spring_intake is not False for r in res.discoveries)
     assert all(r.relevance >= 0.6 for r in res.discoveries)
@@ -43,7 +49,7 @@ def test_discover_respects_constraints_and_floor(catalog):
 
 def test_discover_validates_sizes(catalog):
     with pytest.raises(ValueError):
-        discover(StudentProfile("s", NEEDS), catalog, k_new=-1)
+        discover(full(), catalog, k_new=-1)
 
 
 def test_pipeline_asks_shortlist_once_and_uses_answers(catalog):
@@ -86,3 +92,22 @@ def test_pipeline_leaves_fully_answered_profiles_unchanged(catalog):
 
     full = StudentProfile("s", {k: 0.3 for k in NEED_KEYS}, anchors=["syn-01"])
     assert prepare_profile(full, catalog).needs == pytest.approx(full.needs)
+
+
+@pytest.mark.parametrize("entry", ["shortlist", "discover", "recommend"])
+def test_c2_refuses_incomplete_profiles(catalog, entry):
+    """B-C1-14 enforced at the C2 boundary, not only inside the pipeline."""
+    from aisc.discovery import recommend
+
+    fn = {"shortlist": shortlist, "discover": discover, "recommend": recommend}[entry]
+    with pytest.raises(ValueError, match="unanswered dimensions"):
+        fn(StudentProfile("s", NEEDS), catalog)
+    fn(full(), catalog)  # completed profile is accepted
+
+
+def test_missing_dimensions_reported():
+    from aisc.dimensions import NEED_KEYS
+
+    p = StudentProfile("s", {"quant_intensity": 0.5})
+    assert len(p.missing_dimensions) == len(NEED_KEYS) - 1
+    assert complete_neutral(p).missing_dimensions == []

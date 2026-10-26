@@ -54,14 +54,16 @@ flowchart LR
 
 ## 3. 部件總表
 
-| 部件 | 輸入 → 輸出（契約） | 核心方法 | 規格 | 目前版本 |
-|---|---|---|---|---|
-| **C0** Program 知識庫 | 公開資料 → `Program` | 分類骨架 + 雙重測量 + 一致性品管 | [C0](components/C0-catalog.md) | loader 完成；資料管線未開始 |
-| **C1** 學生側寫 | 問卷回答、錨點、熟悉度 → `StudentProfile` | 心理計量測量模型 + 貝氏更新 + 資訊價值選題 | [C1](components/C1-profiling.md) | C1.2 v0（無偏誤校正） |
-| **C2** 探索推薦 | `StudentProfile` + `Program` → `Recommendation` | 契合度 × 新穎度 + MMR + 可忠實分解的理由 | [C2](components/C2-discovery.md) | v0 完成，3 個已知盲區 |
-| **C3** 錄取可行性 | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) | 未開始 |
-| **C4** 申請組合 | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) | C4.1 完成並驗證 |
-| **C5** 模擬與評估 | 合成族群 → 各部件指標 | 已知真相模擬 + 消融 + 盲區探針 | [C5](components/C5-simulation.md) | 未開始（最優先） |
+> 各部件的目前狀態只記在 [VALIDATION.md §5](VALIDATION.md)，此表只描述設計。
+
+| 部件 | 輸入 → 輸出（契約） | 核心方法 | 規格 |
+|---|---|---|---|
+| **C0** Program 知識庫 | 公開資料 → `Program` | 分類骨架 + 雙重測量 + 一致性品管 | [C0](components/C0-catalog.md) |
+| **C1** 學生側寫 | 問卷回答、錨點、熟悉度 → `StudentProfile`（完整 15 維） | RIASEC 測量模型 + 錨點先驗 + 貝氏自適應問卷 + 熟悉度擷取 | [C1](components/C1-profiling.md) |
+| **C2** 探索推薦 | 完整 `StudentProfile` + `Program` → `DiscoveryResult` | 依契合排序 + 熟悉度分區（v1）；v0 新穎度加權保留為參考；可忠實分解的理由 | [C2](components/C2-discovery.md) |
+| **C3** 錄取可行性 | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) |
+| **C4** 申請組合 | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) |
+| **C5** 模擬與評估 | 合成族群 → 各部件指標 | 已知真相模擬 + 消融 + 盲區探針 | [C5](components/C5-simulation.md) |
 
 ## 4. 數學定義（v0）
 

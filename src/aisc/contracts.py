@@ -108,7 +108,23 @@ class StudentProfile:
 
     @property
     def vector(self) -> np.ndarray:
+        """Ordered need vector. Unanswered dimensions become 0 here, which means
+        "no interest", not "unknown" (B-C1-14). Ranking code must call
+        `require_complete` first."""
         return to_vector(self.needs)
+
+    @property
+    def missing_dimensions(self) -> list[str]:
+        return [k for k in NEED_KEYS if k not in self.needs]
+
+    def require_complete(self, where: str) -> None:
+        """Raise if any dimension is unanswered (B-C1-14)."""
+        missing = self.missing_dimensions
+        if missing:
+            raise ValueError(
+                f"{where} needs a complete profile; unanswered dimensions {missing}. "
+                "Complete it first (pipeline.prepare_profile or profiling.complete_neutral)."
+            )
 
 
 # --- C2 output -------------------------------------------------------------

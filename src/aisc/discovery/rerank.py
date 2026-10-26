@@ -31,6 +31,7 @@ def recommend(
         raise ValueError("Weights must lie in [0, 1]")
     if k < 0:
         raise ValueError("k must be non-negative")
+    profile.require_complete("C2 recommend")
 
     by_id = {p.program_id: p for p in catalog}
     anchors = [by_id[pid] for pid in profile.anchors if pid in by_id]

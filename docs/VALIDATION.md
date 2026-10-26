@@ -92,6 +92,7 @@
 |---|---|---|---|
 | V-S-1 | L3 | 用與估計器**不同**的資料生成模型重跑 C1–C2 指標 | 結論方向不變 ✅（W-13：F1–F3、F4a、F4c、F5、F7 跨兩個生成家族成立） |
 | V-S-2 | L5 | 申請季結束後的追蹤：推薦的 program 實際申請率、滿意度 | 回報（長期） |
+| V-S-3 | L3 | 端到端（問卷 → 補全 → 短名單 → 熟悉度 → 分區）：部件組合後增益不得低於部件單獨測量的一半 | ✅ 兩次執行 × 8 條件（[F30](../results/synthetic-l3-e2e-findings.md)） |
 
 ## 5. 目前狀態
 
@@ -104,7 +105,7 @@
 | C4 | ✅ C4.1 | ✅ C4.1 | 需 C4.2（V-C4-2/3） | — |
 | C5 | ✅ C5.1–C5.3 | ✅ C5.1–C5.3（L2 30 項） | 不適用 | — |
 
-最新 L3 結果：[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
+所有發現的狀態：[results/FINDINGS.md](../results/FINDINGS.md)。最新 L3 結果：[端到端](../results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
 
 **L3 判定規則**：結論須在 2 種真相函數 × 2 種生成模型（× 3 種名氣權重）下方向一致才算成立。
 **調參規則**（F17）：一個生成模型挑選、另一個生成模型驗證、全新種子確認；選擇規則須在執行前寫入腳本（預先登記）。
