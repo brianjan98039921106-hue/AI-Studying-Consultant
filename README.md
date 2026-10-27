@@ -56,7 +56,7 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
-| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10） | W-50 |
+| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
 | 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
 | 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
 <!-- AUTO:changelog END -->

@@ -348,6 +348,8 @@ print(round(est.low, 2), round(est.mean, 2), round(est.high, 2))
 new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學程：用族群平均，區間較寬
 ```
 
+有了留出的真實結果後，可用 `aisc.feasibility` 的 `brier_skill`（是否勝過「官方錄取率」常數預測）、`calibration_slope`（理想為截距 0、斜率 1；斜率小於 1 表示過度自信）、`reliability_table` 與 `by_group`（例如台灣／國際申請者分開）檢查校準（V-C3-2～4）。
+
 ### 4.10 側寫報告（Markdown）
 
 把需求剖面、兩區推薦（附理由與條件差距）、申請組合整理成一份給顧問與學生一起看的報告。報告只負責呈現，不改變任何結果；合成資料、假設的錄取機率、系統補全的維度都會自動標示。
@@ -432,4 +434,4 @@ print(md.splitlines()[0])
 | 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |
 | 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
 | 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
-| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10） | W-50 |
+| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
