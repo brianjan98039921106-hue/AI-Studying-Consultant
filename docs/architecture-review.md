@@ -101,6 +101,13 @@
 
 結果（[F105–F107](../results/interest-area-imputation-findings.md)）：相關補全在 6 個設定都大幅降低未答領域的誤差（RMSE −0.029～−0.112），答得越少好處越大；但「雜訊 0、細問 3 群」時前 5 名找回率略低，依預先登記**不改預設**，改為可選用的 `area_model="correlated"`，待 W-41 學生資料再檢驗。
 
+### 2.2 C1：以相關結構自適應選擇細問的領域
+
+| 項目 | 內容 |
+|---|---|
+| 方法 | 沿用 §2.1 的聯合常態模型，每答一題就更新所有領域；比較 A 最適（總後驗變異數下降最多）與上信賴界（後驗平均＋標準差最大）兩種選題，對照兩階段順序 |
+| 結果（[F113–F116](../results/interest-area-adaptive-findings.md)） | 兩種選題都**未通過**預先登記；但「兩階段＋相關補全」只細問 4 個領域，誤差就低於現行預設細問 12 個（F115）。有雜訊時已答領域直接用作答值，題數增加不再改善（F116，去雜訊為後續候選） |
+
 ## 3. 參考文獻
 
 - Samejima, F. (1969). Estimation of latent ability using a response pattern of graded scores. *Psychometrika Monograph Supplement*, 17.
@@ -108,4 +115,6 @@
 - Rendle, S., Freudenthaler, C., Gantner, Z., & Schmidt-Thieme, L. (2009). BPR: Bayesian personalized ranking from implicit feedback. *UAI*.
 - Chapelle, O., & Li, L. (2011). An empirical evaluation of Thompson sampling. *NeurIPS*.
 - Angelopoulos, A. N., & Bates, S. (2021). A gentle introduction to conformal prediction and distribution-free uncertainty quantification. arXiv:2107.07511.
+- Chaloner, K., & Verdinelli, I. (1995). Bayesian experimental design: A review. *Statistical Science*, 10(3), 273–304.
+- Srinivas, N., Krause, A., Kakade, S. M., & Seeger, M. (2010). Gaussian process optimization in the bandit setting: No regret and experimental design. *ICML*.
 - Carroll, R. J., Ruppert, D., Stefanski, L. A., & Crainiceanu, C. M. (2006). *Measurement Error in Nonlinear Models* (2nd ed.). Chapman & Hall/CRC.

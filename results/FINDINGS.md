@@ -22,6 +22,7 @@
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
 | r3 | [reference-all-v3-findings.md](reference-all-v3-findings.md)（**真實資料**） | W-65、W-70 |
 | im | [interest-area-imputation-findings.md](interest-area-imputation-findings.md)（**真實資料**，O\*NET 職業） | 架構檢討 §2.1 |
+| aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
@@ -65,6 +66,10 @@
 | F106 | 答得越少相關補全好處越大（m = 1：RMSE 0.188 → 0.076，前 5 名 0.576 → 0.736） | ✅ | im | W-41 後重驗，可能改預設 |
 | F107 | 唯一損失在 H 已近完美時（條件期望往平均收縮） | 💭 | im | — |
 | F108 | 相關補全細問 1 群（約 27 題）可能優於現行先驗細問 3 群（約 36 題），約省 25% 題目 | 💭（探索性） | im | B-C1-21：W-41 重驗 |
+| F113 | A 最適選題比兩階段順序差（RMSE +0.017～+0.020，前 5 名 −0.034～−0.058） | ✅（數據）／💭（機制） | aq | 不採用 |
+| F114 | 上信賴界選題只在無雜訊、題數多時較好，預先登記未通過 | ✅ | aq | 不採用；兩階段不變 |
+| F115 | 兩階段＋相關補全只細問 4 個領域，RMSE 即低於現行預設細問 12 個；前 5 名找回率雜訊 0 時需 8 題 | ✅（數據）／💭（省題解讀） | aq | B-C1-21：W-41 重驗 |
+| F116 | 有雜訊時已答領域直接用作答值，增加題數不再降低誤差；去雜訊可能有幫助（未檢驗） | 💭 | aq | 後續候選，須預先登記 |
 
 ## C2 探索推薦
 
