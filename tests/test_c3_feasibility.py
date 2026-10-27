@@ -146,9 +146,10 @@ def test_probe_intervals_cover_when_stronger_applicants_report_more():
 
 
 def test_intervals_cover_nominally_when_well_specified():
-    """B-C3-9 (was a probe; fixed by tau model averaging, F136). Complete records from the model's own family of worlds: 90% intervals for the
-    known programmes should cover the true P(admit) at an average applicant at least
-    0.90 - 3 SE (about 0.87 over 960 checks); plug-in tau gave 0.85."""
+    """B-C3-9 (was a probe; fixed by tau model averaging, F136). Complete records
+    from the model's own family of worlds: 90% intervals for the known programmes
+    should cover the true P(admit) at an average applicant at least 0.90 - 3 SE
+    (about 0.87 over 960 checks); plug-in tau gave 0.85."""
     import aisc.feasibility as fz
 
     hits = []

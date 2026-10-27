@@ -50,8 +50,8 @@ BAND = (0.85, 0.95)
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--reps", type=int, default=N_REP)
-    ap.add_argument("--out", type=Path,
-                    default=ROOT / "results" / "synthetic-l3-admission-pool-confirm.md")  # fmt: skip
+    out = ROOT / "results" / "synthetic-l3-admission-pool-confirm.md"
+    ap.add_argument("--out", type=Path, default=out)
     args = ap.parse_args()
     res = {}
     for gen in GENS:
