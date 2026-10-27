@@ -45,6 +45,12 @@
       "source_url": "https://www.onetcenter.org/database.html",
       "retrieved_at": "2026-10-27",
       "sha256": "a8353fb7aa28042b04be9d75e8456c8a101fb87900107e94d71e67991fa73b79"
+    },
+    "bls_oews_national": {
+      "file_name": "national_M2025_dl.xlsx",
+      "source_url": "https://www.bls.gov/oes/special-requests/oesm25nat.zip",
+      "retrieved_at": "2026-10-28",
+      "sha256": "852250997ceff9b721ff68f63e877d818f9c1ec8b1b69dd367958faedd5282b2"
     }
   }
 }

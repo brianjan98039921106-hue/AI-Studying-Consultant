@@ -451,6 +451,38 @@ def test_occupation_profile_can_exclude_teacher_socs():
     assert only.fallback and only.excluded == () and only.vector["riasec_s"] == 1.0
 
 
+def test_occupation_profile_employment_weights():
+    socs = {"11-1021": {n: 4.0 for n in RIASEC}, "15-2031": {n: 7.0 for n in RIASEC},
+            "19-9999": {n: 1.0 for n in RIASEC}}  # fmt: skip
+    xw = {"c": {"11-1021", "15-2031", "19-9999"}}
+    p = occupation_profile("c", xw, socs, employment={"11-1021": 300.0, "15-2031": 100.0})
+    assert p.unweighted == ("19-9999",)  # no employment figure: left out of the weighting
+    assert p.weights == pytest.approx({"11-1021": 0.75, "15-2031": 0.25})
+    assert p.vector["riasec_s"] == pytest.approx((0.75 * 4 + 0.25 * 7 - 1) / 6)
+    none = occupation_profile("c", xw, socs, employment={})
+    assert not none.weights and none.vector["riasec_s"] == pytest.approx(
+        (4 + 7 + 1) / 3 / 6 - 1 / 6
+    )
+
+
+def test_committed_employment_weighted_tables():
+    src = json.loads((ROOT / "data" / "reference" / "SOURCES_all.json").read_text())
+    assert len(src["inputs"]["bls_oews_national"]["sha256"]) == 64
+    for name in (
+        "occupation_profiles_all_empw.csv",
+        "occupation_profiles_all_empw_nonacademic.csv",
+    ):
+        rows = _ref(name)
+        assert len(rows) == len(_ref("cip2020_all.csv"))
+        for r in rows:
+            if r["max_weight"]:
+                assert 0 < float(r["max_weight"]) <= 1
+    na = {r["cip"]: r for r in _ref("occupation_profiles_all_nonacademic.csv")}
+    for r in _ref("occupation_profiles_all_empw_nonacademic.csv"):
+        if na[r["cip"]]["n_teacher_soc_excluded"] not in ("", "0"):
+            assert int(r["n_soc_used"]) <= int(na[r["cip"]]["n_soc_used"])
+
+
 def test_nonacademic_profiles_leave_out_teachers():
     """B-C0-8 fixed for the v1.1 bridge (A-C0-10): where a CIP maps to other SOCs too,
     the non-academic profiles use none of the 25-1xxx postsecondary-teacher SOCs."""

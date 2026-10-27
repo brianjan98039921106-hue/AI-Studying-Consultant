@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -126,6 +127,8 @@ class OccupationProfile:
     missing: tuple[str, ...] = field(default=())
     excluded: tuple[str, ...] = field(default=())  # SOCs left out by `exclude_prefixes`
     fallback: bool = False  # every SOC was excluded, so all were kept (A-C0-10)
+    weights: dict[str, float] = field(default_factory=dict)  # normalised, empty = equal
+    unweighted: tuple[str, ...] = field(default=())  # SOCs without a weight, left out
 
     @property
     def coverage(self) -> float:
@@ -139,11 +142,14 @@ def occupation_profile(
     keys: tuple[str, ...] = RIASEC_KEYS,
     names: tuple[str, ...] = RIASEC,
     exclude_prefixes: tuple[str, ...] = (),
+    employment: Mapping[str, float] | None = None,
 ) -> OccupationProfile:
     """Equal-weight mean over the CIP's SOC codes with O*NET data, rescaled
     (v - 1) / 6. `keys`/`names` select the element set (RIASEC by default; the
     41 specific interest areas for W-64). `exclude_prefixes` drops matching SOCs
-    (e.g. postsecondary teachers "25-1", A-C0-10) unless that would leave none."""
+    (e.g. postsecondary teachers "25-1", A-C0-10) unless that would leave none.
+    `employment` (W-71): weight each SOC by its employment; SOCs without a figure are
+    left out (listed in `unweighted`) unless none has one, then weights are equal."""
     if len(keys) != len(names):
         raise ValueError("keys and names must have the same length")
     mapped = tuple(sorted(crosswalk.get(cip, set())))
@@ -160,8 +166,47 @@ def occupation_profile(
             fallback = True  # only excluded SOCs: keep them rather than lose the profile
     if not have:
         return OccupationProfile(cip, {}, mapped, have, missing)
-    vec = {
-        key: (sum(socs[s][name] for s in have) / len(have) - 1.0) / 6.0
-        for key, name in zip(keys, names, strict=True)
-    }
-    return OccupationProfile(cip, vec, mapped, have, missing, excluded, fallback)
+    weights: dict[str, float] = {}
+    unweighted: tuple[str, ...] = ()
+    if employment is not None:
+        with_emp = [s for s in have if employment.get(s, 0) > 0]
+        if with_emp:
+            unweighted = tuple(s for s in have if s not in with_emp)
+            have = tuple(with_emp)
+            total = sum(employment[s] for s in have)
+            weights = {s: employment[s] / total for s in have}
+    if weights:
+        vec = {
+            key: (sum(weights[s] * socs[s][name] for s in have) - 1.0) / 6.0
+            for key, name in zip(keys, names, strict=True)
+        }
+    else:  # equal weights, computed exactly as in v1 so its tables stay byte-identical
+        vec = {
+            key: (sum(socs[s][name] for s in have) / len(have) - 1.0) / 6.0
+            for key, name in zip(keys, names, strict=True)
+        }
+    return OccupationProfile(
+        cip, vec, mapped, have, missing, excluded, fallback, weights, unweighted
+    )
+
+
+def load_oews_national(path) -> dict[str, float]:
+    """Employment per detailed SOC from a BLS OEWS national file (national_M<year>_dl):
+    cross-industry, all ownerships, O_GROUP 'detailed', numeric TOT_EMP (W-71).
+    OEWS publishes some SOC 2018 codes only in combination (e.g. 13-1020 for 13-1022
+    and 13-1023); those codes are absent here and handled by the caller."""
+    rows = read_table(path, required=["OCC_CODE", "O_GROUP", "TOT_EMP"])
+    out: dict[str, float] = {}
+    for r in rows:
+        if r.get("AREA_TYPE", "1") not in ("1", 1) or r["O_GROUP"] != "detailed":
+            continue
+        if r.get("NAICS", "000000") not in ("000000", 0):
+            continue
+        try:
+            emp = float(r["TOT_EMP"])
+        except (TypeError, ValueError):
+            continue  # '**' (not released) and similar markers
+        out[str(r["OCC_CODE"]).strip()] = emp
+    if not out:
+        raise ValueError(f"{path}: no detailed occupations with employment")
+    return out

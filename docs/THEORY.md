@@ -13,7 +13,7 @@
 | 職業興趣剖面 | O*NET Occupational Interest Profiles（RIASEC） | A-C0-3 職業的興趣剖面可轉嫁到對應學程 |
 | MVP 範圍篩選（W-14） | CIP 2020 代碼前綴清單（`data/reference/mvp_scope.json`），award level 7、第一主修（MAJORNUM=1）、最近一年畢業人數 > 0 | A-C0-4、A-C0-7 |
 | 職業剖面量尺與合成（W-15 v1） | O*NET 職業興趣量尺 OI 為 1–7（Rounds et al., 1999, *Development of Occupational Interest Profiles for O\*NET*），線性轉為 $(v-1)/6 \in [0,1]$；同一 SOC 下多個 O\*NET-SOC 細項取平均，一個 CIP 對應多個 SOC 時等權平均（v1；v2 以就業人數加權） | A-C0-2、A-C0-3、A-C0-6 |
-| 職業剖面 v2：就業加權（W-71） | BLS Occupational Employment and Wage Statistics（OEWS）各 SOC 就業人數作為權重（沒有自由參數）；教職 SOC 另行處理（B-C0-8） | A-C0-2、A-C0-3 |
+| 職業剖面 v2：就業加權（W-71） | BLS Occupational Employment and Wage Statistics（OEWS）各 SOC 就業人數作為權重（沒有自由參數）；教職 SOC 另行處理（B-C0-8）。**2026-10-28 建置後未採用為預設**：權重集中於單一職業並放大教職稀釋（F102–F104） | A-C0-2、A-C0-3、A-C0-11 |
 | 職業剖面 v1.1：依學位層級處理教職（W-71 的過渡版） | 對照表把多數學術 CIP 對應到「某學科大學教師」（SOC 25-1xxx），但碩士、專業學位與證書的畢業生很少成為大學教師（B-C0-8、F51、F96）。「非學術」剖面：該 CIP 有其他 SOC 有 O\*NET 資料時，排除 25-1xxx 後等權平均；只有教職 SOC 時沿用全部並標記。研究型博士（level 17）使用含教職的原剖面，因為學術是其主要出路之一。沒有自由參數；就業加權（W-71）取得 BLS OEWS 後取代等權 | A-C0-10 |
 | 細分興趣橋接（W-64） | 與 RIASEC 相同的 CIP → SOC → O\*NET 路徑，元素換成 41 個細分興趣領域；OI 1–7 → $(v-1)/6$；等權平均 | A-C0-9、B-C0-14 |
 | 評分準則跨領域外推（W-72） | 留一族群外推（leave-one-family-out）：在部分 CIP 族群開發，在未參與開發的族群檢驗一致性 | A-C0-8 |

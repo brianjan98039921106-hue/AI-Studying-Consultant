@@ -27,6 +27,7 @@ from aisc.catalog.occupation import (
     basic_interest_key,
     load_basic_interest_map,
     load_cip_soc_crosswalk,
+    load_oews_national,
     load_onet_basic_interests,
     load_onet_interests,
     occupation_profile,
@@ -48,6 +49,7 @@ CIP_URL = "https://nces.ed.gov/ipeds/cipcode/resources.aspx?y=56"
 XWALK_URL = "https://nces.ed.gov/IPEDS/CIPCODE/Files/CIP2020_SOC2018_Crosswalk.xlsx"
 ONET_URL = "https://www.onetcenter.org/database.html"
 IPEDS_URL = "https://nces.ed.gov/ipeds/datacenter/DataFiles.aspx"
+OEWS_URL = "https://www.bls.gov/oes/special-requests/oesm25nat.zip"
 
 
 def _write_csv(path: Path, rows: list[dict]) -> None:
@@ -87,6 +89,9 @@ def main() -> None:
         default=None,
         help="download date of the two basic-interest files (default --retrieved-at)",
     )
+    ap.add_argument("--oews", type=Path, default=None,
+                    help="BLS OEWS national file national_M<year>_dl.xlsx (W-71)")  # fmt: skip
+    ap.add_argument("--oews-retrieved-at", default=None, help="download date of --oews")
     ap.add_argument("--scope", type=Path, default=ROOT / "data" / "reference" / "mvp_scope.json")
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "reference")
     ap.add_argument("--report", type=Path, default=ROOT / "results" / "reference-w14-w15.md")
@@ -184,6 +189,44 @@ def main() -> None:
             ("onet_specific_interest_areas", args.basic_interests, ONET_URL, b_date),
             ("onet_specific_interest_areas_map", args.basic_map, ONET_URL, b_date),
         ]
+    if multi and args.oews is not None:
+        # W-71: employment-weighted profiles. OEWS publishes a few SOC 2018 codes only
+        # as a combined code at the broad level (e.g. 13-1020 = 13-1022 + 13-1023):
+        # those SOCs share the combined code's employment equally; SOCs with no
+        # published figure at all are left out of the weighting (listed per CIP).
+        emp = dict(load_oews_national(args.oews))
+        need = sorted({s for c in fam for s in xw.get(c, set())} - set(emp))
+        combo = defaultdict(list)
+        for s in need:
+            if s[:6] + "0" in emp and s[:6] + "0" != s:
+                combo[s[:6] + "0"].append(s)
+        for code, members in combo.items():
+            for s in members:
+                emp[s] = emp[code] / len(members)
+        variants = {"empw": (), "empw_nonacademic": ("25-1",)}
+        for name, excl in variants.items():
+            rp = {c: occupation_profile(c, xw, socs, exclude_prefixes=excl, employment=emp)
+                  for c in sorted(fam)}  # fmt: skip
+            _write_csv(args.out / f"occupation_profiles_{sfx}_{name}.csv", [
+                {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in RIASEC_KEYS},
+                 "n_soc_used": len(p.socs_with_onet), "max_weight":
+                 f"{max(p.weights.values()):.4f}" if p.weights else "",
+                 "soc_without_employment": " ".join(p.unweighted)}
+                for c, p in rp.items()
+            ])  # fmt: skip
+            if args.basic_interests is not None:
+                bp = {c: occupation_profile(c, xw, bsocs, bkeys, areas, exclude_prefixes=excl,
+                                            employment=emp)
+                      for c in sorted(fam)}  # fmt: skip
+                _write_csv(args.out / f"occupation_basic_interests_{sfx}_{name}.csv", [
+                    {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in bkeys},
+                     "n_soc_used": len(p.socs_with_onet), "max_weight":
+                     f"{max(p.weights.values()):.4f}" if p.weights else "",
+                     "soc_without_employment": " ".join(p.unweighted)}
+                    for c, p in bp.items()
+                ])  # fmt: skip
+        extra_inputs.append(("bls_oews_national", args.oews, OEWS_URL,
+                             args.oews_retrieved_at or args.retrieved_at))  # fmt: skip
     sources = {
         "built": date.today().isoformat(),
         "scope_version": scope.version,
