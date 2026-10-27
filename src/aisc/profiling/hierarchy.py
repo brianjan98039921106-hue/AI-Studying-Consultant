@@ -123,6 +123,30 @@ def areas_in_group(group: int) -> tuple[str, ...]:
     return tuple(k for k in BASIC_INTEREST_KEYS if group in AREA_GROUPS[k])
 
 
+def areas_to_ask(
+    group_scores: Mapping[int, float], m: int | None = None, q: int | None = None
+) -> list[str]:
+    """Stage-2 question order (dimensions-v2 §2, W-66): the areas of the highest-rated
+    group first (areas_in_group order, cross-linked areas once), then the next group.
+    `m` keeps the areas of the top m groups; `q` cuts the list to q areas. Neither has
+    a default: the pre-registered choice is still open (dimensions-v2 §5; F115 is
+    occupation-data evidence only). Ties between groups go to the lower group id."""
+    validate_group_scores(group_scores)
+    if m is None and q is None:
+        raise ValueError("give m (groups) or q (areas)")
+    if m is not None and not 1 <= m <= len(GROUP_LABELS):
+        raise ValueError(f"m must lie in 1..{len(GROUP_LABELS)}")
+    if q is not None and q < 0:
+        raise ValueError("q must be non-negative")
+    groups = sorted(GROUP_LABELS, key=lambda g: (-group_scores.get(g, -1.0), g))
+    order: list[str] = []
+    for g in groups[: m if m is not None else len(groups)]:
+        for k in areas_in_group(g):
+            if k not in order:
+                order.append(k)
+    return order if q is None else order[:q]
+
+
 def area_prior(area: str, group_scores: Mapping[int, float]) -> tuple[float, float]:
     """(prior mean, prior sd) for an area the student has not rated."""
     if area not in AREA_GROUPS:

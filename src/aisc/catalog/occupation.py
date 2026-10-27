@@ -210,3 +210,24 @@ def load_oews_national(path) -> dict[str, float]:
     if not out:
         raise ValueError(f"{path}: no detailed occupations with employment")
     return out
+
+
+def series_fallback(
+    profiles: dict[str, dict[str, float]], targets: list[str]
+) -> dict[str, tuple[dict[str, float], str]]:
+    """Fallback profiles for CIP codes without an occupation match (B-C0-9, A-C0-14).
+
+    For each target CIP: the mean profile of the other CIPs with a profile in the same
+    4-digit group ("XX.XX"); if there are none, of the same 2-digit series ("XX");
+    else None is skipped. Returns {cip: (profile, level)} with level "group" or
+    "series". The caller must flag these as low-confidence fallbacks."""
+    keys = None
+    out: dict[str, tuple[dict[str, float], str]] = {}
+    for t in targets:
+        for level, n in (("group", 5), ("series", 2)):
+            sib = [p for c, p in profiles.items() if c != t and c[:n] == t[:n]]
+            if sib:
+                keys = keys or list(sib[0])
+                out[t] = ({k: sum(p[k] for p in sib) / len(sib) for k in keys}, level)
+                break
+    return out
