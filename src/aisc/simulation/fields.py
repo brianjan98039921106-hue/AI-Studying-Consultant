@@ -163,6 +163,14 @@ def all_fields_catalog(
     return programs, hidden
 
 
+def realised_transition(transition: str, natural: str, backgrounds: tuple[str, ...]) -> str:
+    """Transition label that matches the backgrounds actually drawn (B-C5-12): an
+    'adjacent' draw that fell back to the student's own family is 'continuing'."""
+    if transition == "adjacent" and backgrounds == (natural,):
+        return "continuing"
+    return transition
+
+
 def pick_backgrounds(
     transition: str, natural: str, families: list[str], rng: np.random.Generator
 ) -> tuple[str, ...]:

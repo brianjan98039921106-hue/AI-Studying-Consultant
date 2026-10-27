@@ -130,3 +130,48 @@ def test_simex_bootstrap_interval():
     assert sum(est.corrected.shares.values()) == pytest.approx(1.0)
     with pytest.raises(ValueError):
         estimate_layer_weights_simex(stated, X, pairs, y, 0.15, "v1", interval="wald")
+
+
+def test_item_reliability_and_calibrate():
+    from aisc.discovery.layer_weights import calibrate, item_reliability
+
+    rng = np.random.default_rng(12)
+    true = rng.normal(0.5, 0.2, (4000, 3))
+    noise_sd = np.array([0.0, 0.2, 0.4])
+    first = true + rng.normal(0, 1, true.shape) * noise_sd
+    second = true + rng.normal(0, 1, true.shape) * noise_sd
+    rel = item_reliability(first, second)
+    np.testing.assert_allclose(rel, 0.04 / (0.04 + noise_sd**2), atol=0.03)
+    cal = calibrate(first, rel, first.mean(0))
+    assert np.allclose(cal[:, 0], first[:, 0], atol=0.02)  # reliable item barely moves
+    assert cal[:, 2].std() < first[:, 2].std()  # noisy item shrinks toward the mean
+    with pytest.raises(ValueError):
+        item_reliability(first[:2], second[:2])
+
+
+def test_regression_calibration_reduces_measurement_error_bias():
+    from aisc.discovery.layer_weights import _pair_rows, estimate_layer_weights_rc
+
+    rng = np.random.default_rng(13)
+    d = len(NEED_KEYS)
+    n_resp, k = 300, 20
+    true_w = rng.random((n_resp, d))
+    X = rng.random((60, d))
+    pairs = np.array([(r, a, (a + rng.integers(1, 60)) % 60)
+                      for r in range(n_resp) for a in rng.integers(0, 60, k)])  # fmt: skip
+    G = _pair_rows(true_w, X, pairs, "v1")
+    y = (rng.random(len(G)) < 1 / (1 + np.exp(-(G @ np.full(4, 30.0))))).astype(float)
+    # unequal reliability across layers: the interest items are much noisier
+    sd = np.where([k in keys_in_layer("interest") for k in NEED_KEYS], 0.35, 0.05)
+    stated = true_w + rng.normal(0, 1, true_w.shape) * sd
+    rows = np.arange(80)
+    retest = true_w[rows] + rng.normal(0, 1, (80, d)) * sd
+    est = estimate_layer_weights_rc(stated, rows, retest, X, pairs, y, "v1", n_boot=30,
+                                    rng=np.random.default_rng(14))  # fmt: skip
+    err_naive = max(abs(est.naive.shares[lay] - 0.25) for lay in LAYERS)
+    err_rc = max(abs(est.corrected.shares[lay] - 0.25) for lay in LAYERS)
+    assert err_rc < err_naive
+    lo, hi = est.corrected.ci["domain"]
+    assert lo < hi
+    with pytest.raises(ValueError):
+        estimate_layer_weights_rc(stated, rows, retest[:5], X, pairs, y, "v1")

@@ -70,9 +70,17 @@ def worst_stratum(stats: Mapping[str, StratumStat], higher_is_better: bool = Tru
 def worst_case(
     table: Mapping[str, Mapping[str, float]], higher_is_better: bool = True
 ) -> dict[str, float]:
-    """For each method, its worst value over conditions/strata (maximin input, D12)."""
+    """For each method, its worst value over conditions/strata (maximin input, D12).
+    NaN values (unsupported cells) are ignored; a method with only NaN is an error."""
     pick = min if higher_is_better else max
-    return {name: pick(row.values()) for name, row in table.items() if row}
+    out = {}
+    for name, row in table.items():
+        vals = [v for v in row.values() if not math.isnan(v)]
+        if row and not vals:
+            raise ValueError(f"method {name!r} has no non-NaN value")
+        if vals:
+            out[name] = pick(vals)
+    return out
 
 
 def maximin(table: Mapping[str, Mapping[str, float]], higher_is_better: bool = True) -> str:

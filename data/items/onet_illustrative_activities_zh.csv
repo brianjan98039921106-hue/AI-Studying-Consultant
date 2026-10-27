@@ -1,0 +1,189 @@
+element_id,element_name,kind,activity_en,activity_zh
+1.B.1.a,Realistic,career_type,Build kitchen cabinets.,製作廚房櫥櫃
+1.B.1.a,Realistic,career_type,Drive a truck to deliver packages to offices and homes.,開貨車把包裹送到辦公室和住家
+1.B.1.a,Realistic,career_type,Put out forest fires.,撲滅森林火災
+1.B.1.a,Realistic,career_type,Repair household appliances.,修理家電
+1.B.1.b,Investigative,career_type,Develop a new medicine.,開發新藥
+1.B.1.b,Investigative,career_type,Develop a way to better predict the weather.,找出更準確預測天氣的方法
+1.B.1.b,Investigative,career_type,Study ways to reduce water pollution.,研究減少水污染的方法
+1.B.1.b,Investigative,career_type,Work in a biology lab.,在生物實驗室工作
+1.B.1.c,Artistic,career_type,Compose or arrange music.,作曲或編曲
+1.B.1.c,Artistic,career_type,Create special effects for movies.,為電影製作特效
+1.B.1.c,Artistic,career_type,Draw pictures.,畫畫
+1.B.1.c,Artistic,career_type,Write books or plays.,寫書或劇本
+1.B.1.d,Social,career_type,Give career guidance to people.,給別人職涯建議
+1.B.1.d,Social,career_type,Help people with personal or emotional problems.,幫助有個人或情緒困擾的人
+1.B.1.d,Social,career_type,Perform rehabilitation therapy.,進行復健治療
+1.B.1.d,Social,career_type,Teach a high school class.,教一個高中班級
+1.B.1.e,Enterprising,career_type,Manage a department within a large company.,管理大公司裡的一個部門
+1.B.1.e,Enterprising,career_type,Market a new line of clothing.,行銷一系列新服飾
+1.B.1.e,Enterprising,career_type,Represent a client in a lawsuit.,在訴訟中代表客戶
+1.B.1.e,Enterprising,career_type,Start your own business.,自己創業
+1.B.1.f,Conventional,career_type,Develop a spreadsheet using computer software.,用電腦軟體建立試算表
+1.B.1.f,Conventional,career_type,Inventory supplies using a handheld computer.,用手持裝置盤點物料
+1.B.1.f,Conventional,career_type,Keep shipping and receiving records.,記錄出貨與收貨
+1.B.1.f,Conventional,career_type,Load computer software into a large computer network.,在大型電腦網路上安裝軟體
+1.B.3.a,Mechanics/Electronics,specific_area,Install computer systems.,安裝電腦系統
+1.B.3.a,Mechanics/Electronics,specific_area,Maintain aircraft engines.,維修飛機引擎
+1.B.3.a,Mechanics/Electronics,specific_area,Make repairs to industrial robots.,修理工業機器人
+1.B.3.a,Mechanics/Electronics,specific_area,Repair motors and generators.,修理馬達和發電機
+1.B.3.b,Construction/Woodwork,specific_area,Build and finish furniture.,製作並修飾家具
+1.B.3.b,Construction/Woodwork,specific_area,Build and install cabinets.,製作並安裝櫥櫃
+1.B.3.b,Construction/Woodwork,specific_area,Construct wood stairways.,搭建木造樓梯
+1.B.3.b,Construction/Woodwork,specific_area,Operate woodworking machines.,操作木工機具
+1.B.3.c,Transportation/Machine Operation,specific_area,Drive a bus or motor coach.,駕駛公車或遊覽車
+1.B.3.c,Transportation/Machine Operation,specific_area,Operate a bulldozer to move dirt.,操作推土機搬運土方
+1.B.3.c,Transportation/Machine Operation,specific_area,Operate a forklift to move boxes.,操作堆高機搬運箱子
+1.B.3.c,Transportation/Machine Operation,specific_area,Transport materials in a truck or van.,用貨車或廂型車運送物資
+1.B.3.d,Physical/Manual Labor,specific_area,Clean a work area.,清理工作區域
+1.B.3.d,Physical/Manual Labor,specific_area,Manually move cargo and freight.,人力搬運貨物
+1.B.3.d,Physical/Manual Labor,specific_area,Perform physical labor at a construction site.,在工地從事體力工作
+1.B.3.d,Physical/Manual Labor,specific_area,"Unload, sort, and move materials, equipment, or supplies.",卸貨、分類並搬運材料、設備或物資
+1.B.3.e,Protective Service,specific_area,Apprehend and arrest suspects.,逮捕嫌疑人
+1.B.3.e,Protective Service,specific_area,Guard inmates in a prison.,在監獄看守受刑人
+1.B.3.e,Protective Service,specific_area,Investigate criminal activity.,調查犯罪活動
+1.B.3.e,Protective Service,specific_area,Maintain order and protect life by enforcing laws.,執法以維持秩序、保護生命
+1.B.3.f,Agriculture,specific_area,Develop plans to reduce soil erosion and protect rangelands.,規劃減少土壤流失、保護草原的方案
+1.B.3.f,Agriculture,specific_area,Inspect crops for disease.,檢查作物是否有病害
+1.B.3.f,Agriculture,specific_area,"Plant, cultivate, and harvest crops.",種植、栽培並收成作物
+1.B.3.f,Agriculture,specific_area,Raise and tend to farm animals.,飼養並照顧家畜
+1.B.3.g,Nature/Outdoors,specific_area,Conserve wildlife habitats.,保育野生動物棲地
+1.B.3.g,Nature/Outdoors,specific_area,Manage public forested lands for recreational purposes.,管理供遊憩使用的公有林地
+1.B.3.g,Nature/Outdoors,specific_area,Plant a public garden.,規劃種植公共花園
+1.B.3.g,Nature/Outdoors,specific_area,Train conservation workers in planting tree seedlings.,訓練保育人員種植樹苗
+1.B.3.h,Animal Service,specific_area,Exercise animals in a shelter.,在收容所帶動物運動
+1.B.3.h,Animal Service,specific_area,Provide treatment to sick or injured animals.,治療生病或受傷的動物
+1.B.3.h,Animal Service,specific_area,"Supply animals with food, water, and personal care.",照料動物的飲食與清潔
+1.B.3.h,Animal Service,specific_area,Train animals to assist persons with disabilities.,訓練協助身心障礙者的動物
+1.B.3.i,Athletics,specific_area,Coach a sports team.,擔任運動隊伍教練
+1.B.3.i,Athletics,specific_area,Compete in an athletic event.,參加運動競賽
+1.B.3.i,Athletics,specific_area,Play sports.,從事運動
+1.B.3.i,Athletics,specific_area,Train for an athletic event.,為運動比賽進行訓練
+1.B.3.j,Engineering,specific_area,Apply principles of engineering in designing buildings.,運用工程原理設計建築物
+1.B.3.j,Engineering,specific_area,"Design, construct, and test aircraft, missiles, and spacecraft.",設計、建造並測試飛機、飛彈與太空船
+1.B.3.j,Engineering,specific_area,Explain engineering drawings.,解說工程圖
+1.B.3.j,Engineering,specific_area,Test performance of electronic and mechanical systems.,測試電子與機械系統的效能
+1.B.3.k,Physical Science,specific_area,Investigate the chemical composition of an unknown substance.,分析未知物質的化學成分
+1.B.3.k,Physical Science,specific_area,Study formation of stars using space-based telescopes.,用太空望遠鏡研究恆星的形成
+1.B.3.k,Physical Science,specific_area,Study ways to make foods safe and healthy.,研究讓食物安全又健康的方法
+1.B.3.k,Physical Science,specific_area,Use computer models for weather forecasting.,用電腦模型預報天氣
+1.B.3.l,Life Science,specific_area,Develop medically useful products for humans.,開發對人類醫療有用的產品
+1.B.3.l,Life Science,specific_area,Investigate the effects of bacteria on humans and animals.,研究細菌對人類和動物的影響
+1.B.3.l,Life Science,specific_area,Prepare environmental impact reports on wildlife.,撰寫對野生動物的環境影響報告
+1.B.3.l,Life Science,specific_area,Study the science of genes.,研究基因科學
+1.B.3.m,Medical Science,specific_area,Conduct research on ways to treat a new type of illness.,研究治療新型疾病的方法
+1.B.3.m,Medical Science,specific_area,Evaluate the performance of a newly developed medicine.,評估新藥的療效
+1.B.3.m,Medical Science,specific_area,Investigate the causes of human disease.,探究人類疾病的成因
+1.B.3.m,Medical Science,specific_area,Study ways of preventing disease.,研究預防疾病的方法
+1.B.3.n,Social Science,specific_area,Conduct research on economic issues.,研究經濟議題
+1.B.3.n,Social Science,specific_area,Study cultural differences.,研究文化差異
+1.B.3.n,Social Science,specific_area,Study mental and emotional disorders.,研究心理與情緒障礙
+1.B.3.n,Social Science,specific_area,Study public opinion on political issues.,研究民眾對政治議題的看法
+1.B.3.o,Humanities,specific_area,Research and compare religious beliefs.,研究並比較不同宗教信仰
+1.B.3.o,Humanities,specific_area,Research influences on a literary work.,研究影響一部文學作品的因素
+1.B.3.o,Humanities,specific_area,Study the culture and history of a region of the world.,研究世界上某個地區的文化與歷史
+1.B.3.o,Humanities,specific_area,Study the history of the family.,研究家庭的歷史
+1.B.3.p,Mathematics/Statistics,specific_area,Develop a statistical model to explain human behavior.,建立解釋人類行為的統計模型
+1.B.3.p,Mathematics/Statistics,specific_area,Extend mathematical knowledge in the field of geometry.,拓展幾何學領域的數學知識
+1.B.3.p,Mathematics/Statistics,specific_area,Make predictions based on statistical analyses.,根據統計分析做預測
+1.B.3.p,Mathematics/Statistics,specific_area,Solve mathematical problems.,解數學問題
+1.B.3.q,Information Technology,specific_area,Diagnose and resolve computer software problems.,診斷並解決軟體問題
+1.B.3.q,Information Technology,specific_area,Research security measures for computer systems.,研究電腦系統的資安防護
+1.B.3.q,Information Technology,specific_area,"Test, maintain, and monitor computer programs and systems.",測試、維護並監控電腦程式與系統
+1.B.3.q,Information Technology,specific_area,Write and review code for software.,撰寫並審查軟體程式碼
+1.B.3.r,Visual Arts,specific_area,Create a sculpture.,創作雕塑
+1.B.3.r,Visual Arts,specific_area,Create computer-generated graphics or animation.,用電腦創作圖像或動畫
+1.B.3.r,Visual Arts,specific_area,Create photography art prints.,創作攝影藝術作品
+1.B.3.r,Visual Arts,specific_area,Sketch a picture or design.,畫素描或設計草圖
+1.B.3.s,Applied Arts and Design,specific_area,Create appealing product designs for home appliances.,為家電設計吸引人的產品外觀
+1.B.3.s,Applied Arts and Design,specific_area,Create the set for film or theater productions.,為電影或舞台劇設計場景
+1.B.3.s,Applied Arts and Design,specific_area,Design and create handmade clothes.,設計並手工製作服裝
+1.B.3.s,Applied Arts and Design,specific_area,Design displays to sell products in stores.,設計店內的商品陳列
+1.B.3.t,Performing Arts,specific_area,Act on stage for an audience.,在舞台上為觀眾演出
+1.B.3.t,Performing Arts,specific_area,Create new dance routines.,編創新的舞蹈
+1.B.3.t,Performing Arts,specific_area,"Direct stage, television, radio, video, or film productions.",導演舞台、電視、廣播、影片或電影作品
+1.B.3.t,Performing Arts,specific_area,Study and rehearse roles from scripts.,研讀劇本並排練角色
+1.B.3.u,Music,specific_area,"Create musical compositions, arrangements, or scores.",創作樂曲、編曲或寫譜
+1.B.3.u,Music,specific_area,Perform music for a live audience.,為現場觀眾演奏音樂
+1.B.3.u,Music,specific_area,Play a musical instrument.,演奏樂器
+1.B.3.u,Music,specific_area,Sing in a band.,在樂團擔任歌手
+1.B.3.v,Creative Writing,specific_area,Write a novel.,寫小說
+1.B.3.v,Creative Writing,specific_area,Write advertisements.,撰寫廣告文案
+1.B.3.v,Creative Writing,specific_area,Write poetry or lyrics.,寫詩或歌詞
+1.B.3.v,Creative Writing,specific_area,Write scripts for movies and media.,為電影與媒體寫劇本
+1.B.3.w,Media,specific_area,Develop content for a podcast.,為 Podcast 規劃內容
+1.B.3.w,Media,specific_area,Direct a television series.,執導電視影集
+1.B.3.w,Media,specific_area,Speak or read from scripted materials on radio or television.,在廣播或電視上依稿播報
+1.B.3.w,Media,specific_area,Write and report human interest stories.,採訪並撰寫人物故事報導
+1.B.3.x,Culinary Art,specific_area,Coordinate activities of cooks engaged in food preparation.,協調廚師備餐的工作
+1.B.3.x,Culinary Art,specific_area,Create new recipes or food presentations.,開發新食譜或擺盤方式
+1.B.3.x,Culinary Art,specific_area,Develop a distinctive style of cooking.,發展獨特的烹飪風格
+1.B.3.x,Culinary Art,specific_area,Select and ensure freshness of food and ingredients for preparation.,挑選食材並確保新鮮
+1.B.3.y,Teaching/Education,specific_area,Adapt teaching methods to meet students' interests.,依學生興趣調整教學方法
+1.B.3.y,Teaching/Education,specific_area,Instruct students in activities designed to further intellectual growth.,帶領學生進行促進思考成長的活動
+1.B.3.y,Teaching/Education,specific_area,Teach school subjects.,教授學校科目
+1.B.3.y,Teaching/Education,specific_area,Teach social skills to students.,教導學生社交技巧
+1.B.3.z,Social Service,specific_area,Advocate for individual or community needs.,為個人或社區的需求發聲
+1.B.3.z,Social Service,specific_area,Assist people with special needs.,協助有特殊需求的人
+1.B.3.z,Social Service,specific_area,Counsel clients with mental health issues.,為有心理健康困擾的個案提供諮商
+1.B.3.z,Social Service,specific_area,Provide personal and economic assistance for homeless individuals.,為無家者提供生活與經濟協助
+1.B.3.aa,Health Care Service,specific_area,Administer first aid treatment or life support to injured persons.,為傷者進行急救或維生處置
+1.B.3.aa,Health Care Service,specific_area,Develop medical treatment plans for patients.,為病人擬定治療計畫
+1.B.3.aa,Health Care Service,specific_area,Prescribe medications.,開立處方藥物
+1.B.3.aa,Health Care Service,specific_area,Provide preventive care to individuals.,為個人提供預防保健
+1.B.3.ab,Religious Activities,specific_area,Lead a religious group.,帶領宗教團體
+1.B.3.ab,Religious Activities,specific_area,Organize religious services.,籌辦宗教儀式
+1.B.3.ab,Religious Activities,specific_area,Plan religious education programs.,規劃宗教教育課程
+1.B.3.ab,Religious Activities,specific_area,Provide spiritual guidance.,提供心靈指引
+1.B.3.ac,Personal Service,specific_area,Assist customers with problems or questions.,協助客戶處理問題或疑問
+1.B.3.ac,Personal Service,specific_area,Help individuals plan special events.,協助個人規劃特別活動
+1.B.3.ac,Personal Service,specific_area,"Make reservations for guests, such as for dinner, spa treatments, or golf tee times.",為客人預約晚餐、SPA 或高爾夫球場時段等
+1.B.3.ac,Personal Service,specific_area,Make travel arrangements for sightseeing or other tours.,安排觀光或其他行程
+1.B.3.ad,Professional Advising,specific_area,Advise people on how to have a successful career.,建議別人如何經營成功的職涯
+1.B.3.ad,Professional Advising,specific_area,Coach students on study skills.,指導學生讀書方法
+1.B.3.ad,Professional Advising,specific_area,Counsel people how to achieve their professional goals.,輔導別人達成職業目標
+1.B.3.ad,Professional Advising,specific_area,Teach employees leadership and soft skills.,教導員工領導力與軟實力
+1.B.3.ae,Business Initiatives,specific_area,Create business strategies or policies to increase productivity.,制定提升生產力的商業策略或政策
+1.B.3.ae,Business Initiatives,specific_area,Develop a long-term strategic plan for a company.,為公司擬定長期策略
+1.B.3.ae,Business Initiatives,specific_area,Identify partner companies to pursue new business opportunities.,尋找合作夥伴公司開拓新商機
+1.B.3.ae,Business Initiatives,specific_area,Plan activities of businesses to maximize returns on investments.,規劃企業活動以提高投資報酬
+1.B.3.af,Sales,specific_area,Demonstrate products to consumers.,向消費者示範產品
+1.B.3.af,Sales,specific_area,Direct sales or customer service activities.,主導銷售或客服工作
+1.B.3.af,Sales,specific_area,Persuade customers to buy a new product.,說服客戶購買新產品
+1.B.3.af,Sales,specific_area,Sell goods at bargain prices.,以優惠價格銷售商品
+1.B.3.ag,Marketing/Advertising,specific_area,Develop promotional materials for advertising.,製作廣告宣傳素材
+1.B.3.ag,Marketing/Advertising,specific_area,Plan an advertising or marketing campaign.,規劃廣告或行銷活動
+1.B.3.ag,Marketing/Advertising,specific_area,Promote a new product by advertising.,用廣告推廣新產品
+1.B.3.ag,Marketing/Advertising,specific_area,Use social media to market a company.,用社群媒體行銷公司
+1.B.3.ah,Finance,specific_area,Analyze financials and securities of a company.,分析公司的財務與證券
+1.B.3.ah,Finance,specific_area,Make investments to generate future income.,進行投資以創造未來收入
+1.B.3.ah,Finance,specific_area,Manage large amounts of money for a business.,為企業管理大筆資金
+1.B.3.ah,Finance,specific_area,Plan and direct financial decisions for a business.,規劃並主導企業的財務決策
+1.B.3.ai,Accounting,specific_area,Keep accounting records for a company.,為公司記帳
+1.B.3.ai,Accounting,specific_area,Prepare budgets for a business.,為企業編列預算
+1.B.3.ai,Accounting,specific_area,Prepare employee payroll.,處理員工薪資
+1.B.3.ai,Accounting,specific_area,Verify and record numerical data for financial records.,核對並登錄財務數據
+1.B.3.aj,Human Resources,specific_area,Conduct training to improve employee skills and organizational performance.,辦理訓練以提升員工技能與組織績效
+1.B.3.aj,Human Resources,specific_area,Interpret and explain company policies and benefits to employees.,向員工說明公司制度與福利
+1.B.3.aj,Human Resources,specific_area,Maintain employee personnel records.,管理員工人事資料
+1.B.3.aj,Human Resources,specific_area,Recruit and hire employees for a company.,為公司招募並聘用員工
+1.B.3.ak,Office Work,specific_area,"Answer telephones, direct calls, and take messages.",接聽電話、轉接並留言
+1.B.3.ak,Office Work,specific_area,"Maintain and update filing, inventory, and database systems.",維護並更新檔案、庫存與資料庫
+1.B.3.ak,Office Work,specific_area,"Operate office machines, such as printers and scanners.",操作印表機、掃描器等事務機器
+1.B.3.ak,Office Work,specific_area,Schedule appointments for customers.,為客戶安排預約
+1.B.3.al,Management/Administration,specific_area,Develop organizational goals or objectives.,訂定組織的目標
+1.B.3.al,Management/Administration,specific_area,Manage an organization or group of people.,管理一個組織或團隊
+1.B.3.al,Management/Administration,specific_area,Plan or coordinate one or more administrative services.,規劃或協調行政服務
+1.B.3.al,Management/Administration,specific_area,Supervise organizational operations or projects.,督導組織營運或專案
+1.B.3.am,Public Speaking,specific_area,Be a speaker at a club meeting.,在社團聚會上擔任講者
+1.B.3.am,Public Speaking,specific_area,Discuss your ideas on a podcast.,在 Podcast 上分享你的想法
+1.B.3.am,Public Speaking,specific_area,Make a public speech to raise money for a worthy cause.,為公益目的公開演講募款
+1.B.3.am,Public Speaking,specific_area,Provide a public announcement on TV or radio.,在電視或廣播上發布公開聲明
+1.B.3.an,Politics,specific_area,Campaign for political office.,參選公職
+1.B.3.an,Politics,specific_area,Develop knowledge of government policy decisions.,深入了解政府的政策決策
+1.B.3.an,Politics,specific_area,Engage in a political debate.,參與政治辯論
+1.B.3.an,Politics,specific_area,Lead a political campaign.,主導競選活動
+1.B.3.ao,Law,specific_area,Defend a client in court.,在法庭上為當事人辯護
+1.B.3.ao,Law,specific_area,Draw up legal documents.,起草法律文件
+1.B.3.ao,Law,specific_area,Mediate legal disputes.,調解法律糾紛
+1.B.3.ao,Law,specific_area,Provide legal advice to clients.,為客戶提供法律建議

@@ -119,8 +119,8 @@
 
 | 部件 | G0 | G1 | G2 | G3 |
 |---|---|---|---|---|
-| C0 | ✅ C0.1、C0.2 v1 | ✅ loader、參考表（`test_c0_reference.py`） | W-14／W-15 真實資料建置完成，計數與職業剖面經獨立重算一致（[F48–F53](../results/reference-w14-w15-findings.md)）；全領域參考表 v3（W-65、W-70）建置完成並經獨立重算（[F94–F96](../results/reference-all-v3-findings.md)），B-C0-10 🟢；B-C0-1、B-C0-8 探針失敗中 | V-C0-2～5 待 W-20 |
-| C1 | ✅ C1.1、C1.2 v1、C1.3 v1、C1.4 v1 | ✅ | C1.2 v1、C1.4 v1 通過；**C1.3 v1 未達 V-C1-3**（節省 13–28%，門檻 30%，F24）、V-C1-4 通過；C1.3 v2 雜訊模型兩次預先登記 L3 皆無合格候選，**V-C1-8 未達**（F43–F46），預設維持 v1；需求維度 v2 基礎 L2 ✅（W-16c）；**v2 L3 未通過**：領域不符下降（F70），但暫定四層等權計分器下推薦品質低於 v1（F71，H-V2 ❌），v1 維持預設；探索顯示主因是計分器（F74–F76，B-C2-10）；預先登記計分器選擇未通過驗證，結論取決於真實層權重（F77–F80，B-C5-8）；混合領域把關也未通過（F81–F84），等待 W-76 | — |
+| C0 | ✅ C0.1、C0.2 v1 | ✅ loader、參考表（`test_c0_reference.py`） | W-14／W-15 真實資料建置完成，計數與職業剖面經獨立重算一致（[F48–F53](../results/reference-w14-w15-findings.md)）；全領域參考表 v3（W-65、W-70）建置完成並經獨立重算（[F94–F96](../results/reference-all-v3-findings.md)；B-C0-15 更正後重建），B-C0-10 🟢；B-C0-8 🟢（非學術剖面，[F97–F98](../results/reference-all-v3-findings.md)；v1 參考剖面的探針保留）；B-C0-1 探針失敗中 | V-C0-2～5 待 W-20 |
+| C1 | ✅ C1.1、C1.2 v1、C1.3 v1、C1.4 v1 | ✅ | C1.2 v1、C1.4 v1 通過；**C1.3 v1 未達 V-C1-3**（節省 13–28%，門檻 30%，F24）、V-C1-4 通過；C1.3 v2 雜訊模型兩次預先登記 L3 皆無合格候選，**V-C1-8 未達**（F43–F46），預設維持 v1；需求維度 v2 基礎 L2 ✅（W-16c）；**v2 L3 未通過**：領域不符下降（F70），但暫定四層等權計分器下推薦品質低於 v1（F71，H-V2 ❌），v1 維持預設；探索顯示主因是計分器（F74–F76，B-C2-10）；預先登記計分器選擇未通過驗證，結論取決於真實層權重（F77–F80，B-C5-8）；混合領域把關也未通過（F81–F84）；W-76 層份量估計：可區分兩種假設，但精確份量的三種估計器都未通過（F85–F101） | — |
 | C2 | ✅ v0、v1 | ✅ v0、v1；C2.1 計分器 ✅ | v0 未通過（F1）；**v1 通過**（F11–F15）；C2.1 blend(0.25) 通過預先登記選擇、保留驗證與新種子確認（[F37](../results/synthetic-l3-c2-scorer-findings.md)）；V-C2-3 卡在 C1（F16） | — |
 | C3 | — | — | — | — |
 | C4 | ✅ C4.1 | ✅ C4.1 | 需 C4.2（V-C4-2/3） | — |
@@ -128,6 +128,8 @@
 | C6 | ✅ C6.1 draft-0、C6.2 v0 | ✅ C6.2 v0（V-C6-3） | 不適用（確定性比對） | V-C6-1/2 待 W-20 |
 
 所有發現的狀態：[results/FINDINGS.md](../results/FINDINGS.md)。最新 L3 結果：[領域把關](../results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](../results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](../results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](../results/synthetic-l3-noise-findings.md)、[端到端](../results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
+
+**程式稽核**（2026-10-28，獨立代理人審查 `src/aisc`）：第一次（`src/aisc` 核心）找到 8 個缺陷（B-C1-25、B-C2-15～17、B-C4-7、B-C5-10～12），皆先登錄並寫探針再修正，現由 `tests/test_audit_probes.py` 鎖定，沒有一個影響已報告的結果；第二次（C0 資料建置）找到 CIP「Moved to／from」讀反（B-C0-15），全領域參考表漏掉 24 個現行代碼，已修正重建並更正 F94、F95、F97。
 
 **分層規則**（D12，2026-10-27 起）：L3 與 L5 的主要指標一律依背景分層報告；選擇方法時以最差層作為準則之一。
 

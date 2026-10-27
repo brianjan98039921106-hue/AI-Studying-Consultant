@@ -14,6 +14,7 @@
 | MVP 範圍篩選（W-14） | CIP 2020 代碼前綴清單（`data/reference/mvp_scope.json`），award level 7、第一主修（MAJORNUM=1）、最近一年畢業人數 > 0 | A-C0-4、A-C0-7 |
 | 職業剖面量尺與合成（W-15 v1） | O*NET 職業興趣量尺 OI 為 1–7（Rounds et al., 1999, *Development of Occupational Interest Profiles for O\*NET*），線性轉為 $(v-1)/6 \in [0,1]$；同一 SOC 下多個 O\*NET-SOC 細項取平均，一個 CIP 對應多個 SOC 時等權平均（v1；v2 以就業人數加權） | A-C0-2、A-C0-3、A-C0-6 |
 | 職業剖面 v2：就業加權（W-71） | BLS Occupational Employment and Wage Statistics（OEWS）各 SOC 就業人數作為權重（沒有自由參數）；教職 SOC 另行處理（B-C0-8） | A-C0-2、A-C0-3 |
+| 職業剖面 v1.1：依學位層級處理教職（W-71 的過渡版） | 對照表把多數學術 CIP 對應到「某學科大學教師」（SOC 25-1xxx），但碩士、專業學位與證書的畢業生很少成為大學教師（B-C0-8、F51、F96）。「非學術」剖面：該 CIP 有其他 SOC 有 O\*NET 資料時，排除 25-1xxx 後等權平均；只有教職 SOC 時沿用全部並標記。研究型博士（level 17）使用含教職的原剖面，因為學術是其主要出路之一。沒有自由參數；就業加權（W-71）取得 BLS OEWS 後取代等權 | A-C0-10 |
 | 細分興趣橋接（W-64） | 與 RIASEC 相同的 CIP → SOC → O\*NET 路徑，元素換成 41 個細分興趣領域；OI 1–7 → $(v-1)/6$；等權平均 | A-C0-9、B-C0-14 |
 | 評分準則跨領域外推（W-72） | 留一族群外推（leave-one-family-out）：在部分 CIP 族群開發，在未參與開發的族群檢驗一致性 | A-C0-8 |
 | LLM 屬性擷取 | 擷取式 NLP；幻覺風險見 Ji et al. (2023), *ACM Computing Surveys* | A-C0-5 擷取結果可由原文佐證 |
@@ -57,6 +58,7 @@
 | 兩種真相下的選擇 | Maximin（Wald, 1950）：在兩種同樣可信的真相下，選「較差那一種表現」最好的方案 | A-C2-8 |
 | 領域把關（W-16c 混合設計） | 非補償式篩選：先以單一屬性淘汰不可接受的選項，再在剩下的選項中補償式比較（Einhorn, 1970, *Psychological Bulletin* 73(3)；Tversky, 1972, *Psychological Review* 79(4) 的 elimination by aspects）。做法：契合度用 v1 計分器在 v2 作答的 v1 投影上計算（不改變 v1 的排序行為）；另以 41 領域計算「學程內容加權的學生領域興趣」a = Σ x_a·w_a / Σ x_a，a 低於門檻 τ 時扣 λ·(τ − a)。λ = 0 時完全等於 v1 計分；扣分可依領域精確分解到各領域（推薦理由） | A-C2-10、B-C2-11 |
 | 需求層權重估計（W-76） | 成對比較的條件 logit（Bradley & Terry, 1952, *Biometrika* 39；McFadden, 1974, conditional logit）：P(選 A) = σ(Σ_l β_l·(D_l(B) − D_l(A)))，β_l = exp(θ_l) ≥ 0，最大概似；以受訪者為單位的集群自助法估計區間（Efron & Tibshirani, 1993）；測量誤差偏誤以 SIMEX 校正（Cook & Stefanski, 1994, *JASA* 89）：對作答再加 λσ² 的雜訊（λ = 0.5、1、1.5、2，截到 [0, 1]），重估份量後以二次式外插到 λ = −1；σ 來自 W-41 重測；區間以未校正自助法區間平移校正量近似（由參數還原檢驗涵蓋率）。規格見 [layer-weights.md](layer-weights.md) | A-C2-11、A-C2-12、B-C2-12、B-C2-13 |
+| 層權重的測量誤差校正：迴歸校正（W-76） | 成對特徵 D_l(B) − D_l(A) = mean_d[(x_B,d² − x_A,d²) − 2 w_d (x_B,d − x_A,d)] 對學生需求 w **線性**，因此以 E[w ｜ 作答] 取代作答時，特徵的期望值正確（Carroll, Ruppert, Stefanski & Crainiceanu, 2006, *Measurement Error in Nonlinear Models*, 2nd ed., ch. 4；logistic 迴歸的迴歸校正：Rosner, Spiegelman & Willett, 1990, *American Journal of Epidemiology* 132）。每題以線性預測 ŵ_d = μ_d + λ_d (s_d − μ_d)，λ_d = cov(第一次, 第二次) / var(第一次)（重測估計，截在 [0, 1]）；區間以受訪者自助法，每次重抽都重新估計 λ（含重測子樣本） | A-C2-13、A-C2-14、B-C2-14 |
 | 新穎度、意外性、覆蓋率 | Kaminskas & Bridge (2016), *ACM TiiS*；Vargas & Castells (2011), RecSys | A-C2-2 新穎價值可與契合度線性相加；A-C2-3 分類距離代理「不知道」 |
 | 多樣化 | Carbonell & Goldstein (1998), SIGIR：Maximal Marginal Relevance | — |
 | 分區呈現（C2.3 v1） | 依 L3 F7 的證據設計；與意外性文獻中「相關且非預期」的定義一致（Kaminskas & Bridge 2016）：以契合度排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區，而非以分數懲罰已知學程 | A-C2-5 「新穎」以學生回報的熟悉度定義 |

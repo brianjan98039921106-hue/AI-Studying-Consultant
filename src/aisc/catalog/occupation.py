@@ -124,6 +124,8 @@ class OccupationProfile:
     socs: tuple[str, ...]
     socs_with_onet: tuple[str, ...]
     missing: tuple[str, ...] = field(default=())
+    excluded: tuple[str, ...] = field(default=())  # SOCs left out by `exclude_prefixes`
+    fallback: bool = False  # every SOC was excluded, so all were kept (A-C0-10)
 
     @property
     def coverage(self) -> float:
@@ -136,19 +138,30 @@ def occupation_profile(
     socs: dict[str, dict[str, float]],
     keys: tuple[str, ...] = RIASEC_KEYS,
     names: tuple[str, ...] = RIASEC,
+    exclude_prefixes: tuple[str, ...] = (),
 ) -> OccupationProfile:
     """Equal-weight mean over the CIP's SOC codes with O*NET data, rescaled
     (v - 1) / 6. `keys`/`names` select the element set (RIASEC by default; the
-    41 specific interest areas for W-64)."""
+    41 specific interest areas for W-64). `exclude_prefixes` drops matching SOCs
+    (e.g. postsecondary teachers "25-1", A-C0-10) unless that would leave none."""
     if len(keys) != len(names):
         raise ValueError("keys and names must have the same length")
     mapped = tuple(sorted(crosswalk.get(cip, set())))
     have = tuple(s for s in mapped if s in socs)
     missing = tuple(s for s in mapped if s not in socs)
+    excluded: tuple[str, ...] = ()
+    fallback = False
+    if exclude_prefixes and have:
+        kept = tuple(s for s in have if not s.startswith(exclude_prefixes))
+        if kept:
+            excluded = tuple(s for s in have if s not in kept)
+            have = kept
+        else:
+            fallback = True  # only excluded SOCs: keep them rather than lose the profile
     if not have:
         return OccupationProfile(cip, {}, mapped, have, missing)
     vec = {
         key: (sum(socs[s][name] for s in have) / len(have) - 1.0) / 6.0
         for key, name in zip(keys, names, strict=True)
     }
-    return OccupationProfile(cip, vec, mapped, have, missing)
+    return OccupationProfile(cip, vec, mapped, have, missing, excluded, fallback)

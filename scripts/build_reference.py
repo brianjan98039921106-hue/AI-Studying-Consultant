@@ -202,6 +202,28 @@ def main() -> None:
     }
     for key, path, url, when in extra_inputs:
         sources["inputs"][key] = file_provenance(path, url, when).to_dict()
+    if multi:
+        # A-C0-10 (W-71 interim): profiles without postsecondary-teacher SOCs for
+        # master's, professional degrees and certificates; research doctorates keep the
+        # profiles above
+        teach = ("25-1",)
+        na = {c: occupation_profile(c, xw, socs, exclude_prefixes=teach) for c in sorted(fam)}
+        _write_csv(args.out / f"occupation_profiles_{sfx}_nonacademic.csv", [
+            {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in RIASEC_KEYS},
+             "n_soc_used": len(p.socs_with_onet), "n_teacher_soc_excluded": len(p.excluded),
+             "fallback_teacher_only": p.fallback}
+            for c, p in na.items()
+        ])  # fmt: skip
+        if args.basic_interests is not None:
+            nb = {c: occupation_profile(c, xw, bsocs, bkeys, areas, exclude_prefixes=teach)
+                  for c in sorted(fam)}  # fmt: skip
+            _write_csv(args.out / f"occupation_basic_interests_{sfx}_nonacademic.csv", [
+                {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in bkeys},
+                 "n_soc_used": len(p.socs_with_onet),
+                 "n_teacher_soc_excluded": len(p.excluded),
+                 "fallback_teacher_only": p.fallback}
+                for c, p in nb.items()
+            ])  # fmt: skip
     src_name = "SOURCES.json" if sfx == "mvp" else f"SOURCES_{sfx}.json"
     (args.out / src_name).write_text(json.dumps(sources, indent=2) + "\n", encoding="utf-8")
 

@@ -1,0 +1,77 @@
+{
+  "note": "Intensity and orientation items (docs/rubric.md §3). Ask what the student WANTS, not what they can do (A-C1-*); anchors describe concrete course content so that answers mean the same thing across backgrounds (D11).",
+  "items": [
+    {
+      "item_id": "quant_intensity#1",
+      "dimension": "quant_intensity",
+      "stem_zh": "研究所課程中，你希望數學與統計的深度到哪裡？",
+      "scale": {"type": "anchored5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "只看別人算好的結果，自己不太需要計算",
+        "會用統計軟體做描述統計、簡單檢定",
+        "能建立迴歸、最佳化等模型並解釋結果",
+        "能推導模型、證明方法的性質",
+        "以發展新的數學或統計方法為主"
+      ]}
+    },
+    {
+      "item_id": "quant_intensity#2",
+      "dimension": "quant_intensity",
+      "stem_zh": "一週的課業中，你願意有多少比例花在數學推導或證明上？",
+      "scale": {"type": "anchored5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "幾乎不要", "約一成", "約三成", "約一半", "大部分時間"
+      ]}
+    },
+    {
+      "item_id": "programming_intensity#1",
+      "dimension": "programming_intensity",
+      "stem_zh": "研究所課程中，你希望寫程式的比重有多高？",
+      "scale": {"type": "anchored5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "不寫程式",
+        "偶爾用試算表或拖拉式工具",
+        "會寫資料分析腳本（例如 Python、R）",
+        "開發完整的應用程式或系統",
+        "以軟體工程或演算法設計為主"
+      ]}
+    },
+    {
+      "item_id": "programming_intensity#2",
+      "dimension": "programming_intensity",
+      "stem_zh": "一週的課業中，你願意有多少比例花在寫程式、除錯與改寫程式上？",
+      "scale": {"type": "anchored5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "幾乎不要", "約一成", "約三成", "約一半", "大部分時間"
+      ]}
+    },
+    {
+      "item_id": "research_orientation#1",
+      "dimension": "research_orientation",
+      "stem_zh": "我想在研究所做原創研究（自己提出問題、蒐集證據、寫成論文），並考慮之後攻讀博士。",
+      "scale": {"type": "agree5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "非常不同意", "不同意", "普通", "同意", "非常同意"
+      ]}
+    },
+    {
+      "item_id": "research_orientation#2",
+      "dimension": "research_orientation",
+      "stem_zh": "比起學完就能上手的實務技能，我更想花好幾年把一個問題研究透徹。",
+      "scale": {"type": "agree5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "非常不同意", "不同意", "普通", "同意", "非常同意"
+      ]}
+    },
+    {
+      "item_id": "entrepreneurship#1",
+      "dimension": "entrepreneurship",
+      "stem_zh": "我希望畢業後幾年內自己創業，或加入早期新創團隊。",
+      "scale": {"type": "agree5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "非常不同意", "不同意", "普通", "同意", "非常同意"
+      ]}
+    },
+    {
+      "item_id": "entrepreneurship#2",
+      "dimension": "entrepreneurship",
+      "stem_zh": "我願意承擔收入不穩定的風險，換取打造自己產品或事業的機會。",
+      "scale": {"type": "agree5", "to_unit": "(answer - 1) / 4", "labels_zh": [
+        "非常不同意", "不同意", "普通", "同意", "非常同意"
+      ]}
+    }
+  ]
+}

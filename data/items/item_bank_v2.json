@@ -1,0 +1,2587 @@
+{
+ "version": "v2-draft-0",
+ "status": "draft: needs back-translation and cognitive interviews (W-41, D11)",
+ "sources": {
+  "onet_illustrative_activities": {
+   "url": "https://www.onetcenter.org/dl_files/database/db_31_0_json/interests_illustrative_activities.json",
+   "release": "O*NET 31.0",
+   "retrieved_at": "2026-10-28",
+   "method": "transcribed from the official JSON via web fetch; verify against the downloaded official file before fielding"
+  },
+  "core_items": "data/items/core_items_zh.json (docs/rubric.md §3)"
+ },
+ "n_items": 73,
+ "items": [
+  {
+   "item_id": "riasec_r#1",
+   "dimension": "riasec_r",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "製作廚房櫥櫃",
+    "開貨車把包裹送到辦公室和住家"
+   ],
+   "examples_en": [
+    "Build kitchen cabinets.",
+    "Drive a truck to deliver packages to offices and homes."
+   ],
+   "source": [
+    "1.B.1.a",
+    "1.B.1.a"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_r#2",
+   "dimension": "riasec_r",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "撲滅森林火災",
+    "修理家電"
+   ],
+   "examples_en": [
+    "Put out forest fires.",
+    "Repair household appliances."
+   ],
+   "source": [
+    "1.B.1.a",
+    "1.B.1.a"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_i#1",
+   "dimension": "riasec_i",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "開發新藥",
+    "找出更準確預測天氣的方法"
+   ],
+   "examples_en": [
+    "Develop a new medicine.",
+    "Develop a way to better predict the weather."
+   ],
+   "source": [
+    "1.B.1.b",
+    "1.B.1.b"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_i#2",
+   "dimension": "riasec_i",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "研究減少水污染的方法",
+    "在生物實驗室工作"
+   ],
+   "examples_en": [
+    "Study ways to reduce water pollution.",
+    "Work in a biology lab."
+   ],
+   "source": [
+    "1.B.1.b",
+    "1.B.1.b"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_a#1",
+   "dimension": "riasec_a",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "作曲或編曲",
+    "為電影製作特效"
+   ],
+   "examples_en": [
+    "Compose or arrange music.",
+    "Create special effects for movies."
+   ],
+   "source": [
+    "1.B.1.c",
+    "1.B.1.c"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_a#2",
+   "dimension": "riasec_a",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "畫畫",
+    "寫書或劇本"
+   ],
+   "examples_en": [
+    "Draw pictures.",
+    "Write books or plays."
+   ],
+   "source": [
+    "1.B.1.c",
+    "1.B.1.c"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_s#1",
+   "dimension": "riasec_s",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "給別人職涯建議",
+    "幫助有個人或情緒困擾的人"
+   ],
+   "examples_en": [
+    "Give career guidance to people.",
+    "Help people with personal or emotional problems."
+   ],
+   "source": [
+    "1.B.1.d",
+    "1.B.1.d"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_s#2",
+   "dimension": "riasec_s",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "進行復健治療",
+    "教一個高中班級"
+   ],
+   "examples_en": [
+    "Perform rehabilitation therapy.",
+    "Teach a high school class."
+   ],
+   "source": [
+    "1.B.1.d",
+    "1.B.1.d"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_e#1",
+   "dimension": "riasec_e",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "管理大公司裡的一個部門",
+    "行銷一系列新服飾"
+   ],
+   "examples_en": [
+    "Manage a department within a large company.",
+    "Market a new line of clothing."
+   ],
+   "source": [
+    "1.B.1.e",
+    "1.B.1.e"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_e#2",
+   "dimension": "riasec_e",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "在訴訟中代表客戶",
+    "自己創業"
+   ],
+   "examples_en": [
+    "Represent a client in a lawsuit.",
+    "Start your own business."
+   ],
+   "source": [
+    "1.B.1.e",
+    "1.B.1.e"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_c#1",
+   "dimension": "riasec_c",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "用電腦軟體建立試算表",
+    "用手持裝置盤點物料"
+   ],
+   "examples_en": [
+    "Develop a spreadsheet using computer software.",
+    "Inventory supplies using a handheld computer."
+   ],
+   "source": [
+    "1.B.1.f",
+    "1.B.1.f"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "riasec_c#2",
+   "dimension": "riasec_c",
+   "stage": "core",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "記錄出貨與收貨",
+    "在大型電腦網路上安裝軟體"
+   ],
+   "examples_en": [
+    "Keep shipping and receiving records.",
+    "Load computer software into a large computer network."
+   ],
+   "source": [
+    "1.B.1.f",
+    "1.B.1.f"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "quant_intensity#1",
+   "dimension": "quant_intensity",
+   "stem_zh": "研究所課程中，你希望數學與統計的深度到哪裡？",
+   "scale": {
+    "type": "anchored5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "只看別人算好的結果，自己不太需要計算",
+     "會用統計軟體做描述統計、簡單檢定",
+     "能建立迴歸、最佳化等模型並解釋結果",
+     "能推導模型、證明方法的性質",
+     "以發展新的數學或統計方法為主"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "quant_intensity#2",
+   "dimension": "quant_intensity",
+   "stem_zh": "一週的課業中，你願意有多少比例花在數學推導或證明上？",
+   "scale": {
+    "type": "anchored5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "幾乎不要",
+     "約一成",
+     "約三成",
+     "約一半",
+     "大部分時間"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "programming_intensity#1",
+   "dimension": "programming_intensity",
+   "stem_zh": "研究所課程中，你希望寫程式的比重有多高？",
+   "scale": {
+    "type": "anchored5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "不寫程式",
+     "偶爾用試算表或拖拉式工具",
+     "會寫資料分析腳本（例如 Python、R）",
+     "開發完整的應用程式或系統",
+     "以軟體工程或演算法設計為主"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "programming_intensity#2",
+   "dimension": "programming_intensity",
+   "stem_zh": "一週的課業中，你願意有多少比例花在寫程式、除錯與改寫程式上？",
+   "scale": {
+    "type": "anchored5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "幾乎不要",
+     "約一成",
+     "約三成",
+     "約一半",
+     "大部分時間"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "research_orientation#1",
+   "dimension": "research_orientation",
+   "stem_zh": "我想在研究所做原創研究（自己提出問題、蒐集證據、寫成論文），並考慮之後攻讀博士。",
+   "scale": {
+    "type": "agree5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "非常不同意",
+     "不同意",
+     "普通",
+     "同意",
+     "非常同意"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "research_orientation#2",
+   "dimension": "research_orientation",
+   "stem_zh": "比起學完就能上手的實務技能，我更想花好幾年把一個問題研究透徹。",
+   "scale": {
+    "type": "agree5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "非常不同意",
+     "不同意",
+     "普通",
+     "同意",
+     "非常同意"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "entrepreneurship#1",
+   "dimension": "entrepreneurship",
+   "stem_zh": "我希望畢業後幾年內自己創業，或加入早期新創團隊。",
+   "scale": {
+    "type": "agree5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "非常不同意",
+     "不同意",
+     "普通",
+     "同意",
+     "非常同意"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "entrepreneurship#2",
+   "dimension": "entrepreneurship",
+   "stem_zh": "我願意承擔收入不穩定的風險，換取打造自己產品或事業的機會。",
+   "scale": {
+    "type": "agree5",
+    "to_unit": "(answer - 1) / 4",
+    "labels_zh": [
+     "非常不同意",
+     "不同意",
+     "普通",
+     "同意",
+     "非常同意"
+    ]
+   },
+   "stage": "core",
+   "source": [
+    "docs/rubric.md §3"
+   ]
+  },
+  {
+   "item_id": "group_1",
+   "dimension": null,
+   "group": 1,
+   "stage": "group",
+   "label_zh": "經營、銷售、金融與行政",
+   "label_en": "Business, sales, finance and administration",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "制定提升生產力的商業策略或政策",
+    "向消費者示範產品",
+    "製作廣告宣傳素材",
+    "分析公司的財務與證券",
+    "為公司記帳",
+    "辦理訓練以提升員工技能與組織績效",
+    "接聽電話、轉接並留言",
+    "訂定組織的目標"
+   ],
+   "examples_en": [
+    "Create business strategies or policies to increase productivity.",
+    "Demonstrate products to consumers.",
+    "Develop promotional materials for advertising.",
+    "Analyze financials and securities of a company.",
+    "Keep accounting records for a company.",
+    "Conduct training to improve employee skills and organizational performance.",
+    "Answer telephones, direct calls, and take messages.",
+    "Develop organizational goals or objectives."
+   ],
+   "source": [
+    "1.B.3.ae",
+    "1.B.3.af",
+    "1.B.3.ag",
+    "1.B.3.ah",
+    "1.B.3.ai",
+    "1.B.3.aj",
+    "1.B.3.ak",
+    "1.B.3.al"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_2",
+   "dimension": null,
+   "group": 2,
+   "stage": "group",
+   "label_zh": "藝術、設計、媒體與人文",
+   "label_en": "Arts, design, media and humanities",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "研究並比較不同宗教信仰",
+    "創作雕塑",
+    "為家電設計吸引人的產品外觀",
+    "在舞台上為觀眾演出",
+    "創作樂曲、編曲或寫譜",
+    "寫小說",
+    "為 Podcast 規劃內容"
+   ],
+   "examples_en": [
+    "Research and compare religious beliefs.",
+    "Create a sculpture.",
+    "Create appealing product designs for home appliances.",
+    "Act on stage for an audience.",
+    "Create musical compositions, arrangements, or scores.",
+    "Write a novel.",
+    "Develop content for a podcast."
+   ],
+   "source": [
+    "1.B.3.o",
+    "1.B.3.r",
+    "1.B.3.s",
+    "1.B.3.t",
+    "1.B.3.u",
+    "1.B.3.v",
+    "1.B.3.w"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_3",
+   "dimension": null,
+   "group": 3,
+   "stage": "group",
+   "label_zh": "教育、社會服務與社會科學",
+   "label_en": "Education, social service and social science",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "研究經濟議題",
+    "依學生興趣調整教學方法",
+    "為個人或社區的需求發聲",
+    "協助客戶處理問題或疑問",
+    "建議別人如何經營成功的職涯",
+    "在社團聚會上擔任講者",
+    "參選公職"
+   ],
+   "examples_en": [
+    "Conduct research on economic issues.",
+    "Adapt teaching methods to meet students' interests.",
+    "Advocate for individual or community needs.",
+    "Assist customers with problems or questions.",
+    "Advise people on how to have a successful career.",
+    "Be a speaker at a club meeting.",
+    "Campaign for political office."
+   ],
+   "source": [
+    "1.B.3.n",
+    "1.B.3.y",
+    "1.B.3.z",
+    "1.B.3.ac",
+    "1.B.3.ad",
+    "1.B.3.am",
+    "1.B.3.an"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_4",
+   "dimension": null,
+   "group": 4,
+   "stage": "group",
+   "label_zh": "農業、自然與動物",
+   "label_en": "Agriculture, nature and animals",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "規劃減少土壤流失、保護草原的方案",
+    "保育野生動物棲地",
+    "在收容所帶動物運動"
+   ],
+   "examples_en": [
+    "Develop plans to reduce soil erosion and protect rangelands.",
+    "Conserve wildlife habitats.",
+    "Exercise animals in a shelter."
+   ],
+   "source": [
+    "1.B.3.f",
+    "1.B.3.g",
+    "1.B.3.h"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_5",
+   "dimension": null,
+   "group": 5,
+   "stage": "group",
+   "label_zh": "營建、運輸與體力工作",
+   "label_en": "Construction, transport and manual work",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "製作並修飾家具",
+    "駕駛公車或遊覽車",
+    "清理工作區域"
+   ],
+   "examples_en": [
+    "Build and finish furniture.",
+    "Drive a bus or motor coach.",
+    "Clean a work area."
+   ],
+   "source": [
+    "1.B.3.b",
+    "1.B.3.c",
+    "1.B.3.d"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_6",
+   "dimension": null,
+   "group": 6,
+   "stage": "group",
+   "label_zh": "生命科學、醫學與醫療照護",
+   "label_en": "Life science, medicine and health care",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "開發對人類醫療有用的產品",
+    "研究治療新型疾病的方法",
+    "為傷者進行急救或維生處置"
+   ],
+   "examples_en": [
+    "Develop medically useful products for humans.",
+    "Conduct research on ways to treat a new type of illness.",
+    "Administer first aid treatment or life support to injured persons."
+   ],
+   "source": [
+    "1.B.3.l",
+    "1.B.3.m",
+    "1.B.3.aa"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_7",
+   "dimension": null,
+   "group": 7,
+   "stage": "group",
+   "label_zh": "物理科學、數學統計與資訊科技",
+   "label_en": "Physical science, mathematics/statistics and IT",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "分析未知物質的化學成分",
+    "建立解釋人類行為的統計模型",
+    "診斷並解決軟體問題"
+   ],
+   "examples_en": [
+    "Investigate the chemical composition of an unknown substance.",
+    "Develop a statistical model to explain human behavior.",
+    "Diagnose and resolve computer software problems."
+   ],
+   "source": [
+    "1.B.3.k",
+    "1.B.3.p",
+    "1.B.3.q"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_8",
+   "dimension": null,
+   "group": 8,
+   "stage": "group",
+   "label_zh": "機電與工程",
+   "label_en": "Mechanics, electronics and engineering",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "安裝電腦系統",
+    "運用工程原理設計建築物",
+    "維修飛機引擎"
+   ],
+   "examples_en": [
+    "Install computer systems.",
+    "Apply principles of engineering in designing buildings.",
+    "Maintain aircraft engines."
+   ],
+   "source": [
+    "1.B.3.a",
+    "1.B.3.j",
+    "1.B.3.a"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_9",
+   "dimension": null,
+   "group": 9,
+   "stage": "group",
+   "label_zh": "法律與公共安全",
+   "label_en": "Law and public safety",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "逮捕嫌疑人",
+    "在法庭上為當事人辯護",
+    "在監獄看守受刑人"
+   ],
+   "examples_en": [
+    "Apprehend and arrest suspects.",
+    "Defend a client in court.",
+    "Guard inmates in a prison."
+   ],
+   "source": [
+    "1.B.3.e",
+    "1.B.3.ao",
+    "1.B.3.e"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_10",
+   "dimension": null,
+   "group": 10,
+   "stage": "group",
+   "label_zh": "運動",
+   "label_en": "Athletics",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "擔任運動隊伍教練",
+    "參加運動競賽",
+    "從事運動"
+   ],
+   "examples_en": [
+    "Coach a sports team.",
+    "Compete in an athletic event.",
+    "Play sports."
+   ],
+   "source": [
+    "1.B.3.i",
+    "1.B.3.i",
+    "1.B.3.i"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_11",
+   "dimension": null,
+   "group": 11,
+   "stage": "group",
+   "label_zh": "烹飪藝術",
+   "label_en": "Culinary art",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "協調廚師備餐的工作",
+    "開發新食譜或擺盤方式",
+    "發展獨特的烹飪風格"
+   ],
+   "examples_en": [
+    "Coordinate activities of cooks engaged in food preparation.",
+    "Create new recipes or food presentations.",
+    "Develop a distinctive style of cooking."
+   ],
+   "source": [
+    "1.B.3.x",
+    "1.B.3.x",
+    "1.B.3.x"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "group_12",
+   "dimension": null,
+   "group": 12,
+   "stage": "group",
+   "label_zh": "宗教活動",
+   "label_en": "Religious activities",
+   "stem_zh": "整體而言，這一類的活動你有多想做？",
+   "examples_zh": [
+    "帶領宗教團體",
+    "籌辦宗教儀式",
+    "規劃宗教教育課程"
+   ],
+   "examples_en": [
+    "Lead a religious group.",
+    "Organize religious services.",
+    "Plan religious education programs."
+   ],
+   "source": [
+    "1.B.3.ab",
+    "1.B.3.ab",
+    "1.B.3.ab"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_mechanics_electronics#1",
+   "dimension": "bi_mechanics_electronics",
+   "stage": "area",
+   "groups": [
+    8
+   ],
+   "label_zh": "機械／電子",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "安裝電腦系統",
+    "維修飛機引擎",
+    "修理工業機器人",
+    "修理馬達和發電機"
+   ],
+   "examples_en": [
+    "Install computer systems.",
+    "Maintain aircraft engines.",
+    "Make repairs to industrial robots.",
+    "Repair motors and generators."
+   ],
+   "source": [
+    "1.B.3.a",
+    "1.B.3.a",
+    "1.B.3.a",
+    "1.B.3.a"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_construction_woodwork#1",
+   "dimension": "bi_construction_woodwork",
+   "stage": "area",
+   "groups": [
+    5
+   ],
+   "label_zh": "營建／木工",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "製作並修飾家具",
+    "製作並安裝櫥櫃",
+    "搭建木造樓梯",
+    "操作木工機具"
+   ],
+   "examples_en": [
+    "Build and finish furniture.",
+    "Build and install cabinets.",
+    "Construct wood stairways.",
+    "Operate woodworking machines."
+   ],
+   "source": [
+    "1.B.3.b",
+    "1.B.3.b",
+    "1.B.3.b",
+    "1.B.3.b"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_transportation_machine_operation#1",
+   "dimension": "bi_transportation_machine_operation",
+   "stage": "area",
+   "groups": [
+    5
+   ],
+   "label_zh": "運輸／機具操作",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "駕駛公車或遊覽車",
+    "操作推土機搬運土方",
+    "操作堆高機搬運箱子",
+    "用貨車或廂型車運送物資"
+   ],
+   "examples_en": [
+    "Drive a bus or motor coach.",
+    "Operate a bulldozer to move dirt.",
+    "Operate a forklift to move boxes.",
+    "Transport materials in a truck or van."
+   ],
+   "source": [
+    "1.B.3.c",
+    "1.B.3.c",
+    "1.B.3.c",
+    "1.B.3.c"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_physical_manual_labor#1",
+   "dimension": "bi_physical_manual_labor",
+   "stage": "area",
+   "groups": [
+    5
+   ],
+   "label_zh": "體力勞動",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "清理工作區域",
+    "人力搬運貨物",
+    "在工地從事體力工作",
+    "卸貨、分類並搬運材料、設備或物資"
+   ],
+   "examples_en": [
+    "Clean a work area.",
+    "Manually move cargo and freight.",
+    "Perform physical labor at a construction site.",
+    "Unload, sort, and move materials, equipment, or supplies."
+   ],
+   "source": [
+    "1.B.3.d",
+    "1.B.3.d",
+    "1.B.3.d",
+    "1.B.3.d"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_protective_service#1",
+   "dimension": "bi_protective_service",
+   "stage": "area",
+   "groups": [
+    9
+   ],
+   "label_zh": "保護性服務",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "逮捕嫌疑人",
+    "在監獄看守受刑人",
+    "調查犯罪活動",
+    "執法以維持秩序、保護生命"
+   ],
+   "examples_en": [
+    "Apprehend and arrest suspects.",
+    "Guard inmates in a prison.",
+    "Investigate criminal activity.",
+    "Maintain order and protect life by enforcing laws."
+   ],
+   "source": [
+    "1.B.3.e",
+    "1.B.3.e",
+    "1.B.3.e",
+    "1.B.3.e"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_agriculture#1",
+   "dimension": "bi_agriculture",
+   "stage": "area",
+   "groups": [
+    4
+   ],
+   "label_zh": "農業",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "規劃減少土壤流失、保護草原的方案",
+    "檢查作物是否有病害",
+    "種植、栽培並收成作物",
+    "飼養並照顧家畜"
+   ],
+   "examples_en": [
+    "Develop plans to reduce soil erosion and protect rangelands.",
+    "Inspect crops for disease.",
+    "Plant, cultivate, and harvest crops.",
+    "Raise and tend to farm animals."
+   ],
+   "source": [
+    "1.B.3.f",
+    "1.B.3.f",
+    "1.B.3.f",
+    "1.B.3.f"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_nature_outdoors#1",
+   "dimension": "bi_nature_outdoors",
+   "stage": "area",
+   "groups": [
+    4
+   ],
+   "label_zh": "自然／戶外",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "保育野生動物棲地",
+    "管理供遊憩使用的公有林地",
+    "規劃種植公共花園",
+    "訓練保育人員種植樹苗"
+   ],
+   "examples_en": [
+    "Conserve wildlife habitats.",
+    "Manage public forested lands for recreational purposes.",
+    "Plant a public garden.",
+    "Train conservation workers in planting tree seedlings."
+   ],
+   "source": [
+    "1.B.3.g",
+    "1.B.3.g",
+    "1.B.3.g",
+    "1.B.3.g"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_animal_service#1",
+   "dimension": "bi_animal_service",
+   "stage": "area",
+   "groups": [
+    4
+   ],
+   "label_zh": "動物服務",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "在收容所帶動物運動",
+    "治療生病或受傷的動物",
+    "照料動物的飲食與清潔",
+    "訓練協助身心障礙者的動物"
+   ],
+   "examples_en": [
+    "Exercise animals in a shelter.",
+    "Provide treatment to sick or injured animals.",
+    "Supply animals with food, water, and personal care.",
+    "Train animals to assist persons with disabilities."
+   ],
+   "source": [
+    "1.B.3.h",
+    "1.B.3.h",
+    "1.B.3.h",
+    "1.B.3.h"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_athletics#1",
+   "dimension": "bi_athletics",
+   "stage": "area",
+   "groups": [
+    10
+   ],
+   "label_zh": "運動",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "擔任運動隊伍教練",
+    "參加運動競賽",
+    "從事運動",
+    "為運動比賽進行訓練"
+   ],
+   "examples_en": [
+    "Coach a sports team.",
+    "Compete in an athletic event.",
+    "Play sports.",
+    "Train for an athletic event."
+   ],
+   "source": [
+    "1.B.3.i",
+    "1.B.3.i",
+    "1.B.3.i",
+    "1.B.3.i"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_engineering#1",
+   "dimension": "bi_engineering",
+   "stage": "area",
+   "groups": [
+    8
+   ],
+   "label_zh": "工程",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "運用工程原理設計建築物",
+    "設計、建造並測試飛機、飛彈與太空船",
+    "解說工程圖",
+    "測試電子與機械系統的效能"
+   ],
+   "examples_en": [
+    "Apply principles of engineering in designing buildings.",
+    "Design, construct, and test aircraft, missiles, and spacecraft.",
+    "Explain engineering drawings.",
+    "Test performance of electronic and mechanical systems."
+   ],
+   "source": [
+    "1.B.3.j",
+    "1.B.3.j",
+    "1.B.3.j",
+    "1.B.3.j"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_physical_science#1",
+   "dimension": "bi_physical_science",
+   "stage": "area",
+   "groups": [
+    7
+   ],
+   "label_zh": "物理科學",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "分析未知物質的化學成分",
+    "用太空望遠鏡研究恆星的形成",
+    "研究讓食物安全又健康的方法",
+    "用電腦模型預報天氣"
+   ],
+   "examples_en": [
+    "Investigate the chemical composition of an unknown substance.",
+    "Study formation of stars using space-based telescopes.",
+    "Study ways to make foods safe and healthy.",
+    "Use computer models for weather forecasting."
+   ],
+   "source": [
+    "1.B.3.k",
+    "1.B.3.k",
+    "1.B.3.k",
+    "1.B.3.k"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_life_science#1",
+   "dimension": "bi_life_science",
+   "stage": "area",
+   "groups": [
+    6
+   ],
+   "label_zh": "生命科學",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "開發對人類醫療有用的產品",
+    "研究細菌對人類和動物的影響",
+    "撰寫對野生動物的環境影響報告",
+    "研究基因科學"
+   ],
+   "examples_en": [
+    "Develop medically useful products for humans.",
+    "Investigate the effects of bacteria on humans and animals.",
+    "Prepare environmental impact reports on wildlife.",
+    "Study the science of genes."
+   ],
+   "source": [
+    "1.B.3.l",
+    "1.B.3.l",
+    "1.B.3.l",
+    "1.B.3.l"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_medical_science#1",
+   "dimension": "bi_medical_science",
+   "stage": "area",
+   "groups": [
+    6
+   ],
+   "label_zh": "醫學",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "研究治療新型疾病的方法",
+    "評估新藥的療效",
+    "探究人類疾病的成因",
+    "研究預防疾病的方法"
+   ],
+   "examples_en": [
+    "Conduct research on ways to treat a new type of illness.",
+    "Evaluate the performance of a newly developed medicine.",
+    "Investigate the causes of human disease.",
+    "Study ways of preventing disease."
+   ],
+   "source": [
+    "1.B.3.m",
+    "1.B.3.m",
+    "1.B.3.m",
+    "1.B.3.m"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_social_science#1",
+   "dimension": "bi_social_science",
+   "stage": "area",
+   "groups": [
+    3
+   ],
+   "label_zh": "社會科學",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "研究經濟議題",
+    "研究文化差異",
+    "研究心理與情緒障礙",
+    "研究民眾對政治議題的看法"
+   ],
+   "examples_en": [
+    "Conduct research on economic issues.",
+    "Study cultural differences.",
+    "Study mental and emotional disorders.",
+    "Study public opinion on political issues."
+   ],
+   "source": [
+    "1.B.3.n",
+    "1.B.3.n",
+    "1.B.3.n",
+    "1.B.3.n"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_humanities#1",
+   "dimension": "bi_humanities",
+   "stage": "area",
+   "groups": [
+    2,
+    3
+   ],
+   "label_zh": "人文",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "研究並比較不同宗教信仰",
+    "研究影響一部文學作品的因素",
+    "研究世界上某個地區的文化與歷史",
+    "研究家庭的歷史"
+   ],
+   "examples_en": [
+    "Research and compare religious beliefs.",
+    "Research influences on a literary work.",
+    "Study the culture and history of a region of the world.",
+    "Study the history of the family."
+   ],
+   "source": [
+    "1.B.3.o",
+    "1.B.3.o",
+    "1.B.3.o",
+    "1.B.3.o"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_mathematics_statistics#1",
+   "dimension": "bi_mathematics_statistics",
+   "stage": "area",
+   "groups": [
+    7
+   ],
+   "label_zh": "數學／統計",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "建立解釋人類行為的統計模型",
+    "拓展幾何學領域的數學知識",
+    "根據統計分析做預測",
+    "解數學問題"
+   ],
+   "examples_en": [
+    "Develop a statistical model to explain human behavior.",
+    "Extend mathematical knowledge in the field of geometry.",
+    "Make predictions based on statistical analyses.",
+    "Solve mathematical problems."
+   ],
+   "source": [
+    "1.B.3.p",
+    "1.B.3.p",
+    "1.B.3.p",
+    "1.B.3.p"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_information_technology#1",
+   "dimension": "bi_information_technology",
+   "stage": "area",
+   "groups": [
+    7
+   ],
+   "label_zh": "資訊科技",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "診斷並解決軟體問題",
+    "研究電腦系統的資安防護",
+    "測試、維護並監控電腦程式與系統",
+    "撰寫並審查軟體程式碼"
+   ],
+   "examples_en": [
+    "Diagnose and resolve computer software problems.",
+    "Research security measures for computer systems.",
+    "Test, maintain, and monitor computer programs and systems.",
+    "Write and review code for software."
+   ],
+   "source": [
+    "1.B.3.q",
+    "1.B.3.q",
+    "1.B.3.q",
+    "1.B.3.q"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_visual_arts#1",
+   "dimension": "bi_visual_arts",
+   "stage": "area",
+   "groups": [
+    2
+   ],
+   "label_zh": "視覺藝術",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "創作雕塑",
+    "用電腦創作圖像或動畫",
+    "創作攝影藝術作品",
+    "畫素描或設計草圖"
+   ],
+   "examples_en": [
+    "Create a sculpture.",
+    "Create computer-generated graphics or animation.",
+    "Create photography art prints.",
+    "Sketch a picture or design."
+   ],
+   "source": [
+    "1.B.3.r",
+    "1.B.3.r",
+    "1.B.3.r",
+    "1.B.3.r"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_applied_arts_and_design#1",
+   "dimension": "bi_applied_arts_and_design",
+   "stage": "area",
+   "groups": [
+    2
+   ],
+   "label_zh": "應用藝術與設計",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "為家電設計吸引人的產品外觀",
+    "為電影或舞台劇設計場景",
+    "設計並手工製作服裝",
+    "設計店內的商品陳列"
+   ],
+   "examples_en": [
+    "Create appealing product designs for home appliances.",
+    "Create the set for film or theater productions.",
+    "Design and create handmade clothes.",
+    "Design displays to sell products in stores."
+   ],
+   "source": [
+    "1.B.3.s",
+    "1.B.3.s",
+    "1.B.3.s",
+    "1.B.3.s"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_performing_arts#1",
+   "dimension": "bi_performing_arts",
+   "stage": "area",
+   "groups": [
+    2
+   ],
+   "label_zh": "表演藝術",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "在舞台上為觀眾演出",
+    "編創新的舞蹈",
+    "導演舞台、電視、廣播、影片或電影作品",
+    "研讀劇本並排練角色"
+   ],
+   "examples_en": [
+    "Act on stage for an audience.",
+    "Create new dance routines.",
+    "Direct stage, television, radio, video, or film productions.",
+    "Study and rehearse roles from scripts."
+   ],
+   "source": [
+    "1.B.3.t",
+    "1.B.3.t",
+    "1.B.3.t",
+    "1.B.3.t"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_music#1",
+   "dimension": "bi_music",
+   "stage": "area",
+   "groups": [
+    2
+   ],
+   "label_zh": "音樂",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "創作樂曲、編曲或寫譜",
+    "為現場觀眾演奏音樂",
+    "演奏樂器",
+    "在樂團擔任歌手"
+   ],
+   "examples_en": [
+    "Create musical compositions, arrangements, or scores.",
+    "Perform music for a live audience.",
+    "Play a musical instrument.",
+    "Sing in a band."
+   ],
+   "source": [
+    "1.B.3.u",
+    "1.B.3.u",
+    "1.B.3.u",
+    "1.B.3.u"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_creative_writing#1",
+   "dimension": "bi_creative_writing",
+   "stage": "area",
+   "groups": [
+    2
+   ],
+   "label_zh": "創意寫作",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "寫小說",
+    "撰寫廣告文案",
+    "寫詩或歌詞",
+    "為電影與媒體寫劇本"
+   ],
+   "examples_en": [
+    "Write a novel.",
+    "Write advertisements.",
+    "Write poetry or lyrics.",
+    "Write scripts for movies and media."
+   ],
+   "source": [
+    "1.B.3.v",
+    "1.B.3.v",
+    "1.B.3.v",
+    "1.B.3.v"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_media#1",
+   "dimension": "bi_media",
+   "stage": "area",
+   "groups": [
+    2
+   ],
+   "label_zh": "媒體",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "為 Podcast 規劃內容",
+    "執導電視影集",
+    "在廣播或電視上依稿播報",
+    "採訪並撰寫人物故事報導"
+   ],
+   "examples_en": [
+    "Develop content for a podcast.",
+    "Direct a television series.",
+    "Speak or read from scripted materials on radio or television.",
+    "Write and report human interest stories."
+   ],
+   "source": [
+    "1.B.3.w",
+    "1.B.3.w",
+    "1.B.3.w",
+    "1.B.3.w"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_culinary_art#1",
+   "dimension": "bi_culinary_art",
+   "stage": "area",
+   "groups": [
+    11
+   ],
+   "label_zh": "烹飪藝術",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "協調廚師備餐的工作",
+    "開發新食譜或擺盤方式",
+    "發展獨特的烹飪風格",
+    "挑選食材並確保新鮮"
+   ],
+   "examples_en": [
+    "Coordinate activities of cooks engaged in food preparation.",
+    "Create new recipes or food presentations.",
+    "Develop a distinctive style of cooking.",
+    "Select and ensure freshness of food and ingredients for preparation."
+   ],
+   "source": [
+    "1.B.3.x",
+    "1.B.3.x",
+    "1.B.3.x",
+    "1.B.3.x"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_teaching_education#1",
+   "dimension": "bi_teaching_education",
+   "stage": "area",
+   "groups": [
+    3
+   ],
+   "label_zh": "教學／教育",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "依學生興趣調整教學方法",
+    "帶領學生進行促進思考成長的活動",
+    "教授學校科目",
+    "教導學生社交技巧"
+   ],
+   "examples_en": [
+    "Adapt teaching methods to meet students' interests.",
+    "Instruct students in activities designed to further intellectual growth.",
+    "Teach school subjects.",
+    "Teach social skills to students."
+   ],
+   "source": [
+    "1.B.3.y",
+    "1.B.3.y",
+    "1.B.3.y",
+    "1.B.3.y"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_social_service#1",
+   "dimension": "bi_social_service",
+   "stage": "area",
+   "groups": [
+    3
+   ],
+   "label_zh": "社會服務",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "為個人或社區的需求發聲",
+    "協助有特殊需求的人",
+    "為有心理健康困擾的個案提供諮商",
+    "為無家者提供生活與經濟協助"
+   ],
+   "examples_en": [
+    "Advocate for individual or community needs.",
+    "Assist people with special needs.",
+    "Counsel clients with mental health issues.",
+    "Provide personal and economic assistance for homeless individuals."
+   ],
+   "source": [
+    "1.B.3.z",
+    "1.B.3.z",
+    "1.B.3.z",
+    "1.B.3.z"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_health_care_service#1",
+   "dimension": "bi_health_care_service",
+   "stage": "area",
+   "groups": [
+    6
+   ],
+   "label_zh": "醫療照護服務",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "為傷者進行急救或維生處置",
+    "為病人擬定治療計畫",
+    "開立處方藥物",
+    "為個人提供預防保健"
+   ],
+   "examples_en": [
+    "Administer first aid treatment or life support to injured persons.",
+    "Develop medical treatment plans for patients.",
+    "Prescribe medications.",
+    "Provide preventive care to individuals."
+   ],
+   "source": [
+    "1.B.3.aa",
+    "1.B.3.aa",
+    "1.B.3.aa",
+    "1.B.3.aa"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_religious_activities#1",
+   "dimension": "bi_religious_activities",
+   "stage": "area",
+   "groups": [
+    12
+   ],
+   "label_zh": "宗教活動",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "帶領宗教團體",
+    "籌辦宗教儀式",
+    "規劃宗教教育課程",
+    "提供心靈指引"
+   ],
+   "examples_en": [
+    "Lead a religious group.",
+    "Organize religious services.",
+    "Plan religious education programs.",
+    "Provide spiritual guidance."
+   ],
+   "source": [
+    "1.B.3.ab",
+    "1.B.3.ab",
+    "1.B.3.ab",
+    "1.B.3.ab"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_personal_service#1",
+   "dimension": "bi_personal_service",
+   "stage": "area",
+   "groups": [
+    3
+   ],
+   "label_zh": "個人服務",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "協助客戶處理問題或疑問",
+    "協助個人規劃特別活動",
+    "為客人預約晚餐、SPA 或高爾夫球場時段等",
+    "安排觀光或其他行程"
+   ],
+   "examples_en": [
+    "Assist customers with problems or questions.",
+    "Help individuals plan special events.",
+    "Make reservations for guests, such as for dinner, spa treatments, or golf tee times.",
+    "Make travel arrangements for sightseeing or other tours."
+   ],
+   "source": [
+    "1.B.3.ac",
+    "1.B.3.ac",
+    "1.B.3.ac",
+    "1.B.3.ac"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_professional_advising#1",
+   "dimension": "bi_professional_advising",
+   "stage": "area",
+   "groups": [
+    3
+   ],
+   "label_zh": "專業諮詢",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "建議別人如何經營成功的職涯",
+    "指導學生讀書方法",
+    "輔導別人達成職業目標",
+    "教導員工領導力與軟實力"
+   ],
+   "examples_en": [
+    "Advise people on how to have a successful career.",
+    "Coach students on study skills.",
+    "Counsel people how to achieve their professional goals.",
+    "Teach employees leadership and soft skills."
+   ],
+   "source": [
+    "1.B.3.ad",
+    "1.B.3.ad",
+    "1.B.3.ad",
+    "1.B.3.ad"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_business_initiatives#1",
+   "dimension": "bi_business_initiatives",
+   "stage": "area",
+   "groups": [
+    1
+   ],
+   "label_zh": "商業開創",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "制定提升生產力的商業策略或政策",
+    "為公司擬定長期策略",
+    "尋找合作夥伴公司開拓新商機",
+    "規劃企業活動以提高投資報酬"
+   ],
+   "examples_en": [
+    "Create business strategies or policies to increase productivity.",
+    "Develop a long-term strategic plan for a company.",
+    "Identify partner companies to pursue new business opportunities.",
+    "Plan activities of businesses to maximize returns on investments."
+   ],
+   "source": [
+    "1.B.3.ae",
+    "1.B.3.ae",
+    "1.B.3.ae",
+    "1.B.3.ae"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_sales#1",
+   "dimension": "bi_sales",
+   "stage": "area",
+   "groups": [
+    1
+   ],
+   "label_zh": "銷售",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "向消費者示範產品",
+    "主導銷售或客服工作",
+    "說服客戶購買新產品",
+    "以優惠價格銷售商品"
+   ],
+   "examples_en": [
+    "Demonstrate products to consumers.",
+    "Direct sales or customer service activities.",
+    "Persuade customers to buy a new product.",
+    "Sell goods at bargain prices."
+   ],
+   "source": [
+    "1.B.3.af",
+    "1.B.3.af",
+    "1.B.3.af",
+    "1.B.3.af"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_marketing_advertising#1",
+   "dimension": "bi_marketing_advertising",
+   "stage": "area",
+   "groups": [
+    1,
+    2
+   ],
+   "label_zh": "行銷／廣告",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "製作廣告宣傳素材",
+    "規劃廣告或行銷活動",
+    "用廣告推廣新產品",
+    "用社群媒體行銷公司"
+   ],
+   "examples_en": [
+    "Develop promotional materials for advertising.",
+    "Plan an advertising or marketing campaign.",
+    "Promote a new product by advertising.",
+    "Use social media to market a company."
+   ],
+   "source": [
+    "1.B.3.ag",
+    "1.B.3.ag",
+    "1.B.3.ag",
+    "1.B.3.ag"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_finance#1",
+   "dimension": "bi_finance",
+   "stage": "area",
+   "groups": [
+    1
+   ],
+   "label_zh": "金融",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "分析公司的財務與證券",
+    "進行投資以創造未來收入",
+    "為企業管理大筆資金",
+    "規劃並主導企業的財務決策"
+   ],
+   "examples_en": [
+    "Analyze financials and securities of a company.",
+    "Make investments to generate future income.",
+    "Manage large amounts of money for a business.",
+    "Plan and direct financial decisions for a business."
+   ],
+   "source": [
+    "1.B.3.ah",
+    "1.B.3.ah",
+    "1.B.3.ah",
+    "1.B.3.ah"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_accounting#1",
+   "dimension": "bi_accounting",
+   "stage": "area",
+   "groups": [
+    1
+   ],
+   "label_zh": "會計",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "為公司記帳",
+    "為企業編列預算",
+    "處理員工薪資",
+    "核對並登錄財務數據"
+   ],
+   "examples_en": [
+    "Keep accounting records for a company.",
+    "Prepare budgets for a business.",
+    "Prepare employee payroll.",
+    "Verify and record numerical data for financial records."
+   ],
+   "source": [
+    "1.B.3.ai",
+    "1.B.3.ai",
+    "1.B.3.ai",
+    "1.B.3.ai"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_human_resources#1",
+   "dimension": "bi_human_resources",
+   "stage": "area",
+   "groups": [
+    1,
+    3
+   ],
+   "label_zh": "人力資源",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "辦理訓練以提升員工技能與組織績效",
+    "向員工說明公司制度與福利",
+    "管理員工人事資料",
+    "為公司招募並聘用員工"
+   ],
+   "examples_en": [
+    "Conduct training to improve employee skills and organizational performance.",
+    "Interpret and explain company policies and benefits to employees.",
+    "Maintain employee personnel records.",
+    "Recruit and hire employees for a company."
+   ],
+   "source": [
+    "1.B.3.aj",
+    "1.B.3.aj",
+    "1.B.3.aj",
+    "1.B.3.aj"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_office_work#1",
+   "dimension": "bi_office_work",
+   "stage": "area",
+   "groups": [
+    1
+   ],
+   "label_zh": "行政事務",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "接聽電話、轉接並留言",
+    "維護並更新檔案、庫存與資料庫",
+    "操作印表機、掃描器等事務機器",
+    "為客戶安排預約"
+   ],
+   "examples_en": [
+    "Answer telephones, direct calls, and take messages.",
+    "Maintain and update filing, inventory, and database systems.",
+    "Operate office machines, such as printers and scanners.",
+    "Schedule appointments for customers."
+   ],
+   "source": [
+    "1.B.3.ak",
+    "1.B.3.ak",
+    "1.B.3.ak",
+    "1.B.3.ak"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_management_administration#1",
+   "dimension": "bi_management_administration",
+   "stage": "area",
+   "groups": [
+    1
+   ],
+   "label_zh": "管理",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "訂定組織的目標",
+    "管理一個組織或團隊",
+    "規劃或協調行政服務",
+    "督導組織營運或專案"
+   ],
+   "examples_en": [
+    "Develop organizational goals or objectives.",
+    "Manage an organization or group of people.",
+    "Plan or coordinate one or more administrative services.",
+    "Supervise organizational operations or projects."
+   ],
+   "source": [
+    "1.B.3.al",
+    "1.B.3.al",
+    "1.B.3.al",
+    "1.B.3.al"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_public_speaking#1",
+   "dimension": "bi_public_speaking",
+   "stage": "area",
+   "groups": [
+    3
+   ],
+   "label_zh": "公開演說",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "在社團聚會上擔任講者",
+    "在 Podcast 上分享你的想法",
+    "為公益目的公開演講募款",
+    "在電視或廣播上發布公開聲明"
+   ],
+   "examples_en": [
+    "Be a speaker at a club meeting.",
+    "Discuss your ideas on a podcast.",
+    "Make a public speech to raise money for a worthy cause.",
+    "Provide a public announcement on TV or radio."
+   ],
+   "source": [
+    "1.B.3.am",
+    "1.B.3.am",
+    "1.B.3.am",
+    "1.B.3.am"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_politics#1",
+   "dimension": "bi_politics",
+   "stage": "area",
+   "groups": [
+    3,
+    9
+   ],
+   "label_zh": "政治",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "參選公職",
+    "深入了解政府的政策決策",
+    "參與政治辯論",
+    "主導競選活動"
+   ],
+   "examples_en": [
+    "Campaign for political office.",
+    "Develop knowledge of government policy decisions.",
+    "Engage in a political debate.",
+    "Lead a political campaign."
+   ],
+   "source": [
+    "1.B.3.an",
+    "1.B.3.an",
+    "1.B.3.an",
+    "1.B.3.an"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  },
+  {
+   "item_id": "bi_law#1",
+   "dimension": "bi_law",
+   "stage": "area",
+   "groups": [
+    9,
+    3
+   ],
+   "label_zh": "法律",
+   "stem_zh": "以下這些活動，你有多想做？（不考慮你現在會不會做）",
+   "examples_zh": [
+    "在法庭上為當事人辯護",
+    "起草法律文件",
+    "調解法律糾紛",
+    "為客戶提供法律建議"
+   ],
+   "examples_en": [
+    "Defend a client in court.",
+    "Draw up legal documents.",
+    "Mediate legal disputes.",
+    "Provide legal advice to clients."
+   ],
+   "source": [
+    "1.B.3.ao",
+    "1.B.3.ao",
+    "1.B.3.ao",
+    "1.B.3.ao"
+   ],
+   "scale": {
+    "type": "likert5",
+    "labels_zh": [
+     "完全不想",
+     "不太想",
+     "普通",
+     "有點想",
+     "非常想"
+    ],
+    "to_unit": "(answer - 1) / 4"
+   }
+  }
+ ]
+}

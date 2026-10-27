@@ -152,13 +152,15 @@ class CipEntry:
 
 
 def load_cip2020(path: str | Path) -> dict[str, CipEntry]:
-    """All codes valid in CIP 2020 (rows whose Action is 'Moved to' or 'Deleted'
-    describe codes that no longer exist and are dropped)."""
+    """All codes valid in CIP 2020. Rows whose Action is 'Moved from' (the old code;
+    its definition reads 'Moved from X to Y') or 'Deleted' describe codes that no
+    longer exist and are dropped; 'Moved to' rows are the current destination codes
+    and are kept (B-C0-15)."""
     rows = read_table(path, required=["CIPCode", "CIPTitle"])
     out: dict[str, CipEntry] = {}
     for r in rows:
         action = r.get("Action", "").lower()
-        if action.startswith(("moved to", "deleted")):
+        if action.startswith(("moved from", "deleted")):
             continue
         code = normalize_cip(r["CIPCode"])
         out[code] = CipEntry(code, r["CIPTitle"].strip().rstrip("."), r.get("CIPDefinition", ""))

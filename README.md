@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.3 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.6 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -56,23 +56,23 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
-| 2026-10-28 | v0.3.3 | 新增全領域官方參考表（`data/reference/*_all.csv`，範圍 `all_scope.json`）：1,209 個 CIP、含專業／研究型博士與研究所證書；推薦目錄不變（§6） | W-65、W-70 |
-| 2026-10-27 | v0.3.2 | 新增實驗用計分器 `domain_gated`（v2 作答 → v1 計分 ＋ 遠領域扣分）；L3 未通過，不建議使用（§4.8） | W-16c |
-| 2026-10-27 | v0.3.1 | v2 的 L3 結果：未通過，v2 推薦品質目前低於 v1，請勿用於實際推薦（§1、§4.8）；用法沒有改變 | W-16c |
+| 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
+| 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
+| 2026-10-28 | v0.3.4 | 新增 v2 題庫中文草案（`data/items/item_bank_v2.json`，取自 O\*NET 31.0 代表活動；[item-bank-v2.md](docs/item-bank-v2.md)），尚未驗證、不可施測（§6） | W-41 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
 
 <!-- AUTO:next-steps START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-來源：[docs/ROADMAP.md](docs/ROADMAP.md) （依證據排序，2026-10-27 W-63／W-67 後更新）
+來源：[docs/ROADMAP.md](docs/ROADMAP.md) （依證據排序，2026-10-28 更新）
 
 | 順序 | 工項 | 依據 |
 |---|---|---|
-| 1 | **W-64** 跨領域領域層（G0：取得 O\*NET 細分興趣檔案並確認來源） | F59–F61：遠領域假陽性在模擬中出現，且集中在需求屬於遠領域的學生（F60）；只有讓量測空間能表達這些領域才能修正 B-C2-8 |
-| 2 | **W-20** 黃金標準（需求維度＋入學條件，依族群分層） | 課程層資料、條件擷取與評分準則跨領域檢驗都需要它 |
-| 3 | **W-66** 兩階段提問 | 依賴 W-64；維度增加後的作答負擔（B-C1-21） |
-| 4 | **W-41** 使用者研究（依背景分層）＋ W-73 | 測量恆等性只能用真實資料檢驗（D11） |
-| — | W-67 剩餘：背景分布以教育部學門統計校準 | 需官方檔案 |
+| 1 | **W-20** 黃金標準（需第二位評分者）＋ W-76 刺激物選定 | W-76 的配對設計與分析方法都要等實際刺激物（F99–F101）；C0.3 跨領域檢驗 |
+| 2 | **W-41** 題庫 v2：核對 O\*NET 官方檔、回譯、認知訪談（[item-bank-v2.md](docs/item-bank-v2.md)） | 實測前置（[study-protocol.md](docs/study-protocol.md) §8） |
+| 3 | **W-76** 配對設計＋「區分兩種假設」的預先登記參數還原 | 精確份量估不準，區分假設可行（F101） |
+| 4 | **W-71** 職業橋接就業加權（需 BLS OEWS 檔案） | 教職稀釋已以非學術剖面過渡處理（F97–F98） |
+| 5 | **W-40／W-41／W-76** 實測（待 study-protocol §7 決策） | 只有真實資料能決定 v2 是否值得（B-C5-8） |
 <!-- AUTO:next-steps END -->
 
 ## 文件導覽

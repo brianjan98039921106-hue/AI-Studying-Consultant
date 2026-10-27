@@ -350,6 +350,8 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 155399,Kansas State University,KS,01.1002,01,17,6,2025
 200332,North Dakota State University-Main Campus,ND,01.1002,01,17,5,2025
 100858,Auburn University,AL,01.1003,01,7,7,2025
+209065,Linfield University,OR,01.1004,01,6,1,2025
+209065,Linfield University,OR,01.1004,01,7,5,2025
 155399,Kansas State University,KS,01.1099,01,6,5,2025
 479956,Pennsylvania State University-World Campus,PA,01.1099,01,6,1,2025
 181464,University of Nebraska-Lincoln,NE,01.1099,01,6,1,2025
@@ -547,6 +549,98 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 207388,Oklahoma State University-Main Campus,OK,01.1299,01,17,3,2025
 110644,University of California-Davis,CA,01.1299,01,17,5,2025
 141574,University of Hawaii at Manoa,HI,01.1299,01,17,3,2025
+134130,University of Florida,FL,01.8001,01,8,64,2025
+100858,Auburn University,AL,01.8001,01,18,120,2025
+126818,Colorado State University-Fort Collins,CO,01.8001,01,18,145,2025
+190415,Cornell University,NY,01.8001,01,18,121,2025
+153603,Iowa State University,IA,01.8001,01,18,149,2025
+155399,Kansas State University,KS,01.8001,01,18,121,2025
+220631,Lincoln Memorial University,TN,01.8001,01,18,122,2025
+192448,Long Island University,NY,01.8001,01,18,100,2025
+159391,Louisiana State University and Agricultural & Mechanical College,LA,01.8001,01,18,117,2025
+171100,Michigan State University,MI,01.8001,01,18,111,2025
+423643,Midwestern University-Glendale,AZ,01.8001,01,18,120,2025
+176080,Mississippi State University,MS,01.8001,01,18,110,2025
+199193,North Carolina State University at Raleigh,NC,01.8001,01,18,95,2025
+204796,Ohio State University-Main Campus,OH,01.8001,01,18,164,2025
+207388,Oklahoma State University-Main Campus,OK,01.8001,01,18,103,2025
+209542,Oregon State University,OR,01.8001,01,18,81,2025
+243780,Purdue University-Main Campus,IN,01.8001,01,18,74,2025
+228723,Texas A&M University-College Station,TX,01.8001,01,18,162,2025
+229115,Texas Tech University,TX,01.8001,01,18,61,2025
+221759,The University of Tennessee-Knoxville,TN,01.8001,01,18,87,2025
+168148,Tufts University,MA,01.8001,01,18,98,2025
+102377,Tuskegee University,AL,01.8001,01,18,65,2025
+104179,University of Arizona,AZ,01.8001,01,18,106,2025
+110644,University of California-Davis,CA,01.8001,01,18,139,2025
+134130,University of Florida,FL,01.8001,01,18,119,2025
+139959,University of Georgia,GA,01.8001,01,18,145,2025
+145637,University of Illinois Urbana-Champaign,IL,01.8001,01,18,131,2025
+163286,University of Maryland-College Park,MD,01.8001,01,18,32,2025
+174066,University of Minnesota-Twin Cities,MN,01.8001,01,18,123,2025
+178396,University of Missouri-Columbia,MO,01.8001,01,18,113,2025
+215062,University of Pennsylvania,PA,01.8001,01,18,134,2025
+240444,University of Wisconsin-Madison,WI,01.8001,01,18,94,2025
+233921,Virginia Polytechnic Institute and State University,VA,01.8001,01,18,121,2025
+236939,Washington State University,WA,01.8001,01,18,127,2025
+112525,Western University of Health Sciences,CA,01.8001,01,18,108,2025
+134130,University of Florida,FL,01.8101,01,6,43,2025
+174066,University of Minnesota-Twin Cities,MN,01.8101,01,6,25,2025
+126818,Colorado State University-Fort Collins,CO,01.8101,01,7,19,2025
+220631,Lincoln Memorial University,TN,01.8101,01,7,24,2025
+243780,Purdue University-Main Campus,IN,01.8101,01,7,16,2025
+219356,South Dakota State University,SD,01.8101,01,7,12,2025
+229115,Texas Tech University,TX,01.8101,01,7,4,2025
+102377,Tuskegee University,AL,01.8101,01,7,1,2025
+134130,University of Florida,FL,01.8101,01,7,109,2025
+145637,University of Illinois Urbana-Champaign,IL,01.8101,01,7,9,2025
+233921,Virginia Polytechnic Institute and State University,VA,01.8101,01,7,8,2025
+155399,Kansas State University,KS,01.8101,01,8,1,2025
+126818,Colorado State University-Fort Collins,CO,01.8101,01,17,4,2025
+134130,University of Florida,FL,01.8101,01,17,6,2025
+174066,University of Minnesota-Twin Cities,MN,01.8101,01,17,3,2025
+233921,Virginia Polytechnic Institute and State University,VA,01.8101,01,17,11,2025
+212054,Drexel University,PA,01.8102,01,7,11,2025
+204796,Ohio State University-Main Campus,OH,01.8102,01,7,11,2025
+232982,Old Dominion University,VA,01.8102,01,7,5,2025
+209542,Oregon State University,OR,01.8102,01,7,1,2025
+168148,Tufts University,MA,01.8102,01,7,2,2025
+236948,University of Washington-Seattle Campus,WA,01.8102,01,7,6,2025
+204796,Ohio State University-Main Campus,OH,01.8102,01,17,11,2025
+139959,University of Georgia,GA,01.8103,01,7,1,2025
+139959,University of Georgia,GA,01.8104,01,6,4,2025
+139959,University of Georgia,GA,01.8104,01,7,7,2025
+126818,Colorado State University-Fort Collins,CO,01.8106,01,6,1,2025
+168148,Tufts University,MA,01.8106,01,7,7,2025
+236939,Washington State University,WA,01.8106,01,7,11,2025
+139959,University of Georgia,GA,01.8106,01,17,5,2025
+236939,Washington State University,WA,01.8106,01,17,5,2025
+153603,Iowa State University,IA,01.8107,01,7,1,2025
+163286,University of Maryland-College Park,MD,01.8107,01,7,1,2025
+153603,Iowa State University,IA,01.8107,01,17,3,2025
+163286,University of Maryland-College Park,MD,01.8107,01,17,4,2025
+153603,Iowa State University,IA,01.8108,01,7,1,2025
+176080,Mississippi State University,MS,01.8108,01,7,7,2025
+145637,University of Illinois Urbana-Champaign,IL,01.8108,01,7,6,2025
+157085,University of Kentucky,KY,01.8108,01,7,1,2025
+174066,University of Minnesota-Twin Cities,MN,01.8108,01,7,3,2025
+153603,Iowa State University,IA,01.8108,01,17,2,2025
+176080,Mississippi State University,MS,01.8108,01,17,6,2025
+145637,University of Illinois Urbana-Champaign,IL,01.8108,01,17,6,2025
+157085,University of Kentucky,KY,01.8108,01,17,5,2025
+174066,University of Minnesota-Twin Cities,MN,01.8108,01,17,3,2025
+178396,University of Missouri-Columbia,MO,01.8108,01,17,6,2025
+155399,Kansas State University,KS,01.8109,01,17,2,2025
+139959,University of Georgia,GA,01.8109,01,17,1,2025
+153603,Iowa State University,IA,01.8110,01,7,4,2025
+204796,Ohio State University-Main Campus,OH,01.8110,01,7,13,2025
+228723,Texas A&M University-College Station,TX,01.8110,01,7,14,2025
+110644,University of California-Davis,CA,01.8110,01,7,16,2025
+134130,University of Florida,FL,01.8110,01,7,1,2025
+153603,Iowa State University,IA,01.8110,01,8,1,2025
+153603,Iowa State University,IA,01.8110,01,17,4,2025
+229115,Texas Tech University,TX,01.8110,01,17,10,2025
+236939,Washington State University,WA,01.8199,01,6,1,2025
 157401,Murray State University,KY,01.8201,01,6,1,2025
 220631,Lincoln Memorial University,TN,01.8399,01,7,12,2025
 199193,North Carolina State University at Raleigh,NC,01.9999,01,6,14,2025
@@ -18786,6 +18880,18 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 219347,South Dakota School of Mines and Technology,SD,15.1601,15,17,2,2025
 236948,University of Washington-Seattle Campus,WA,15.1601,15,17,12,2025
 234030,Virginia Commonwealth University,VA,15.1601,15,17,4,2025
+186876,Stockton University,NJ,15.1701,15,6,1,2025
+228875,Texas Christian University,TX,15.1701,15,6,1,2025
+229018,The University of Texas Permian Basin,TX,15.1701,15,6,2,2025
+199139,University of North Carolina at Charlotte,NC,15.1701,15,6,2,2025
+200280,University of North Dakota,ND,15.1701,15,6,1,2025
+153603,Iowa State University,IA,15.1701,15,7,2,2025
+194091,New York Institute of Technology,NY,15.1701,15,7,20,2025
+122931,Santa Clara University,CA,15.1701,15,7,5,2025
+160658,University of Louisiana at Lafayette,LA,15.1701,15,7,6,2025
+122612,University of San Francisco,CA,15.1701,15,7,15,2025
+207971,University of Tulsa,OK,15.1701,15,7,6,2025
+479956,Pennsylvania State University-World Campus,PA,15.1703,15,6,6,2025
 144892,Eastern Illinois University,IL,15.9999,15,6,314,2025
 194091,New York Institute of Technology,NY,15.9999,15,6,2,2025
 104151,Arizona State University Campus Immersion,AZ,15.9999,15,7,10,2025
@@ -29868,6 +29974,17 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 192040,Jewish Theological Seminary of America,NY,38.0206,38,17,5,2025
 148982,Spertus College,IL,38.0206,38,17,3,2025
 197708,Yeshiva University,NY,38.0206,38,17,1,2025
+183804,Beth Medrash Govoha,NJ,38.0207,38,7,609,2025
+189857,Central Yeshiva Tomchei Tmimim Lubavitz,NY,38.0207,38,7,40,2025
+193070,Mesivtha Tifereth Jerusalem of America,NY,38.0207,38,7,2,2025
+193247,Mirrer Yeshiva Cent Institute,NY,38.0207,38,7,3,2025
+163532,Ner Israel Rabbinical College,MD,38.0207,38,7,26,2025
+194657,Rabbinical Academy Mesivta Rabbi Chaim Berlin,NY,38.0207,38,7,12,2025
+149329,Telshe Yeshiva-Chicago,IL,38.0207,38,7,1,2025
+197708,Yeshiva University,NY,38.0207,38,7,3,2025
+183804,Beth Medrash Govoha,NJ,38.0207,38,8,651,2025
+193247,Mirrer Yeshiva Cent Institute,NY,38.0207,38,17,1,2025
+194657,Rabbinical Academy Mesivta Rabbi Chaim Berlin,NY,38.0207,38,19,1,2025
 205957,Franciscan University of Steubenville,OH,38.0208,38,7,30,2025
 239637,Sacred Heart Seminary and School of Theology,WI,38.0208,38,7,2,2025
 147767,Northwestern University,IL,38.0299,38,6,2,2025
@@ -35794,6 +35911,69 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 482705,Northeastern University Professional Programs,MA,43.0399,43,7,26,2025
 243780,Purdue University-Main Campus,IN,43.0401,43,6,1,2025
 233921,Virginia Polytechnic Institute and State University,VA,43.0401,43,6,46,2025
+139931,Georgia Southern University,GA,43.0402,43,6,11,2025
+233277,Radford University,VA,43.0402,43,6,2,2025
+433660,Florida Gulf Coast University,FL,43.0402,43,7,23,2025
+212601,Gannon University,PA,43.0402,43,7,11,2025
+131469,George Washington University,DC,43.0402,43,7,10,2025
+164173,Stevenson University,MD,43.0402,43,7,30,2025
+206048,Tiffin University,OH,43.0402,43,7,3,2025
+166513,University of Massachusetts-Lowell,MA,43.0402,43,17,4,2025
+190600,CUNY John Jay College of Criminal Justice,NY,43.0403,43,6,13,2025
+230852,Champlain College,VT,43.0403,43,6,13,2025
+210739,DeSales University,PA,43.0403,43,6,4,2025
+232186,George Mason University,VA,43.0403,43,6,2,2025
+232423,James Madison University,VA,43.0403,43,6,14,2025
+171100,Michigan State University,MI,43.0403,43,6,6,2025
+178411,Missouri University of Science and Technology,MO,43.0403,43,6,2,2025
+186283,Rider University,NJ,43.0403,43,6,2,2025
+217518,Roger Williams University,RI,43.0403,43,6,1,2025
+217536,Salve Regina University,RI,43.0403,43,6,3,2025
+243577,Universidad Politecnica de Puerto Rico,PR,43.0403,43,6,1,2025
+363934,University of Advancing Technology,AZ,43.0403,43,6,11,2025
+163204,University of Maryland Global Campus,MD,43.0403,43,6,16,2025
+182290,University of Nevada-Reno,NV,43.0403,43,6,2,2025
+129941,University of New Haven,CT,43.0403,43,6,8,2025
+200280,University of North Dakota,ND,43.0403,43,6,3,2025
+217484,University of Rhode Island,RI,43.0403,43,6,2,2025
+240453,University of Wisconsin-Milwaukee,WI,43.0403,43,6,1,2025
+217633,Anderson University,SC,43.0403,43,7,11,2025
+190600,CUNY John Jay College of Criminal Justice,NY,43.0403,43,7,26,2025
+413413,Capella University,MN,43.0403,43,7,8,2025
+230852,Champlain College,VT,43.0403,43,7,25,2025
+211583,Chestnut Hill College,PA,43.0403,43,7,6,2025
+144892,Eastern Illinois University,IL,43.0403,43,7,22,2025
+104586,Embry-Riddle Aeronautical University-Prescott,AZ,43.0403,43,7,4,2025
+426314,Embry-Riddle Aeronautical University-Worldwide,FL,43.0403,43,7,3,2025
+196680,Excelsior University,NY,43.0403,43,7,53,2025
+232186,George Mason University,VA,43.0403,43,7,25,2025
+104717,Grand Canyon University,AZ,43.0403,43,7,38,2025
+237525,Marshall University,WV,43.0403,43,7,7,2025
+176053,Mississippi Christian University,MS,43.0403,43,7,4,2025
+231651,Regent University,VA,43.0403,43,7,23,2025
+186283,Rider University,NJ,43.0403,43,7,4,2025
+215655,Robert Morris University,PA,43.0403,43,7,78,2025
+130253,Sacred Heart University,CT,43.0403,43,7,49,2025
+195544,St. Joseph's University-New York,NY,43.0403,43,7,16,2025
+164173,Stevenson University,MD,43.0403,43,7,10,2025
+196413,Syracuse University,NY,43.0403,43,7,2,2025
+187046,Thomas Edison State University,NJ,43.0403,43,7,1,2025
+363934,University of Advancing Technology,AZ,43.0403,43,7,16,2025
+104179,University of Arizona,AZ,43.0403,43,7,26,2025
+161873,University of Baltimore,MD,43.0403,43,7,13,2025
+206941,University of Central Oklahoma,OK,43.0403,43,7,2,2025
+237312,University of Charleston,WV,43.0403,43,7,36,2025
+126562,University of Colorado Denver/Anschutz Medical Campus,CO,43.0403,43,7,3,2025
+169716,University of Detroit Mercy,MI,43.0403,43,7,1,2025
+163204,University of Maryland Global Campus,MD,43.0403,43,7,121,2025
+129941,University of New Haven,CT,43.0403,43,7,11,2025
+484613,University of Phoenix-Arizona,AZ,43.0403,43,7,86,2025
+122436,University of San Diego,CA,43.0403,43,7,44,2025
+215929,University of Scranton,PA,43.0403,43,7,7,2025
+161554,University of Southern Maine,ME,43.0403,43,7,5,2025
+156541,University of the Cumberlands,KY,43.0403,43,7,25,2025
+483780,Washington University of Science and Technology,VA,43.0403,43,7,52,2025
+162061,Capitol Technology University,MD,43.0403,43,17,2,2025
 131159,American University,DC,43.0404,43,6,8,2025
 223232,Baylor University,TX,43.0404,43,6,29,2025
 142115,Boise State University,ID,43.0404,43,6,36,2025
@@ -35818,7 +35998,95 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 171100,Michigan State University,MI,43.0404,43,7,35,2025
 163204,University of Maryland Global Campus,MD,43.0404,43,7,4,2025
 157951,Western Kentucky University,KY,43.0404,43,7,7,2025
+190600,CUNY John Jay College of Criminal Justice,NY,43.0405,43,6,1,2025
+145813,Illinois State University,IL,43.0405,43,6,4,2025
+171128,Michigan Technological University,MI,43.0405,43,6,1,2025
+179566,Missouri State University-Springfield,MO,43.0405,43,6,1,2025
+196112,SUNY Polytechnic Institute,NY,43.0405,43,6,1,2025
+195474,Siena University,NY,43.0405,43,6,7,2025
+129941,University of New Haven,CT,43.0405,43,6,1,2025
+211431,Carlow University,PA,43.0405,43,7,11,2025
+242653,Inter American University of Puerto Rico-Metro,PR,43.0405,43,7,18,2025
+214272,Neumann University,PA,43.0405,43,7,4,2025
+196237,SUNY Old Westbury,NY,43.0405,43,7,7,2025
+164173,Stevenson University,MD,43.0405,43,7,12,2025
+206048,Tiffin University,OH,43.0405,43,7,13,2025
+129941,University of New Haven,CT,43.0405,43,7,5,2025
+215929,University of Scranton,PA,43.0405,43,7,10,2025
+197045,Utica University,NY,43.0405,43,7,21,2025
+238032,West Virginia University,WV,43.0405,43,7,30,2025
+212601,Gannon University,PA,43.0405,43,8,1,2025
+220075,East Tennessee State University,TN,43.0406,43,6,1,2025
+232186,George Mason University,VA,43.0406,43,6,1,2025
+131469,George Washington University,DC,43.0406,43,6,1,2025
+119058,Middlebury Institute of International Studies at Monterey,CA,43.0406,43,6,2,2025
+178387,Missouri Western State University,MO,43.0406,43,6,1,2025
+119605,National University,CA,43.0406,43,6,4,2025
+207388,Oklahoma State University-Main Campus,OK,43.0406,43,6,30,2025
+186876,Stockton University,NJ,43.0406,43,6,2,2025
+196413,Syracuse University,NY,43.0406,43,6,12,2025
+129941,University of New Haven,CT,43.0406,43,6,130,2025
+199218,University of North Carolina Wilmington,NC,43.0406,43,6,1,2025
+240453,University of Wisconsin-Milwaukee,WI,43.0406,43,6,1,2025
+100724,Alabama State University,AL,43.0406,43,7,2,2025
+211088,Arcadia University,PA,43.0406,43,7,7,2025
+483124,Arizona State University Digital Immersion,AZ,43.0406,43,7,96,2025
+164988,Boston University,MA,43.0406,43,7,22,2025
+190600,CUNY John Jay College of Criminal Justice,NY,43.0406,43,7,18,2025
+110592,California State University-Los Angeles,CA,43.0406,43,7,9,2025
+211468,Cedar Crest College,PA,43.0406,43,7,2,2025
+212106,Duquesne University,PA,43.0406,43,7,13,2025
+155025,Emporia State University,KS,43.0406,43,7,4,2025
+133951,Florida International University,FL,43.0406,43,7,9,2025
+232186,George Mason University,VA,43.0406,43,7,32,2025
+131469,George Washington University,DC,43.0406,43,7,11,2025
+104717,Grand Canyon University,AZ,43.0406,43,7,78,2025
+191649,Hofstra University,NY,43.0406,43,7,20,2025
+151111,Indiana University-Indianapolis,IN,43.0406,43,7,13,2025
+213367,La Salle University,PA,43.0406,43,7,1,2025
+163046,Loyola University Maryland,MD,43.0406,43,7,10,2025
+170806,Madonna University,MI,43.0406,43,7,3,2025
+237525,Marshall University,WV,43.0406,43,7,6,2025
+178387,Missouri Western State University,MO,43.0406,43,7,6,2025
+119605,National University,CA,43.0406,43,7,92,2025
+207315,Oklahoma State University Center for Health Sciences,OK,43.0406,43,7,99,2025
+194310,Pace University,NY,43.0406,43,7,10,2025
+214777,Pennsylvania State University-Main Campus,PA,43.0406,43,7,7,2025
+215123,Philadelphia College of Osteopathic Medicine,PA,43.0406,43,7,29,2025
+186371,Rutgers University-Camden,NJ,43.0406,43,7,6,2025
+196130,SUNY Buffalo State University,NY,43.0406,43,7,2,2025
+137032,Saint Leo University,FL,43.0406,43,7,17,2025
+237783,Salem University,WV,43.0406,43,7,9,2025
+227881,Sam Houston State University,TX,43.0406,43,7,9,2025
+149231,Southern Illinois University Edwardsville,IL,43.0406,43,7,2,2025
+164173,Stevenson University,MD,43.0406,43,7,57,2025
+196413,Syracuse University,NY,43.0406,43,7,39,2025
+229115,Texas Tech University,TX,43.0406,43,7,21,2025
+216366,Thomas Jefferson University,PA,43.0406,43,7,1,2025
+164076,Towson University,MD,43.0406,43,7,18,2025
+241739,Universidad Ana G. Mendez-Cupey Campus,PR,43.0406,43,7,14,2025
+243601,Universidad Ana G. Mendez-Gurabo Campus,PR,43.0406,43,7,27,2025
+196060,University at Albany,NY,43.0406,43,7,3,2025
+100663,University of Alabama at Birmingham,AL,43.0406,43,7,7,2025
+110644,University of California-Davis,CA,43.0406,43,7,18,2025
+132903,University of Central Florida,FL,43.0406,43,7,8,2025
+206941,University of Central Oklahoma,OK,43.0406,43,7,15,2025
+163259,"University of Maryland, Baltimore",MD,43.0406,43,7,10,2025
+129941,University of New Haven,CT,43.0406,43,7,41,2025
+234030,Virginia Commonwealth University,VA,43.0406,43,7,20,2025
+238032,West Virginia University,WV,43.0406,43,7,6,2025
+196079,Binghamton University,NY,43.0406,43,8,7,2025
+207315,Oklahoma State University Center for Health Sciences,OK,43.0406,43,17,57,2025
+227881,Sam Houston State University,TX,43.0406,43,17,7,2025
 213020,Indiana University of Pennsylvania,PA,43.0407,43,6,4,2025
+190600,CUNY John Jay College of Criminal Justice,NY,43.0408,43,6,10,2025
+211431,Carlow University,PA,43.0408,43,6,1,2025
+236595,Seattle University,WA,43.0408,43,6,1,2025
+211431,Carlow University,PA,43.0408,43,7,1,2025
+134097,Florida State University,FL,43.0408,43,7,44,2025
+170806,Madonna University,MI,43.0408,43,7,1,2025
+206941,University of Central Oklahoma,OK,43.0408,43,7,13,2025
+169716,University of Detroit Mercy,MI,43.0408,43,7,9,2025
 162061,Capitol Technology University,MD,43.0499,43,17,1,2025
 242662,Inter American University of Puerto Rico-Ponce,PR,43.9999,43,6,1,2025
 214777,Pennsylvania State University-Main Campus,PA,43.9999,43,6,1,2025
@@ -39220,6 +39488,9 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 228459,Texas State University,TX,45.1102,45,7,3,2025
 228787,The University of Texas at Dallas,TX,45.1102,45,7,3,2025
 187444,William Paterson University of New Jersey,NJ,45.1102,45,7,1,2025
+209542,Oregon State University,OR,45.1103,45,6,7,2025
+190415,Cornell University,NY,45.1103,45,7,2,2025
+190415,Cornell University,NY,45.1103,45,17,11,2025
 110680,University of California-San Diego,CA,45.1199,45,17,2,2025
 164988,Boston University,MA,45.1201,45,6,2,2025
 202134,Cleveland State University,OH,45.1201,45,6,1,2025
@@ -44077,6 +44348,51 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 490373,Western Michigan University Homer Stryker M.D. School of Medicine,MI,51.1201,51,18,84,2025
 206604,Wright State University-Main Campus,OH,51.1201,51,18,128,2025
 130794,Yale University,CT,51.1201,51,18,87,2025
+177834,A T Still University of Health Sciences,MO,51.1202,51,18,284,2025
+483975,Alabama College of Osteopathic Medicine,AL,51.1202,51,18,180,2025
+488527,Arkansas Colleges of Health Education,AR,51.1202,51,18,159,2025
+488554,Burrell College of Osteopathic Medicine,NM,51.1202,51,18,151,2025
+488572,California Health Sciences University,CA,51.1202,51,18,109,2025
+198136,Campbell University,NC,51.1202,51,18,155,2025
+154156,Des Moines University-Osteopathic Medical Center,IA,51.1202,51,18,214,2025
+442806,Edward Via College of Osteopathic Medicine,VA,51.1202,51,18,642,2025
+493947,Idaho College of Osteopathic Medicine,ID,51.1202,51,18,149,2025
+179812,Kansas City University,MO,51.1202,51,18,417,2025
+407629,Lake Erie College of Osteopathic Medicine,PA,51.1202,51,18,623,2025
+232557,Liberty University,VA,51.1202,51,18,153,2025
+220631,Lincoln Memorial University,TN,51.1202,51,18,368,2025
+151786,Marian University,IN,51.1202,51,18,143,2025
+171100,Michigan State University,MI,51.1202,51,18,303,2025
+143853,Midwestern University-Downers Grove,IL,51.1202,51,18,200,2025
+423643,Midwestern University-Glendale,AZ,51.1202,51,18,245,2025
+194091,New York Institute of Technology,NY,51.1202,51,18,404,2025
+136215,Nova Southeastern University,FL,51.1202,51,18,395,2025
+204857,Ohio University-Main Campus,OH,51.1202,51,18,237,2025
+207315,Oklahoma State University Center for Health Sciences,OK,51.1202,51,18,168,2025
+455406,Pacific Northwest University of Health Sciences,WA,51.1202,51,18,138,2025
+215123,Philadelphia College of Osteopathic Medicine,PA,51.1202,51,18,452,2025
+480790,Rocky Vista University,CO,51.1202,51,18,333,2025
+184782,Rowan University,NJ,51.1202,51,18,205,2025
+227881,Sam Houston State University,TX,51.1202,51,18,98,2025
+196592,Touro University,NY,51.1202,51,18,260,2025
+459736,Touro University California,CA,51.1202,51,18,126,2025
+459824,Touro University Nevada,NV,51.1202,51,18,171,2025
+161457,University of New England,ME,51.1202,51,18,170,2025
+228909,University of North Texas Health Science Center,TX,51.1202,51,18,222,2025
+157535,University of Pikeville,KY,51.1202,51,18,135,2025
+225627,University of the Incarnate Word,TX,51.1202,51,18,148,2025
+237880,West Virginia School of Osteopathic Medicine,WV,51.1202,51,18,185,2025
+112525,Western University of Health Sciences,CA,51.1202,51,18,318,2025
+176479,William Carey University,MS,51.1202,51,18,154,2025
+132471,Barry University,FL,51.1203,51,18,54,2025
+154156,Des Moines University-Osteopathic Medical Center,IA,51.1203,51,18,50,2025
+203517,Kent State University at Kent,OH,51.1203,51,18,88,2025
+423643,Midwestern University-Glendale,AZ,51.1203,51,18,30,2025
+194073,New York College of Podiatric Medicine,NY,51.1203,51,18,91,2025
+145558,Rosalind Franklin University of Medicine and Science,IL,51.1203,51,18,75,2025
+122296,Samuel Merritt University,CA,51.1203,51,18,34,2025
+216339,Temple University,PA,51.1203,51,18,77,2025
+112525,Western University of Health Sciences,CA,51.1203,51,18,37,2025
 193405,Icahn School of Medicine at Mount Sinai,NY,51.1401,51,6,1,2025
 105330,Northern Arizona University,AZ,51.1401,51,6,1,2025
 209490,Oregon Health & Science University,OR,51.1401,51,6,17,2025
@@ -47690,6 +48006,184 @@ unitid,institution,state,cip,family,award_level,awards,completions_year
 177986,Logan University,MO,51.3202,51,17,14,2025
 216852,Widener University,PA,51.3202,51,17,1,2025
 198136,Campbell University,NC,51.3202,51,19,27,2025
+449889,American College of Education,IN,51.3203,51,6,2,2025
+106458,Arkansas State University,AR,51.3203,51,6,1,2025
+145619,Benedictine University,IL,51.3203,51,6,7,2025
+167394,College of Our Lady of the Elms,MA,51.3203,51,6,28,2025
+198419,Duke University,NC,51.3203,51,6,12,2025
+182795,Franklin Pierce University,NH,51.3203,51,6,1,2025
+142276,Idaho State University,ID,51.3203,51,6,1,2025
+226091,Lamar University,TX,51.3203,51,6,1,2025
+232557,Liberty University,VA,51.3203,51,6,16,2025
+170806,Madonna University,MI,51.3203,51,6,1,2025
+174358,Minnesota State University Moorhead,MN,51.3203,51,6,1,2025
+232982,Old Dominion University,VA,51.3203,51,6,1,2025
+221759,The University of Tennessee-Knoxville,TN,51.3203,51,6,1,2025
+228802,The University of Texas at Tyler,TX,51.3203,51,6,19,2025
+187046,Thomas Edison State University,NJ,51.3203,51,6,5,2025
+201885,University of Cincinnati-Main Campus,OH,51.3203,51,6,12,2025
+157085,University of Kentucky,KY,51.3203,51,6,1,2025
+166629,University of Massachusetts-Amherst,MA,51.3203,51,6,3,2025
+182281,University of Nevada-Las Vegas,NV,51.3203,51,6,1,2025
+230764,University of Utah,UT,51.3203,51,6,4,2025
+236939,Washington State University,WA,51.3203,51,6,11,2025
+175272,Winona State University,MN,51.3203,51,6,1,2025
+188429,Adelphi University,NY,51.3203,51,7,2,2025
+152798,Allen College,IA,51.3203,51,7,1,2025
+210775,Alvernia University,PA,51.3203,51,7,2,2025
+222831,Angelo State University,TX,51.3203,51,7,7,2025
+440651,Atenas University,PR,51.3203,51,7,2,2025
+168847,Baker College,MI,51.3203,51,7,6,2025
+154688,Baker University,KS,51.3203,51,7,1,2025
+238324,Bellin College,WI,51.3203,51,7,10,2025
+190576,CUNY Graduate School and University Center,NY,51.3203,51,7,23,2025
+190691,CUNY York College,NY,51.3203,51,7,3,2025
+413413,Capella University,MN,51.3203,51,7,757,2025
+201548,Capital University,OH,51.3203,51,7,6,2025
+211431,Carlow University,PA,51.3203,51,7,7,2025
+238458,Carroll University,WI,51.3203,51,7,9,2025
+219806,Carson-Newman University,TN,51.3203,51,7,1,2025
+211468,Cedar Crest College,PA,51.3203,51,7,2,2025
+201654,Cedarville University,OH,51.3203,51,7,1,2025
+445267,Central Methodist University-College of Graduate and Extended Studies,MO,51.3203,51,7,7,2025
+217688,Charleston Southern University,SC,51.3203,51,7,2,2025
+180832,Clarkson College,NE,51.3203,51,7,10,2025
+182634,Colby-Sawyer College,NH,51.3203,51,7,5,2025
+167394,College of Our Lady of the Elms,MA,51.3203,51,7,5,2025
+174747,College of Saint Benedict,MN,51.3203,51,7,3,2025
+238616,Concordia University-Wisconsin,WI,51.3203,51,7,7,2025
+181002,Creighton University,NE,51.3203,51,7,3,2025
+219949,Cumberland University,TN,51.3203,51,7,3,2025
+190716,D'Youville  University,NY,51.3203,51,7,6,2025
+190725,Daemen University,NY,51.3203,51,7,5,2025
+169479,Davenport University,MI,51.3203,51,7,1,2025
+198419,Duke University,NC,51.3203,51,7,11,2025
+212106,Duquesne University,PA,51.3203,51,7,3,2025
+169798,Eastern Michigan University,MI,51.3203,51,7,5,2025
+196264,Empire State University,NY,51.3203,51,7,29,2025
+196680,Excelsior University,NY,51.3203,51,7,15,2025
+165866,Framingham State University,MA,51.3203,51,7,10,2025
+182795,Franklin Pierce University,NH,51.3203,51,7,2,2025
+156471,Galen College of Nursing-Louisville,KY,51.3203,51,7,233,2025
+240392,Herzing University-Madison,WI,51.3203,51,7,22,2025
+151111,Indiana University-Indianapolis,IN,51.3203,51,7,10,2025
+151333,Indiana University-Kokomo,IN,51.3203,51,7,5,2025
+151342,Indiana University-South Bend,IN,51.3203,51,7,1,2025
+151379,Indiana University-Southeast,IN,51.3203,51,7,2,2025
+488679,Indiana Wesleyan University-National & Global,IN,51.3203,51,7,15,2025
+226091,Lamar University,TX,51.3203,51,7,25,2025
+203960,Mercy College of Ohio,OH,51.3203,51,7,1,2025
+193016,Mercy University,NY,51.3203,51,7,12,2025
+213996,Messiah University,PA,51.3203,51,7,1,2025
+157377,Midway University,KY,51.3203,51,7,2,2025
+147244,Millikin University,IL,51.3203,51,7,3,2025
+178244,Missouri Baptist University,MO,51.3203,51,7,3,2025
+193292,Molloy University,NY,51.3203,51,7,10,2025
+214157,Moravian University,PA,51.3203,51,7,1,2025
+154013,Mount Mercy University,IA,51.3203,51,7,10,2025
+119173,Mount Saint Mary's University,CA,51.3203,51,7,2,2025
+204200,Mount St. Joseph University,OH,51.3203,51,7,9,2025
+181297,Nebraska Methodist College of Nursing & Allied Health,NE,51.3203,51,7,21,2025
+193900,New York University,NY,51.3203,51,7,12,2025
+444787,Nightingale College,UT,51.3203,51,7,1,2025
+147660,North Central College,IL,51.3203,51,7,1,2025
+207263,Northeastern State University,OK,51.3203,51,7,43,2025
+204857,Ohio University-Main Campus,OH,51.3203,51,7,10,2025
+147828,Olivet Nazarene University,IL,51.3203,51,7,8,2025
+209490,Oregon Health & Science University,OR,51.3203,51,7,23,2025
+136455,PENSACOLA CHRISTIAN COLLEGE,FL,51.3203,51,7,5,2025
+366252,Pennsylvania College of Technology,PA,51.3203,51,7,1,2025
+130183,Post University,CT,51.3203,51,7,48,2025
+227526,Prairie View A & M University,TX,51.3203,51,7,1,2025
+489779,Purdue University Global,IN,51.3203,51,7,37,2025
+194958,Roberts Wesleyan University,NY,51.3203,51,7,6,2025
+196024,SUNY College of Technology at Delhi,NY,51.3203,51,7,35,2025
+196255,SUNY Downstate Health Sciences University,NY,51.3203,51,7,2,2025
+196112,SUNY Polytechnic Institute,NY,51.3203,51,7,3,2025
+172051,Saginaw Valley State University,MI,51.3203,51,7,1,2025
+442356,Saint Joseph's University - Lancaster,PA,51.3203,51,7,7,2025
+148627,Saint Xavier University,IL,51.3203,51,7,18,2025
+475121,South University-Savannah Online,GA,51.3203,51,7,19,2025
+449898,South University-Tampa,FL,51.3203,51,7,5,2025
+130493,Southern Connecticut State University,CT,51.3203,51,7,8,2025
+149231,Southern Illinois University Edwardsville,IL,51.3203,51,7,20,2025
+175078,Southwest Minnesota State University,MN,51.3203,51,7,3,2025
+157757,Spalding University,KY,51.3203,51,7,2,2025
+172334,Spring Arbor University,MI,51.3203,51,7,9,2025
+175005,St Catherine University,MN,51.3203,51,7,16,2025
+228431,Stephen F Austin State University,TX,51.3203,51,7,4,2025
+196097,Stony Brook University,NY,51.3203,51,7,13,2025
+228529,Tarleton State University,TX,51.3203,51,7,12,2025
+196468,Teachers College at Columbia University,NY,51.3203,51,7,1,2025
+221731,Tennessee Wesleyan University,TN,51.3203,51,7,2,2025
+224147,Texas A & M University-Corpus Christi,TX,51.3203,51,7,5,2025
+228723,Texas A&M University-College Station,TX,51.3203,51,7,9,2025
+228875,Texas Christian University,TX,51.3203,51,7,1,2025
+229337,Texas Tech University Health Sciences Center,TX,51.3203,51,7,17,2025
+229179,Texas Woman's University,TX,51.3203,51,7,13,2025
+228653,The University of Texas Medical Branch at Galveston,TX,51.3203,51,7,4,2025
+227368,The University of Texas Rio Grande Valley,TX,51.3203,51,7,9,2025
+228769,The University of Texas at Arlington,TX,51.3203,51,7,113,2025
+228796,The University of Texas at El Paso,TX,51.3203,51,7,13,2025
+228802,The University of Texas at Tyler,TX,51.3203,51,7,24,2025
+221971,Union University,TN,51.3203,51,7,3,2025
+447050,United States University,CA,51.3203,51,7,37,2025
+201885,University of Cincinnati-Main Campus,OH,51.3203,51,7,1,2025
+151263,University of Indianapolis,IN,51.3203,51,7,3,2025
+200217,University of Mary,ND,51.3203,51,7,8,2025
+167987,University of Massachusetts-Dartmouth,MA,51.3203,51,7,10,2025
+484613,University of Phoenix-Arizona,AZ,51.3203,51,7,131,2025
+195030,University of Rochester,NY,51.3203,51,7,14,2025
+218663,University of South Carolina-Columbia,SC,51.3203,51,7,2,2025
+218742,University of South Carolina-Upstate,SC,51.3203,51,7,16,2025
+161554,University of Southern Maine,ME,51.3203,51,7,12,2025
+230171,Utah Tech University,UT,51.3203,51,7,3,2025
+197045,Utica University,NY,51.3203,51,7,5,2025
+162210,Washington Adventist University,MD,51.3203,51,7,1,2025
+458210,West Coast University-Anaheim-Orange County,CA,51.3203,51,7,108,2025
+443331,West Coast University-Texas,TX,51.3203,51,7,14,2025
+433387,Western Governors University,UT,51.3203,51,7,1054,2025
+216852,Widener University,PA,51.3203,51,7,2,2025
+131113,Wilmington University,DE,51.3203,51,7,41,2025
+217013,Wilson College,PA,51.3203,51,7,2,2025
+175272,Winona State University,MN,51.3203,51,7,5,2025
+168430,Worcester State University,MA,51.3203,51,7,42,2025
+206622,Xavier University,OH,51.3203,51,7,7,2025
+206695,Youngstown State University,OH,51.3203,51,7,6,2025
+449889,American College of Education,IN,51.3203,51,8,3,2025
+483124,Arizona State University Digital Immersion,AZ,51.3203,51,8,3,2025
+454227,Chamberlain University-Illinois,IL,51.3203,51,8,19,2025
+198464,East Carolina University,NC,51.3203,51,8,9,2025
+134079,Florida Southern College,FL,51.3203,51,8,1,2025
+139764,Georgia Southwestern State University,GA,51.3203,51,8,2,2025
+153366,Graceland University-Lamoni,IA,51.3203,51,8,3,2025
+239105,Marquette University,WI,51.3203,51,8,4,2025
+203960,Mercy College of Ohio,OH,51.3203,51,8,1,2025
+193292,Molloy University,NY,51.3203,51,8,1,2025
+194310,Pace University,NY,51.3203,51,8,1,2025
+489779,Purdue University Global,IN,51.3203,51,8,2,2025
+127918,Regis University,CO,51.3203,51,8,4,2025
+228653,The University of Texas Medical Branch at Galveston,TX,51.3203,51,8,3,2025
+228769,The University of Texas at Arlington,TX,51.3203,51,8,4,2025
+141167,Thomas University,GA,51.3203,51,8,32,2025
+196088,University at Buffalo,NY,51.3203,51,8,1,2025
+102094,University of South Alabama,AL,51.3203,51,8,13,2025
+221999,Vanderbilt University,TN,51.3203,51,8,19,2025
+216597,Villanova University,PA,51.3203,51,8,1,2025
+125231,Walden University,MN,51.3203,51,8,7,2025
+206437,Walsh University,OH,51.3203,51,8,1,2025
+172644,Wayne State University,MI,51.3203,51,8,10,2025
+230782,Weber State University,UT,51.3203,51,8,1,2025
+433387,Western Governors University,UT,51.3203,51,8,5,2025
+449889,American College of Education,IN,51.3203,51,17,4,2025
+413413,Capella University,MN,51.3203,51,17,17,2025
+232557,Liberty University,VA,51.3203,51,17,29,2025
+130493,Southern Connecticut State University,CT,51.3203,51,17,3,2025
+196468,Teachers College at Columbia University,NY,51.3203,51,17,10,2025
+226471,University of Mary Hardin-Baylor,TX,51.3203,51,17,1,2025
+141334,University of West Georgia,GA,51.3203,51,17,3,2025
+176479,William Carey University,MS,51.3203,51,17,25,2025
+130183,Post University,CT,51.3203,51,18,38,2025
 184348,Drew University,NJ,51.3204,51,6,5,2025
 212197,Elizabethtown College,PA,51.3204,51,6,2,2025
 216339,Temple University,PA,51.3204,51,6,3,2025

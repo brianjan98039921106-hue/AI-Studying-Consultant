@@ -129,8 +129,8 @@ def test_hidden_mismatch_rate_only_with_hidden(world):
     with_h = evaluate_lists_per_student(pop, cat, {"c2": c2_pipeline()}, k=5, hidden=hidden)["c2"]
     assert len(with_h["hidden_mismatch_rate"]) == len(pop)
     assert all(0 <= v <= 1 for v in with_h["hidden_mismatch_rate"])
-    without = evaluate_lists_per_student(pop, cat, {"c2": c2_pipeline()}, k=5)["c2"]
-    assert "hidden_mismatch_rate" not in without
+    with pytest.raises(ValueError, match="hidden"):  # B-C5-11: no silent measured-only truth
+        evaluate_lists_per_student(pop, cat, {"c2": c2_pipeline()}, k=5)
 
 
 @pytest.mark.probe

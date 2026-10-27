@@ -24,6 +24,7 @@ See docs/ARCHITECTURE.md for the full graph.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from functools import cached_property
 
@@ -40,8 +41,8 @@ def to_vector(values: dict[str, float], dims: str = "v1") -> np.ndarray:
     if unknown:
         raise ValueError(f"Unknown need dimensions for {dims}: {sorted(unknown)}")
     vec = np.array([float(values.get(k, 0.0)) for k in keys])
-    if np.any(vec < 0) or np.any(vec > 1):
-        raise ValueError("Need scores must lie in [0, 1]")
+    if not np.all(np.isfinite(vec)) or np.any(vec < 0) or np.any(vec > 1):
+        raise ValueError("Need scores must be finite and lie in [0, 1] (B-C2-15)")
     return vec
 
 
@@ -123,6 +124,9 @@ class StudentProfile:
 
     def __post_init__(self) -> None:
         dims_keys(self.dims)  # validates the name
+        bad = {k: v for k, v in self.uncertainty.items() if not (math.isfinite(v) and v > 0)}
+        if bad:
+            raise ValueError(f"uncertainty must be a finite positive SD (B-C1-25): {bad}")
         if self.group_scores and self.dims != "v2":
             raise ValueError("group_scores are defined only for the v2 dimension set")
 

@@ -65,7 +65,8 @@ CIP_ROWS = [
     ['="52"', '="52.02"', "No substantive changes", "No", "Fixture Management.", "def"],
     ['="52"', '="52.0201"', "No substantive changes", "No", "Fixture Admin.", "def a"],
     ['="52"', '="52.0205"', "No substantive changes", "No", "Fixture Ops.", "def b"],
-    ['="52"', '="52.0299"', "Moved to", "No", "Fixture Moved.", "gone"],
+    ['="52"', '="52.0299"', "Moved from", "No", "Fixture Moved.", "Moved from 52.0299 to 01.8001"],
+    ['="01"', '="01.8001"', "Moved to", "No", "Fixture Moved Here.", "def e"],
     ['="30"', '="30.7102"', "New", "No", "Fixture Analytics.", "def c"],
     ['="27"', '="27.0501"', "No substantive changes", "No", "Fixture Stats.", "def d"],
 ]
@@ -143,15 +144,24 @@ def test_provenance(tmp_path):
 
 def test_load_cip2020_drops_moved_codes_and_cleans_titles(cip_file):
     cip = load_cip2020(cip_file)
-    assert "52.0299" not in cip
+    assert "52.0299" not in cip  # 'Moved from' = obsolete code (B-C0-15)
+    assert cip["01.8001"].title == "Fixture Moved Here"  # 'Moved to' = current code
     assert cip["52.0201"].title == "Fixture Admin"
-    assert {"52", "52.02", "52.0201", "52.0205", "30.7102", "27.0501"} == set(cip)
+    assert {"52", "52.02", "52.0201", "52.0205", "30.7102", "27.0501", "01.8001"} == set(cip)
 
 
 def test_load_cip2020_from_xlsx(tmp_path):
     rows = [[c.strip('="') for c in r] for r in CIP_ROWS]
     x = _xlsx(tmp_path / "CIPCode2020.xlsx", CIP_HEADER, rows, title_rows=1)
-    assert set(load_cip2020(x)) == {"52", "52.02", "52.0201", "52.0205", "30.7102", "27.0501"}
+    assert set(load_cip2020(x)) == {
+        "52",
+        "52.02",
+        "52.0201",
+        "52.0205",
+        "30.7102",
+        "27.0501",
+        "01.8001",
+    }
 
 
 def test_select_cips_longest_prefix_and_unknown_prefix(cip_file):
@@ -408,7 +418,8 @@ def _ref(name):
 @pytest.mark.xfail(
     strict=True,
     raises=AssertionError,
-    reason="B-C0-8: postsecondary-teacher SOCs in the crosswalk pull x_occ toward Social",
+    reason="B-C0-8 (v1 equal-weight bridge, reference only): postsecondary-teacher SOCs "
+    "in the crosswalk pull x_occ toward Social",
 )
 def test_probe_teacher_occupations_do_not_dominate_occupation_profiles():
     """Most master's graduates do not become professors, yet the crosswalk maps most
@@ -428,6 +439,48 @@ def test_probe_teacher_occupations_do_not_dominate_occupation_profiles():
             shifts.append(abs(all_s - sum(soc[s] for s in rest) / len(rest)) / 6)
     assert shifts, "expected CIPs mixing teacher and non-teacher SOCs"
     assert max(shifts) <= 0.10
+
+
+def test_occupation_profile_can_exclude_teacher_socs():
+    socs = {"11-1021": {n: 4.0 for n in RIASEC}, "25-1022": {n: 7.0 for n in RIASEC}}
+    xw = {"52.0201": {"11-1021", "25-1022"}, "13.1311": {"25-1022"}}
+    mixed = occupation_profile("52.0201", xw, socs, exclude_prefixes=("25-1",))
+    assert mixed.excluded == ("25-1022",) and not mixed.fallback
+    assert mixed.vector["riasec_s"] == pytest.approx(0.5)  # (4 - 1) / 6, teacher left out
+    only = occupation_profile("13.1311", xw, socs, exclude_prefixes=("25-1",))
+    assert only.fallback and only.excluded == () and only.vector["riasec_s"] == 1.0
+
+
+def test_nonacademic_profiles_leave_out_teachers():
+    """B-C0-8 fixed for the v1.1 bridge (A-C0-10): where a CIP maps to other SOCs too,
+    the non-academic profiles use none of the 25-1xxx postsecondary-teacher SOCs."""
+    soc = {r["soc"]: r for r in _ref("soc_profiles_all.csv")}
+    pairs: dict[str, list[str]] = {}
+    for r in _ref("cip_soc_all.csv"):
+        if r["soc"] in soc:
+            pairs.setdefault(r["cip"], []).append(r["soc"])
+    rows = {r["cip"]: r for r in _ref("occupation_profiles_all_nonacademic.csv")}
+    checked = 0
+    for cip, socs in pairs.items():
+        rest = [s for s in socs if not s.startswith("25-1")]
+        r = rows[cip]
+        if rest and len(rest) < len(socs):
+            expected = (sum(float(soc[s]["social"]) for s in rest) / len(rest) - 1) / 6
+            assert float(r["riasec_s"]) == pytest.approx(expected, abs=1e-4)
+            assert int(r["n_teacher_soc_excluded"]) == len(socs) - len(rest)
+            checked += 1
+        elif not rest:
+            assert r["fallback_teacher_only"] == "True"
+    assert checked > 700
+
+
+def test_moved_cip_codes_are_current_codes():
+    """In CIPCode2020, 'Moved to' rows are the live destination codes (e.g. 01.8001
+    Veterinary Medicine) and 'Moved from' rows the obsolete ones (51.2401). Both
+    01.8001 and 51.1202 (Osteopathic Medicine) award graduate degrees in IPEDS 2025."""
+    cips = {r["cip"] for r in _ref("cip2020_all.csv")}
+    assert {"01.8001", "51.1202"} <= cips
+    assert "51.2401" not in cips
 
 
 def test_committed_reference_tables_are_consistent():
