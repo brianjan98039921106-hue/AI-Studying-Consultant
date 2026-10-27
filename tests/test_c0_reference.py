@@ -396,7 +396,8 @@ def test_probe_teacher_occupations_do_not_dominate_occupation_profiles():
 def test_committed_reference_tables_are_consistent():
     """L2 on the committed tables: provenance present, joins closed, ranges valid."""
     src = json.loads((ROOT / "data" / "reference" / "SOURCES.json").read_text())
-    assert len(src["inputs"]) == 5
+    assert {"cip2020", "cip_soc_crosswalk", "onet_interests", "ipeds_completions",
+            "ipeds_directory"} <= set(src["inputs"])  # fmt: skip
     for v in src["inputs"].values():
         assert v["source_url"].startswith("https://") and len(v["sha256"]) == 64
     cips = {r["cip"]: r for r in _ref("cip2020_mvp.csv")}
@@ -424,3 +425,50 @@ def test_probe_scope_covers_other_graduate_award_levels():
     spec = json.loads((ROOT / "data" / "reference" / "mvp_scope.json").read_text())
     levels = spec.get("award_levels", [spec["award_level"]])
     assert len(levels) > 1
+
+
+def test_committed_basic_interest_tables():
+    """W-64: 41 specific interest areas, each linked to one or two RIASEC types."""
+    bmap = _ref("basic_interest_map.csv")
+    assert len(bmap) == 41 and len({r["key"] for r in bmap}) == 41
+    assert all(1 <= len(r["riasec"].split()) <= 2 for r in bmap)
+    keys = [r["key"] for r in bmap]
+    for r in _ref("occupation_basic_interests_mvp.csv"):
+        vals = [r[k] for k in keys]
+        assert all(v == "" for v in vals) or all(0 <= float(v) <= 1 for v in vals)
+    src = json.loads((ROOT / "data" / "reference" / "SOURCES.json").read_text())
+    assert "onet_specific_interest_areas" in src["inputs"]
+
+
+def test_basic_interest_loaders(tmp_path):
+    from aisc.catalog.occupation import (
+        basic_interest_key,
+        load_basic_interest_map,
+        load_onet_basic_interests,
+    )
+
+    assert basic_interest_key("Applied Arts and Design") == "bi_applied_arts_and_design"
+    assert basic_interest_key("Mechanics/Electronics") == "bi_mechanics_electronics"
+    mp = _csv(tmp_path / "map.csv",
+              ["Specific Interest Areas Element ID", "Specific Interest Areas Element Name",
+               "Career Interest Types Element ID", "Career Interest Types Element Name"],
+              [["1.B.3.a", "Fixture Area A", "1.B.1.a", "Realistic"],
+               ["1.B.3.b", "Fixture Area B", "1.B.1.b", "Investigative"],
+               ["1.B.3.b", "Fixture Area B", "1.B.1.d", "Social"]])  # fmt: skip
+    bmap = load_basic_interest_map(mp)
+    assert bmap == {"Fixture Area A": ("Realistic",), "Fixture Area B": ("Investigative", "Social")}
+    rows = [["15-2051.00", "t", "1.B.3.a", "Fixture Area A", "OI", "Occupational Interests", "2.50",
+             "05/2026", "AI/Expert"],
+            ["15-2051.00", "t", "1.B.3.a", "Fixture Area A", "DS", "Summary Display Rank", "1.00",
+             "05/2026", "AI/Expert"],
+            ["15-2051.00", "t", "1.B.3.b", "Fixture Area B", "OI", "Occupational Interests", "6.00",
+             "05/2026", "AI/Expert"]]  # fmt: skip
+    hdr = ["O*NET-SOC Code", "Title", "Element ID", "Element Name", "Scale ID", "Scale Name",
+           "Data Value", "Date", "Domain Source"]  # fmt: skip
+    got = load_onet_basic_interests(_csv(tmp_path / "sia.csv", hdr, rows), tuple(bmap))
+    assert got == {"15-2051.00": {"Fixture Area A": 2.5, "Fixture Area B": 6.0}}
+    socs = soc_profiles(got, tuple(bmap))
+    prof = occupation_profile("27.0501", {"27.0501": {"15-2051"}}, socs, ("a", "b"), tuple(bmap))
+    assert prof.vector == {"a": pytest.approx(0.25), "b": pytest.approx(5 / 6)}
+    with pytest.raises(ValueError, match="same length"):
+        occupation_profile("27.0501", {}, socs, ("a",), tuple(bmap))
