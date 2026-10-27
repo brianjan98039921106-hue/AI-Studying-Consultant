@@ -94,3 +94,39 @@ def test_simex_reduces_measurement_error_bias():
     assert sum(est.corrected.shares.values()) == pytest.approx(1.0)
     with pytest.raises(ValueError):
         estimate_layer_weights_simex(stated, X, pairs[:, :2], y, sigma, "v1")
+
+
+def test_pair_rows_match_layer_differences():
+    from aisc.discovery.layer_weights import _pair_rows
+
+    rng = np.random.default_rng(9)
+    stated = rng.random((5, len(NEED_KEYS)))
+    X = rng.random((8, len(NEED_KEYS)))
+    pairs = np.array([(r, a, b) for r in range(5) for a, b in ((0, 3), (7, 2))])
+    got = _pair_rows(stated, X, pairs, "v1")
+    for row, (r, a, b) in zip(got, pairs, strict=True):
+        d = layer_differences(stated[r], X, "v1")
+        np.testing.assert_allclose(row, d[b] - d[a])
+
+
+def test_simex_bootstrap_interval():
+    from aisc.discovery.layer_weights import _pair_rows, estimate_layer_weights_simex
+
+    rng = np.random.default_rng(10)
+    d = len(NEED_KEYS)
+    true_w = rng.random((150, d))
+    X = rng.random((40, d))
+    pairs = np.array([(r, a, (a + 1 + rng.integers(0, 39)) % 40)
+                      for r in range(150) for a in rng.integers(0, 40, 15)])  # fmt: skip
+    G = _pair_rows(true_w, X, pairs, "v1")
+    y = (rng.random(len(G)) < 1 / (1 + np.exp(-(G @ np.full(4, 30.0))))).astype(float)
+    stated = np.clip(true_w + rng.normal(0, 0.15, true_w.shape), 0, 1)
+    est = estimate_layer_weights_simex(stated, X, pairs, y, 0.15, "v1", n_sim=3, n_boot=15,
+                                       rng=np.random.default_rng(11), interval="bootstrap",
+                                       n_sim_boot=2)  # fmt: skip
+    for lay in LAYERS:
+        lo, hi = est.corrected.ci[lay]
+        assert np.isfinite([lo, hi]).all() and 0 <= lo < hi <= 1
+    assert sum(est.corrected.shares.values()) == pytest.approx(1.0)
+    with pytest.raises(ValueError):
+        estimate_layer_weights_simex(stated, X, pairs, y, 0.15, "v1", interval="wald")

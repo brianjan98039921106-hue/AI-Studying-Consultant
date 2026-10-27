@@ -138,18 +138,44 @@ SIMEX_LAMBDAS = (0.5, 1.0, 1.5, 2.0)
 
 @dataclass(frozen=True)
 class SimexEstimate:
-    corrected: LayerWeightEstimate  # SIMEX shares; interval = naive interval shifted
+    corrected: LayerWeightEstimate  # SIMEX shares and interval (see `interval`)
     naive: LayerWeightEstimate
+
+
+def _layer_matrix(dims: str) -> np.ndarray:
+    """(d, 4) matrix that averages squared differences within each layer."""
+    idx = _layer_index(dims)
+    M = np.zeros((sum(len(i) for i in idx), len(LAYERS)))
+    for j, i in enumerate(idx):
+        M[i, j] = 1.0 / len(i)
+    return M
 
 
 def _pair_rows(stated: np.ndarray, X: np.ndarray, pairs: np.ndarray, dims: str) -> np.ndarray:
     """Feature rows D(B) - D(A) for (respondent, a, b) index triples."""
-    out = np.empty((len(pairs), len(LAYERS)))
-    for r in np.unique(pairs[:, 0]):
-        sel = np.flatnonzero(pairs[:, 0] == r)
-        d = layer_differences(stated[r], X, dims)
-        out[sel] = d[pairs[sel, 2]] - d[pairs[sel, 1]]
-    return out
+    S = stated[pairs[:, 0]]
+    diff = (X[pairs[:, 2]] - S) ** 2 - (X[pairs[:, 1]] - S) ** 2
+    return diff @ _layer_matrix(dims)
+
+
+def _simex_shares(stated, X, pairs, y, sigma, dims, lambdas, n_sim, rng) -> np.ndarray:
+    """Quadratic SIMEX extrapolation of the layer shares to lambda = -1."""
+    lam_pts = [0.0]
+    share_pts = [_shares(fit_layer_weights(_pair_rows(stated, X, pairs, dims), y))]
+    for lam in lambdas:
+        sims = []
+        for _ in range(n_sim):
+            noise = np.sqrt(lam) * sigma * rng.standard_normal(stated.shape)
+            noisy = np.clip(stated + noise, 0, 1)
+            sims.append(_shares(fit_layer_weights(_pair_rows(noisy, X, pairs, dims), y)))
+        lam_pts.append(lam)
+        share_pts.append(np.nanmean(sims, axis=0))
+    coef = np.polyfit(np.array(lam_pts), np.array(share_pts), 2)  # (3, n_layers)
+    ext = np.maximum(coef[0] - coef[1] + coef[2], 0.0)  # value at lambda = -1
+    return ext / ext.sum() if ext.sum() > 0 else np.full(len(LAYERS), np.nan)
+
+
+INTERVALS = ("shift", "bootstrap")
 
 
 def estimate_layer_weights_simex(
@@ -163,6 +189,8 @@ def estimate_layer_weights_simex(
     n_sim: int = 20,
     n_boot: int = 200,
     rng: np.random.Generator | None = None,
+    interval: str = "shift",
+    n_sim_boot: int = 10,
 ) -> SimexEstimate:
     """SIMEX-corrected layer shares (Cook & Stefanski 1994; B-C2-12).
 
@@ -173,8 +201,13 @@ def estimate_layer_weights_simex(
     answers (clipped to [0, 1] like real answers), the shares are refitted n_sim
     times and averaged; a quadratic in lambda through (0, naive) and these points
     is extrapolated to lambda = -1 (no error). Negative shares are set to 0 and the
-    rest renormalised. The interval is the naive cluster-bootstrap interval shifted
-    by the correction (an approximation checked in the recovery study).
+    rest renormalised.
+
+    interval:
+      "shift"      naive cluster-bootstrap interval shifted by the correction
+                   (F88: undercovers in one of six recovery settings)
+      "bootstrap"  respondent bootstrap around the WHOLE SIMEX procedure
+                   (n_sim_boot simulations per lambda inside each resample)
     """
     stated = np.asarray(stated, float)
     X = np.asarray(X, float)
@@ -184,30 +217,35 @@ def estimate_layer_weights_simex(
         raise ValueError("pairs must be (n_pairs, 3) rows of (respondent, a, b)")
     if np.any(np.asarray(sigma) < 0):
         raise ValueError("sigma must be non-negative")
+    if interval not in INTERVALS:
+        raise ValueError(f"interval must be one of {INTERVALS}")
     rng = rng or np.random.default_rng(0)
     F0 = _pair_rows(stated, X, pairs, dims)
     resp = [str(r) for r in pairs[:, 0]]
-    naive = estimate_layer_weights(F0, y, resp, n_boot=n_boot, rng=rng)
-    lam_pts, share_pts = [0.0], [_shares(fit_layer_weights(F0, y))]
-    for lam in lambdas:
-        sims = []
-        for _ in range(n_sim):
-            noisy = np.clip(stated + np.sqrt(lam) * sigma * rng.standard_normal(stated.shape), 0, 1)
-            sims.append(_shares(fit_layer_weights(_pair_rows(noisy, X, pairs, dims), y)))
-        lam_pts.append(lam)
-        share_pts.append(np.nanmean(sims, axis=0))
-    S = np.array(share_pts)
-    coef = np.polyfit(np.array(lam_pts), S, 2)  # (3, n_layers)
-    ext = np.maximum(np.polyval(coef, -1.0) if coef.ndim == 1 else
-                     coef[0] - coef[1] + coef[2], 0.0)  # fmt: skip
-    ext = ext / ext.sum() if ext.sum() > 0 else np.full(len(LAYERS), np.nan)
-    shift = ext - np.array([naive.shares[lay] for lay in LAYERS])
-    ci = {lay: (naive.ci[lay][0] + s, naive.ci[lay][1] + s)
-          for lay, s in zip(LAYERS, shift, strict=True)}  # fmt: skip
+    naive = estimate_layer_weights(
+        F0, y, resp, n_boot=n_boot if interval == "shift" else 0, rng=rng
+    )
+    ext = _simex_shares(stated, X, pairs, y, sigma, dims, lambdas, n_sim, rng)
+    if interval == "shift":
+        shift = ext - np.array([naive.shares[lay] for lay in LAYERS])
+        lo = np.array([naive.ci[lay][0] for lay in LAYERS]) + shift
+        hi = np.array([naive.ci[lay][1] for lay in LAYERS]) + shift
+    else:
+        ids = np.unique(pairs[:, 0])
+        rows = {r: np.flatnonzero(pairs[:, 0] == r) for r in ids}
+        boot = []
+        for _ in range(n_boot):
+            draw = rng.choice(ids, len(ids), replace=True)
+            sel = np.concatenate([rows[r] for r in draw])
+            new_resp = np.repeat(np.arange(len(draw)), [len(rows[r]) for r in draw])
+            pb = np.column_stack([new_resp, pairs[sel, 1], pairs[sel, 2]])
+            boot.append(_simex_shares(stated[draw], X, pb, y[sel], sigma, dims, lambdas,
+                                      n_sim_boot, rng))  # fmt: skip
+        lo, hi = np.nanpercentile(np.array(boot), [2.5, 97.5], axis=0)
     corrected = LayerWeightEstimate(
         shares=dict(zip(LAYERS, map(float, ext), strict=True)),
         beta=naive.beta,
-        ci=ci,
+        ci={lay: (float(a), float(b)) for lay, a, b in zip(LAYERS, lo, hi, strict=True)},
         n_respondents=naive.n_respondents,
         n_pairs=naive.n_pairs,
     )
