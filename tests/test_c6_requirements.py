@@ -108,6 +108,9 @@ def test_taxonomy_checks(tmp_path):
     tax = load_taxonomy(TAXONOMY)
     assert set(tax) <= set(REQUIREMENT_KINDS)
     assert "design_portfolio" in tax["portfolio"] and "dat" in tax["test"]
+    # draft-1: requirements of fields outside business x data (D10)
+    assert {"audition"} <= tax["portfolio"] and {"lsat", "licensing_exam"} <= tax["test"]
+    assert {"bachelor_equivalency", "teaching_license"} <= tax["credential"]
     with pytest.raises(ValueError, match="not a 'test'"):
         compute_gap("p", [_req("p", "test", "calculus_1")], StudentRecord("s"), tax)
     with pytest.raises(ValueError, match="unknown categories"):
