@@ -25,6 +25,10 @@
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
 | dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
 | dvs | [synthetic-l3-diversity-findings.md](synthetic-l3-diversity-findings.md) | B-C2-9 |
+| ab | [synthetic-l3-admission-bias-findings.md](synthetic-l3-admission-bias-findings.md) | W-44 |
+| a01 | [synthetic-l3-admission-v01-findings.md](synthetic-l3-admission-v01-findings.md) | W-44 |
+| apc | [synthetic-l3-admission-pool-confirm-findings.md](synthetic-l3-admission-pool-confirm-findings.md) | W-44 |
+| ap | [synthetic-l3-admission-portfolio-findings.md](synthetic-l3-admission-portfolio-findings.md) | W-44 × W-29／W-2A |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | pr | [synthetic-l3-portfolio-robust-findings.md](synthetic-l3-portfolio-robust-findings.md) | W-2A |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
@@ -181,6 +185,24 @@
 | F45 | 只用重複題學雜訊消除大部分前期損失，但 Q=45、雜訊 0.40 時仍略差（−0.015） | ✅ | nz（第二次，單次） | 仍未通過守門 |
 | F46 | 校準與排序有結構性衝突：v1 低估雜訊反而少靠有偏誤的錨點先驗 | 💭 | nz（三種模型方向一致） | 先驗品質（B-C1-17）是下一個槓桿 |
 | F47 | 作答偏誤會破壞截斷模型在低雜訊時的校準（0.837） | ✅（只報告） | nz | — |
+
+## C3 錄取可行性
+
+| ID | 結論 | 狀態 | 證據 | 對目前設計 |
+|---|---|---|---|---|
+| F128 | 自陳偏誤讓未校正模型高估錄取機率 0.106–0.238，90% 區間只涵蓋 4–42% | ✅ | ab | 必須校正 |
+| F129 | 官方錄取率錨點＋自陳平移把 RMSE 降到 0.038–0.068，兩種生成都成立（V-C3-1） | ✅ | ab | B-C3-1 🟢 |
+| F130 | 校正後仍高估 0.015–0.053（原因已確認：平均錨點的 Jensen 差，A-C3-5）；自陳依強度而變時 90% 區間只涵蓋 61–66% | ✅ | ab | B-C3-8 |
+| F131 | 少量顧問完整紀錄幾乎沒有幫助，校正靠官方錄取率 | ✅ | ab | C3.1 優先取得官方錄取率 |
+| F132 | 校正顯著降低申請組合的遺憾，但絕對影響很小（U 0.08–0.23%，C 0.02–0.08%） | ✅ | ap | — |
+| F133 | 自陳偏誤的主要傷害是宣稱的期望效用太樂觀（U 高估 4.3–9.8 點，C −0.2～+2.1 點） | ✅ | ap | C3 校正用於讓數字可信 |
+| F134 | 校正後再做最小化最大遺憾沒有改善 | ✅ | ap | C4 預設維持點估計 |
+| F135 | 組合的選擇對機率誤差穩健，需要準確的是呈現的數字；C3 應以校準評估 | 💭 | ap | V-C3-2／3 |
+| F136 | τ 模型平均依預先登記成為 C3.2 預設；效果小，但修好 B-C3-9 | ✅ | a01 | 預設 v0.1 |
+| F137 | 母體積分錨點消除 F130 的偏誤；stress 下涵蓋率 0.58–0.65 → 0.86–0.89 | ✅ | a01 | F139 確認後採用 |
+| F138 | 母體積分錨點只因對稱的涵蓋率準則未通過；以 V-C3-3 範圍準則須新種子確認 | 💭 → ✅（F139 確認） | a01 | 見 F139 |
+| F139 | 新種子確認：母體積分錨點＋τ 模型平均讓 8 個設定的涵蓋率都在 85–95%（stress 0.61–0.66 → 0.86–0.89） | ✅ | apc | C3.2 預設 v0.2；B-C3-8 🟢 |
+| F140 | 殘差改為 stress 下低估 0.021–0.029；standard 區間略寬（0.93–0.94） | ✅（數據）／💭（原因） | apc | C3.1 稽核回報機制 |
 
 ## C4 申請組合
 
