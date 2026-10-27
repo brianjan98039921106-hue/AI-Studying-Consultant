@@ -67,3 +67,30 @@ def test_validation():
         fit_layer_weights(np.zeros((3, 4)), np.array([0, 1, 2]))
     with pytest.raises(ValueError):
         estimate_layer_weights(np.zeros((2, 4)), np.array([0, 1]), ["a"])
+
+
+def test_simex_reduces_measurement_error_bias():
+    from aisc.dimensions import NEED_KEYS
+    from aisc.discovery.layer_weights import estimate_layer_weights_simex
+
+    rng = np.random.default_rng(5)
+    d = len(NEED_KEYS)
+    n_resp, k, sigma = 300, 20, 0.2
+    true_w = rng.random((n_resp, d))
+    X = rng.random((60, d))
+    pairs = np.array([(r, a, (a + rng.integers(1, 60)) % 60)
+                      for r in range(n_resp) for a in rng.integers(0, 60, k)])  # fmt: skip
+    beta = np.array([30.0, 30.0, 30.0, 30.0])
+    from aisc.discovery.layer_weights import _pair_rows
+
+    G = _pair_rows(true_w, X, pairs, "v1")
+    y = (rng.random(len(G)) < 1 / (1 + np.exp(-(G @ beta)))).astype(float)
+    stated = np.clip(true_w + rng.normal(0, sigma, true_w.shape), 0, 1)
+    est = estimate_layer_weights_simex(stated, X, pairs, y, sigma, "v1", n_sim=5, n_boot=20,
+                                       rng=np.random.default_rng(6))  # fmt: skip
+    err_naive = max(abs(est.naive.shares[lay] - 0.25) for lay in LAYERS)
+    err_simex = max(abs(est.corrected.shares[lay] - 0.25) for lay in LAYERS)
+    assert err_simex < err_naive
+    assert sum(est.corrected.shares.values()) == pytest.approx(1.0)
+    with pytest.raises(ValueError):
+        estimate_layer_weights_simex(stated, X, pairs[:, :2], y, sigma, "v1")

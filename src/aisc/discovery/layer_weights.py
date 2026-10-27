@@ -131,3 +131,84 @@ def estimate_layer_weights(
         n_respondents=len(ids),
         n_pairs=len(y),
     )
+
+
+SIMEX_LAMBDAS = (0.5, 1.0, 1.5, 2.0)
+
+
+@dataclass(frozen=True)
+class SimexEstimate:
+    corrected: LayerWeightEstimate  # SIMEX shares; interval = naive interval shifted
+    naive: LayerWeightEstimate
+
+
+def _pair_rows(stated: np.ndarray, X: np.ndarray, pairs: np.ndarray, dims: str) -> np.ndarray:
+    """Feature rows D(B) - D(A) for (respondent, a, b) index triples."""
+    out = np.empty((len(pairs), len(LAYERS)))
+    for r in np.unique(pairs[:, 0]):
+        sel = np.flatnonzero(pairs[:, 0] == r)
+        d = layer_differences(stated[r], X, dims)
+        out[sel] = d[pairs[sel, 2]] - d[pairs[sel, 1]]
+    return out
+
+
+def estimate_layer_weights_simex(
+    stated: np.ndarray,
+    X: np.ndarray,
+    pairs: np.ndarray,
+    y: np.ndarray,
+    sigma: float | np.ndarray,
+    dims: str,
+    lambdas: Sequence[float] = SIMEX_LAMBDAS,
+    n_sim: int = 20,
+    n_boot: int = 200,
+    rng: np.random.Generator | None = None,
+) -> SimexEstimate:
+    """SIMEX-corrected layer shares (Cook & Stefanski 1994; B-C2-12).
+
+    stated: (n_respondents, d) answered needs on [0, 1]; X: (n_programmes, d);
+    pairs: (n_pairs, 3) integer rows (respondent, a, b); y: 1 if a was chosen;
+    sigma: answer error SD (scalar or per dimension), e.g. from a retest (W-41).
+    For each lambda, extra noise with variance lambda * sigma^2 is added to the
+    answers (clipped to [0, 1] like real answers), the shares are refitted n_sim
+    times and averaged; a quadratic in lambda through (0, naive) and these points
+    is extrapolated to lambda = -1 (no error). Negative shares are set to 0 and the
+    rest renormalised. The interval is the naive cluster-bootstrap interval shifted
+    by the correction (an approximation checked in the recovery study).
+    """
+    stated = np.asarray(stated, float)
+    X = np.asarray(X, float)
+    pairs = np.asarray(pairs, int)
+    y = np.asarray(y, float)
+    if pairs.ndim != 2 or pairs.shape[1] != 3 or len(pairs) != len(y):
+        raise ValueError("pairs must be (n_pairs, 3) rows of (respondent, a, b)")
+    if np.any(np.asarray(sigma) < 0):
+        raise ValueError("sigma must be non-negative")
+    rng = rng or np.random.default_rng(0)
+    F0 = _pair_rows(stated, X, pairs, dims)
+    resp = [str(r) for r in pairs[:, 0]]
+    naive = estimate_layer_weights(F0, y, resp, n_boot=n_boot, rng=rng)
+    lam_pts, share_pts = [0.0], [_shares(fit_layer_weights(F0, y))]
+    for lam in lambdas:
+        sims = []
+        for _ in range(n_sim):
+            noisy = np.clip(stated + np.sqrt(lam) * sigma * rng.standard_normal(stated.shape), 0, 1)
+            sims.append(_shares(fit_layer_weights(_pair_rows(noisy, X, pairs, dims), y)))
+        lam_pts.append(lam)
+        share_pts.append(np.nanmean(sims, axis=0))
+    S = np.array(share_pts)
+    coef = np.polyfit(np.array(lam_pts), S, 2)  # (3, n_layers)
+    ext = np.maximum(np.polyval(coef, -1.0) if coef.ndim == 1 else
+                     coef[0] - coef[1] + coef[2], 0.0)  # fmt: skip
+    ext = ext / ext.sum() if ext.sum() > 0 else np.full(len(LAYERS), np.nan)
+    shift = ext - np.array([naive.shares[lay] for lay in LAYERS])
+    ci = {lay: (naive.ci[lay][0] + s, naive.ci[lay][1] + s)
+          for lay, s in zip(LAYERS, shift, strict=True)}  # fmt: skip
+    corrected = LayerWeightEstimate(
+        shares=dict(zip(LAYERS, map(float, ext), strict=True)),
+        beta=naive.beta,
+        ci=ci,
+        n_respondents=naive.n_respondents,
+        n_pairs=naive.n_pairs,
+    )
+    return SimexEstimate(corrected=corrected, naive=naive)
