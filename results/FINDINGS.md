@@ -26,6 +26,7 @@
 | dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
 | dvs | [synthetic-l3-diversity-findings.md](synthetic-l3-diversity-findings.md) | B-C2-9 |
 | ab | [synthetic-l3-admission-bias-findings.md](synthetic-l3-admission-bias-findings.md) | W-44 |
+| ap | [synthetic-l3-admission-portfolio-findings.md](synthetic-l3-admission-portfolio-findings.md) | W-44 × W-29／W-2A |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | pr | [synthetic-l3-portfolio-robust-findings.md](synthetic-l3-portfolio-robust-findings.md) | W-2A |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
@@ -191,6 +192,10 @@
 | F129 | 官方錄取率錨點＋自陳平移把 RMSE 降到 0.038–0.068，兩種生成都成立（V-C3-1） | ✅ | ab | B-C3-1 🟢 |
 | F130 | 校正後仍高估 0.015–0.053（原因已確認：平均錨點的 Jensen 差，A-C3-5）；自陳依強度而變時 90% 區間只涵蓋 61–66% | ✅ | ab | B-C3-8 |
 | F131 | 少量顧問完整紀錄幾乎沒有幫助，校正靠官方錄取率 | ✅ | ab | C3.1 優先取得官方錄取率 |
+| F132 | 校正顯著降低申請組合的遺憾，但絕對影響很小（U 0.08–0.23%，C 0.02–0.08%） | ✅ | ap | — |
+| F133 | 自陳偏誤的主要傷害是宣稱的期望效用太樂觀（U 高估 4.3–9.8 點，C −0.2～+2.1 點） | ✅ | ap | C3 校正用於讓數字可信 |
+| F134 | 校正後再做最小化最大遺憾沒有改善 | ✅ | ap | C4 預設維持點估計 |
+| F135 | 組合的選擇對機率誤差穩健，需要準確的是呈現的數字；C3 應以校準評估 | 💭 | ap | V-C3-2／3 |
 
 ## C4 申請組合
 
