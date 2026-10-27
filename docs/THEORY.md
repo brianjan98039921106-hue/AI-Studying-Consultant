@@ -83,7 +83,7 @@
 | 申請組合問題 | Kapur & Hong (2022), arXiv:2205.01869 | A-C4-1 錄取彼此獨立；A-C4-2 只就讀一所、目標是期望最佳結果 |
 | 序列決策對照 | Weitzman (1979), *Econometrica*：Pandora's box | A-C4-3 所有申請同時決定（靜態） |
 | 市場均衡 | Fu (2014), *Journal of Political Economy* | S-5 大量使用會改變錄取率 |
-| 相關性 | Sklar 定理／Gaussian copula | — |
+| 相關性（C4.2，W-29） | Sklar 定理／Gaussian copula：潛在變數 Z_j = √ρ·F + √(1−ρ)·E_j，Z_j < Φ⁻¹(p_j) 即錄取，邊際機率不變；以共同隨機數的 Monte Carlo 估計 v(S)；組合以 C4.1 解為起點做加入／移除／交換的局部搜尋（小問題以窮舉作參考） | A-C4-5 |
 | 穩健最佳化 | Bertsimas & Sim (2004), *Operations Research*, "The Price of Robustness" | — |
 | 多屬性效用 | Keeney & Raiffa (1976), *Decisions with Multiple Objectives*；AHP (Saaty) | A-C4-4 效用可由屬性加權組成 |
 

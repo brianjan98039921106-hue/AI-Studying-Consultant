@@ -77,3 +77,27 @@ def test_input_validation():
         portfolio_value([0.5, 0.5], [1], [0])
     with pytest.raises(ValueError):
         dp_varied_cost([0.5], [1], [1.5], 3)
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C4-1: the recommended portfolio ignores correlated admissions",
+)
+def test_probe_recommendation_accounts_for_admission_correlation():
+    """With strongly correlated admissions (rho = 0.7) three long-shot reaches are worth
+    less than the independence model says; the recommended portfolio should keep a
+    safer option. Checked against brute force under the same Monte Carlo draws."""
+    import numpy as np
+
+    import aisc.portfolio as pf
+
+    p = [0.15, 0.15, 0.15, 0.6, 0.95]
+    u = [1.0, 0.98, 0.96, 0.6, 0.3]
+    cost, budget = [1, 1, 1, 1, 1], 3
+    assert hasattr(pf, "recommend_portfolio") and hasattr(pf, "admission_draws")
+    draws = pf.admission_draws(p, 0.7, 40_000, np.random.default_rng(0))
+    best = max(pf.portfolio_value_mc(u, draws, s) for s in pf.subsets_within_budget(cost, budget))
+    chosen = pf.recommend_portfolio(p, u, cost, budget, rho=0.7, draws=draws)
+    assert pf.portfolio_value_mc(u, draws, chosen) >= best - 1e-9
