@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.11 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.12 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -44,7 +44,7 @@
 | 申請組合最佳化（選哪幾間申請） | C4.1–C4.3 | ✅ 精確解；相關錄取（C4.2）與機率區間的穩健選擇（C4.3）可選用 | ⚠️ 錄取機率與相關係數都須自行假設（C3 未完成） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | 🧪 v0 模型可用（§4.9）：階層 logistic、區間、自陳偏誤校正；只在合成資料驗證 | ❌ 尚無真實申請結果資料（只在合成資料驗證，F128–F140） |
-| 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
+| 顧問介面／側寫報告 | Phase 5 | 🟡 報告 v0 可用（Markdown，§4.10）；介面未開始 | ⚠️ 會自動標示合成資料、假設的錄取機率與補全的維度 |
 
 **一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 申請組合」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。
 <!-- AUTO:status END -->
@@ -56,9 +56,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10） | W-50 |
 | 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
 | 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
-| 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
