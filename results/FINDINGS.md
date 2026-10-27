@@ -22,6 +22,7 @@
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
 | r3 | [reference-all-v3-findings.md](reference-all-v3-findings.md)（**真實資料**） | W-65、W-70 |
 | im | [interest-area-imputation-findings.md](interest-area-imputation-findings.md)（**真實資料**，O\*NET 職業） | 架構檢討 §2.1 |
+| pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
 | dl | [domain-layer-findings.md](domain-layer-findings.md)（**真實資料**） | W-64 |
@@ -165,6 +166,15 @@
 | F45 | 只用重複題學雜訊消除大部分前期損失，但 Q=45、雜訊 0.40 時仍略差（−0.015） | ✅ | nz（第二次，單次） | 仍未通過守門 |
 | F46 | 校準與排序有結構性衝突：v1 低估雜訊反而少靠有偏誤的錨點先驗 | 💭 | nz（三種模型方向一致） | 先驗品質（B-C1-17）是下一個槓桿 |
 | F47 | 作答偏誤會破壞截斷模型在低雜訊時的校準（0.837） | ✅（只報告） | nz | — |
+
+## C4 申請組合
+
+| ID | 結論 | 狀態 | 證據 | 對目前設計 |
+|---|---|---|---|---|
+| F109 | 錄取相關時獨立模型高估期望效用：ρ = 0.4 時 3.1–9.8%，ρ = 0.8 時 9.1–22.6% | ✅ | pc | V-C4-2 預先登記門檻（ρ = 0.4 時 > 10%）未觸發 |
+| F110 | C4.1 選出的組合遺憾小：ρ = 0.4 時 0.2–1.1%，ρ = 0.8 時 ≤ 3.5% | ✅ | pc | 預設維持 C4.1 |
+| F111 | 假設 ρ = 0.4 的組合在 ρ = 0.8 時較好，但實際獨立時最多少 1.2%；沒有一致更好的選擇 | ✅ | pc | C4.2 為可選用 |
+| F112 | 相關錄取的主要影響是期望效用數字太樂觀，不是選錯學校 | 💭 | pc | 輸出註明獨立假設；C3 後估計 ρ |
 
 ## 端到端（系統層）
 

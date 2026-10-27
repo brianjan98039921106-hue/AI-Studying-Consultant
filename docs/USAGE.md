@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.7（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.8（研究原型）
 
 ---
 
@@ -20,7 +20,7 @@
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
-| 申請組合最佳化（選哪幾間申請） | C4.1 | ✅ 精確解 | ⚠️ 錄取機率須自行假設（C3 未完成） |
+| 申請組合最佳化（選哪幾間申請） | C4.1、C4.2 | ✅ 精確解；相關錄取的敏感度分析可選用（C4.2） | ⚠️ 錄取機率與相關係數都須自行假設（C3 未完成） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⬜ 未開始 | — |
 | 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
@@ -264,6 +264,20 @@ chosen, value = dp_varied_cost([a.mean for a in assumed], utility, [1] * len(ass
 print([shortlist_[j].program.degree_name for j in chosen], round(value, 1))
 ```
 
+上面的期望效用假設**各校錄取互相獨立**。實際上同一份申請在各校的結果是相關的（整體競爭力是共同因素），獨立假設會讓期望效用偏樂觀（合成情境中 ρ = 0.4 時高估 3–10%，ρ = 0.8 時 9–23%），但選出的組合通常只差 1% 左右（[F109–F112](../results/synthetic-l3-portfolio-corr-findings.md)），所以預設不變。想看敏感度時可用 C4.2（ρ 是假設值，不是估計值）：
+
+```python
+import numpy as np
+
+from aisc.portfolio import admission_draws, portfolio_value_mc, recommend_portfolio
+
+p = [a.mean for a in assumed]
+for rho in (0.0, 0.4, 0.8):
+    draws = admission_draws(p, rho, 20_000, np.random.default_rng(0))
+    print(rho, round(portfolio_value_mc(utility, draws, chosen), 1))  # 同一個組合，相關越高越低
+best_if_correlated = recommend_portfolio(p, utility, [1] * len(p), budget=3, rho=0.4)
+```
+
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
 
 v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
@@ -353,3 +367,4 @@ v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用
 | 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
 | 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
 | 2026-10-28 | v0.3.7 | v2 新增可選用的相關補全 `area_model="correlated"`（§4.8）；全領域參考表新增就業加權版本（參考用，非預設） | 架構檢討、W-71 |
+| 2026-10-28 | v0.3.8 | 申請組合新增 C4.2（錄取相關）：`admission_draws`、`portfolio_value_mc`、`recommend_portfolio`，可看期望效用對相關係數的敏感度；預設選擇不變（§4.7） | W-29 |
