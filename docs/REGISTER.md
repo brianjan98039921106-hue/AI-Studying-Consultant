@@ -137,6 +137,7 @@
 | B-C2-16 | 盲區 | **分層平衡計分器配上 layered(γ>0) 會在計分時崩潰**：每層子向量的長度不是任何維度集合，`layer_index` 找不到強度層 | 程式稽核（2026-10-28，獨立代理人） | 組合在建構時被接受、到計分才失敗 | 探針 `test_probe_layer_balanced_rejects_layered_base_up_front` | 建構時拒絕 γ > 0 的基底 | L |🟢（建構時拒絕，`test_layer_balanced_rejects_layered_base_up_front`） |
 | B-C2-17 | 盲區 | **SIMEX 校正後的估計附帶未校正的 β**：`corrected.beta` 與 `corrected.shares` 不一致；迴歸校正則回傳空的 β | 程式稽核（2026-10-28，獨立代理人） | 使用者以 β 重算份量會得到未校正的值 | 探針 `test_probe_corrected_estimate_does_not_report_naive_betas` | 校正後的估計不回報 β（兩種估計器一致） | L |🟢（校正後不回報 β，`test_corrected_estimate_does_not_report_naive_betas`） |
 | B-C2-18 | 盲區 | **隨機配對下領域份量識別不足**：領域層差異是 41 個多半很低的領域取平均，配對之間變化很小；真實份量較小時（各層等權），估計偏誤隨學生分布改變方向（F100） | W-76 迴歸校正參數還原（2026-10-28） | 層份量估不準，W-16c 的決策依據不穩 | 參數還原跨世界比較 | 以實際刺激物設計配對，使各層差異變化足夠（D-optimal 類設計）；W-76 改為區分假設（F101） | H | 🔴 |
+| B-C2-19 | 盲區 | **族群代碼假設 CIP 格式固定**：`cip_family` 取前 5 個字元，未補零的代碼（如 "9.0101"）會得到錯的族群 "9.010" | 程式稽核（2026-10-28，第三次獨立代理人） | 從外部表格讀入的代碼族群錯分，多樣化與族群統計失準 | 探針 `test_probe_cip_family_handles_unpadded_codes` | 以「.」拆開並補零 | L | 🔴 |
 
 ## C3 錄取可行性
 
@@ -173,6 +174,7 @@
 | B-C4-5 | 盲區 | **成本不只申請費**：文件準備時間、推薦人負擔 | — | 低估邊際申請成本 | — | 成本加入時間單位 | L | 🔴 |
 | B-C4-6 | 盲區 | **申請成本與時程依學位類型差異大**（集中申請費、面試旅費、作品集製作時間） | 全背景決策（2026-10-27） | 申請組合低估某些學程的實際成本 | — | 成本由學生輸入或取自官網；只在申請模式使用 | L | 🔴 |
 | B-C4-7 | 盲區 | **整數值的浮點成本通過驗證後崩潰**：`dp_varied_cost` 接受 2.0 但之後 `range(2.0)` 失敗 | 程式稽核（2026-10-28，獨立代理人） | 從表格讀入的成本（常為浮點）無法使用 | 探針 `test_probe_dp_accepts_whole_number_float_costs` | 驗證後轉為整數 | L |🟢（驗證後轉整數，`test_dp_accepts_whole_number_float_costs`） |
+| B-C4-8 | 盲區 | **傳入模擬抽樣時不檢查 ρ**：`recommend_portfolio` 在給定 `draws` 時接受 ρ = −0.5 等無效值，且 ρ = 0 時回傳模擬最佳而非文件寫的 DP 精確解 | 程式稽核（2026-10-28，第三次獨立代理人） | 呼叫端誤用時沒有錯誤訊息；文件與行為不符 | 探針 `test_probe_recommend_portfolio_validates_rho_with_draws` | 一律檢查 ρ；文件寫明給定 draws 時的行為 | L | 🔴 |
 
 ## C5 模擬與評估
 
