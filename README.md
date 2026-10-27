@@ -4,7 +4,9 @@
 >
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
-**Status:** v0.2 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+<!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
+**Status:** v0.3.2 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+<!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
 
@@ -14,17 +16,64 @@
 
 這個專案把它當成**冷啟動推薦 + 探索**問題，拆成七個可以獨立開發、獨立驗證的部件：
 
-摘要如下；**正式狀態以 [docs/VALIDATION.md §5](docs/VALIDATION.md) 為準**。
+| 部件 | 功能 |
+|---|---|
+| C0 Program 知識庫 | CIP 分類骨架 + 兩種獨立來源測量學程屬性 |
+| C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 |
+| C2 探索推薦 | 依契合排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區 |
+| C3 錄取可行性 | 階層貝氏模型 + 選擇偏誤校正 + 校準 |
+| C4 申請組合 | Kapur & Hong 精確解 + 相關性評估 + 穩健選擇 |
+| C5 模擬與評估 | 已知真相的合成學生，驗證所有部件 |
+| C6 先修與申請條件差距 | 顯示學程要求什麼、學生還缺什麼；只呈現不過濾 |
 
-| 部件 | 功能 | 狀態 |
+> 以下「目前狀態」「最近更新」「下一步」「最新驗證結論」由 `scripts/update_readme.py` 從來源檔自動產生；合併到 main 後 GitHub Actions 會自動同步，**請修改來源檔，不要直接改 README 的這些區塊**。
+
+## 目前狀態
+
+<!-- AUTO:status START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
+來源：[docs/USAGE.md §1](docs/USAGE.md#1-現在能用什麼)（各部件的驗證關卡見 [docs/VALIDATION.md §5](docs/VALIDATION.md)）
+
+| 功能 | 部件 | 狀態 | 可以用在真實學生身上嗎？ |
+|---|---|---|---|
+| 輸入需求（15 個維度）＋ 未作答維度自動補全 | C1.1、C1.2 | ✅ 可用 | ⚠️ 維度尚未經實證驗證（W-41） |
+| 大考中心興趣量表分數作為先驗 | C1.1 | ✅ 可用 | ⚠️ 參數未校準（A-C1-8） |
+| 自適應問卷（自動挑下一題） | C1.3 | 🟡 可用，題目為抽象占位題 | ❌ 真實題目文字待 W-41 |
+| 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
+| 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
+| 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
+| 申請組合最佳化（選哪幾間申請） | C4.1 | ✅ 精確解 | ⚠️ 錄取機率須自行假設（C3 未完成） |
+| 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
+| 錄取機率估計 | C3 | ⬜ 未開始 | — |
+| 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
+
+**一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 申請組合」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。
+<!-- AUTO:status END -->
+
+## 最近更新
+
+<!-- AUTO:changelog START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
+來源：[docs/USAGE.md §8](docs/USAGE.md#8-變更紀錄使用方式)（最近 3 筆，新到舊）
+
+| 日期 | 版本 | 改變 | 工項 |
+|---|---|---|---|
+| 2026-10-27 | v0.3.2 | 新增實驗用計分器 `domain_gated`（v2 作答 → v1 計分 ＋ 遠領域扣分）；L3 未通過，不建議使用（§4.8） | W-16c |
+| 2026-10-27 | v0.3.1 | v2 的 L3 結果：未通過，v2 推薦品質目前低於 v1，請勿用於實際推薦（§1、§4.8）；用法沒有改變 | W-16c |
+| 2026-10-27 | v0.3 | 新增實驗中的需求維度 v2（`dims="v2"`、`group_scores`、`migrate_needs_v1_to_v2`），預設仍為 v1（§4.8） | W-16c |
+<!-- AUTO:changelog END -->
+
+## 下一步
+
+<!-- AUTO:next-steps START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
+來源：[docs/ROADMAP.md](docs/ROADMAP.md) （依證據排序，2026-10-27 W-63／W-67 後更新）
+
+| 順序 | 工項 | 依據 |
 |---|---|---|
-| C0 Program 知識庫 | CIP 分類骨架 + 兩種獨立來源測量學程屬性 | loader ✅ · 參考表（IPEDS 2025、CIP 2020、O*NET）✅ · 課程擷取 ⬜ |
-| C1 學生側寫 | 以 RIASEC 為骨架的需求測量、錨點拆解、自適應提問、熟悉度 | 15 維需求空間 ✅ · 大考中心分數先驗 ✅ · 熟悉度擷取 ✅ · 錨點拆解 v1 ✅ · 自適應問卷 v1（節省 13–28% 題目，未達 30% 門檻） |
-| C2 探索推薦 | 依契合排序（cosine 與強度差距的混合計分），再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區 | **v1 ✅ L3 通過**；v0 保留為參考 |
-| C3 錄取可行性 | 階層貝氏模型 + 選擇偏誤校正 + 校準 | ⬜ |
-| C4 申請組合 | Kapur & Hong 精確解 + 相關性評估 + 穩健選擇 | 精確解 ✅（已驗證） |
-| C5 模擬與評估 | 已知真相的合成學生，驗證所有部件 | 產生器、指標、執行器 ✅ · 首次 L3 報告 ✅ |
-| C6 先修與申請條件差距 | 顯示學程要求什麼、學生還缺什麼；只呈現不過濾 | 契約、條件類別 draft-0、差距比對 v0 ✅ |
+| 1 | **W-64** 跨領域領域層（G0：取得 O\*NET 細分興趣檔案並確認來源） | F59–F61：遠領域假陽性在模擬中出現，且集中在需求屬於遠領域的學生（F60）；只有讓量測空間能表達這些領域才能修正 B-C2-8 |
+| 2 | **W-20** 黃金標準（需求維度＋入學條件，依族群分層） | 課程層資料、條件擷取與評分準則跨領域檢驗都需要它 |
+| 3 | **W-66** 兩階段提問 | 依賴 W-64；維度增加後的作答負擔（B-C1-21） |
+| 4 | **W-41** 使用者研究（依背景分層）＋ W-73 | 測量恆等性只能用真實資料檢驗（D11） |
+| — | W-67 剩餘：背景分布以教育部學門統計校準 | 需官方檔案 |
+<!-- AUTO:next-steps END -->
 
 ## 文件導覽
 
@@ -39,7 +88,10 @@
 | 工項與順序 | [docs/ROADMAP.md](docs/ROADMAP.md) |
 | 需求維度與評分準則 | [docs/rubric.md](docs/rubric.md) |
 | **所有發現的狀態總表** | [results/FINDINGS.md](results/FINDINGS.md) |
-| 最新 L3 合成驗證結論 | [C2 計分器](results/synthetic-l3-c2-scorer-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C2 分區呈現](results/synthetic-l3-v2-findings.md)、[C1 錨點拆解 v1](results/synthetic-l3-c1-v1-findings.md)、[C1 自適應問卷](results/synthetic-l3-adaptive-findings.md) |
+
+<!-- AUTO:latest-results START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
+最新 L3 合成驗證結論（來源：[docs/VALIDATION.md §5](docs/VALIDATION.md)）：[領域把關](results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](results/synthetic-l3-noise-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](results/synthetic-l3-v1-continuous-findings.md)、[v1](results/synthetic-l3-v1-findings.md)、[v0](results/synthetic-l3-v0-findings.md)）
+<!-- AUTO:latest-results END -->
 
 ## 使用方式
 

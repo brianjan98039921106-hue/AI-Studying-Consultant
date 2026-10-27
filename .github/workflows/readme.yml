@@ -1,0 +1,43 @@
+name: README sync
+
+# W-06: regenerate the README sections that track development
+# (status, changelog, next steps, latest results, version) from their sources
+# after every push to main, and commit the result if anything changed.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/USAGE.md"
+      - "docs/VALIDATION.md"
+      - "docs/ROADMAP.md"
+      - "README.md"
+      - "scripts/update_readme.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: readme-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/update_readme.py
+      - name: Commit if changed
+        run: |
+          if git diff --quiet; then
+            echo "README already up to date"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md pyproject.toml src/aisc/__init__.py docs/USAGE.md
+          git commit -m "docs(readme): sync generated sections"
+          git push

@@ -24,3 +24,4 @@ W-xx：
 - [ ] 沒有真實學生資料、沒有未標示來源的真實學程資料
 - [ ] ROADMAP、VALIDATION §5 已更新
 - [ ] 使用方式有變：docs/USAGE.md 已更新（章節、§1 狀態表、§8 變更紀錄）；無變化請勾此項並註明「無」
+- [ ] 已執行 `python scripts/update_readme.py`（README 自動區塊與版本號；合併後也會自動同步）
