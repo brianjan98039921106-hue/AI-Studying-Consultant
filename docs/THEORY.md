@@ -76,6 +76,8 @@
 | 方法 | 理論來源 | 引入的假設 |
 |---|---|---|
 | 階層貝氏 logistic | 部分合併（partial pooling）：資料少的學程向群體平均收縮 | A-C3-1 過去結果可預測未來（定態） |
+| C3.2 v0 估計方式（W-44） | logit P(錄取) = a_p + β·x + b·[自陳]；a_p ~ N(μ_f, τ²)（學程向所屬 CIP 族群 f 收縮），μ_f ~ N(0, 2²)，β ~ N(0, 1)。以後驗眾數（MAP，牛頓法）估計，區間用 Laplace 近似（Tierney & Kadane, 1986, *JASA* 81）：線性預測的後驗變異數 = zᵀ H⁻¹ z，再經 logistic 轉成機率區間；τ 以 Laplace 近似的邊際概似在格點上選擇（經驗貝氏） | A-C3-3、A-C3-4、A-C3-5 |
+| 自陳資料的選擇偏誤校正（B-C3-1） | 結果決定的抽樣（outcome-dependent sampling）下，logistic 的斜率不偏，只有截距平移 log(q₁／q₀)（q₁、q₀ = 錄取者、未錄取者回報的機率；Prentice & Pyke, 1979, *Biometrika* 66；King & Zeng, 2001, *Political Analysis* 9 的 prior correction）。模型對自陳紀錄加一個共同平移 b，預測時取 b = 0。b 的辨識來源：(1) 完整紀錄的顧問案例（同時有兩種來源）；(2) 官方錄取率 r_p 作為軟限制：(logit r_p − a_p)² ／ (2κ²)，假設特徵以申請者母體標準化（平均 0） | A-C3-3、A-C3-4、A-C3-5 |
 | 選擇偏誤 | Heckman (1979), *Econometrica* | A-C3-2 訓練樣本具代表性（GradCafe **不符合**） |
 | 機率校準 | Brier (1950)；Niculescu-Mizil & Caruana (2005), ICML | — |
 | 不可觀測因素 | Zhao et al. (2023), *PLOS ONE*：推薦信帶有預測訊號 | 說明區間為何必須夠寬（B-C3-5） |
