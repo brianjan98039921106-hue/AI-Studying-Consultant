@@ -88,10 +88,16 @@ def interactive_discovery(
     k_known: int = 5,
     min_relevance: float = 0.0,
     scorer: Scorer | None = None,
+    diversity: float = 0.0,
 ) -> DiscoveryResult:
     profile = prepare_profile(profile, catalog)
     candidates = shortlist(
-        profile, catalog, n=n_shortlist, min_relevance=min_relevance, scorer=scorer
+        profile,
+        catalog,
+        n=n_shortlist,
+        min_relevance=min_relevance,
+        scorer=scorer,
+        diversity=diversity,
     )
     report = ask(candidates) if candidates else {}
     unexpected = set(report) - set(candidates)
@@ -106,4 +112,5 @@ def interactive_discovery(
         min_relevance=min_relevance,
         asked=candidates,
         scorer=scorer,
+        diversity=diversity,
     )

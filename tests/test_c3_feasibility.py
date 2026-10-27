@@ -1,0 +1,109 @@
+"""C3.2 v0 hierarchical admission model (L2, L4)."""
+
+import numpy as np
+import pytest
+
+
+def _world(rng, n_prog=12, n_per=60, q1=1.0, q0=1.0, beta=(1.0, -0.5)):
+    """Programmes in 3 families; applicants with 2 standardised features; reporting
+    with probability q1 if admitted, q0 if rejected (outcome-dependent)."""
+    fam = [f"f{i % 3}" for i in range(n_prog)]
+    mu_f = {"f0": -1.5, "f1": -0.5, "f2": 0.5}
+    a = {f"p{i}": mu_f[fam[i]] + rng.normal(0, 0.5) for i in range(n_prog)}
+    recs, rates = [], {}
+    for i in range(n_prog):
+        pid = f"p{i}"
+        X = rng.normal(0, 1, (4000, 2))
+        p = 1 / (1 + np.exp(-(a[pid] + X @ np.array(beta))))
+        y = rng.random(4000) < p
+        rates[pid] = float(y.mean())
+        keep = rng.random(4000) < np.where(y, q1, q0)
+        idx = np.flatnonzero(keep)[:n_per]
+        recs += [(pid, fam[i], X[j], int(y[j])) for j in idx]
+    return recs, rates, a
+
+
+def test_self_report_bias_is_corrected_by_official_rates():
+    """B-C3-1 (was a probe). Admitted applicants report 4x as often as rejected ones.
+    Fitted naively the average applicant's P(admit) is far too high; anchored to
+    official admission rates the estimate must be close to the true rate."""
+    import aisc.feasibility as fz
+
+    assert hasattr(fz, "fit_admission_model")
+    rng = np.random.default_rng(0)
+    recs, rates, _ = _world(rng, q1=0.8, q0=0.2)
+    data = [fz.AdmissionRecord(pid, fam, tuple(x), y, "self_report") for pid, fam, x, y in recs]
+    fams = {pid: fam for pid, fam, _, _ in recs}
+    naive = fz.fit_admission_model(data, families=fams)
+    anchored = fz.fit_admission_model(data, families=fams, official_rates=rates)
+    err_naive, err_anchored = [], []
+    for pid, r in rates.items():
+        err_naive.append(naive.predict(pid, (0.0, 0.0)).mean - r)
+        err_anchored.append(anchored.predict(pid, (0.0, 0.0)).mean - r)
+    assert np.mean(err_naive) > 0.15  # the bias is real
+    assert abs(np.mean(err_anchored)) < 0.06
+
+
+def _records(recs, source):
+    import aisc.feasibility as fz
+
+    return [fz.AdmissionRecord(pid, fam, tuple(x), y, source) for pid, fam, x, y in recs]
+
+
+def test_recovers_slopes_and_intervals_without_selection():
+    import aisc.feasibility as fz
+
+    rng = np.random.default_rng(1)
+    recs, _, a = _world(rng, n_per=150)
+    m = fz.fit_admission_model(_records(recs, "complete"))
+    assert m.method == "hierarchical_v0" and not m.shift_estimated
+    assert m.theta[:2] == pytest.approx([1.0, -0.5], abs=0.15)
+    covered = 0
+    for pid, ai in a.items():
+        est = m.predict(pid, (0.0, 0.0))
+        assert est.low <= est.mean <= est.high
+        covered += est.low <= 1 / (1 + np.exp(-ai)) <= est.high
+    assert covered >= 9  # 90% intervals over 12 programmes
+
+
+def test_complete_records_identify_the_self_report_shift():
+    import aisc.feasibility as fz
+
+    rng = np.random.default_rng(2)
+    biased, _, _ = _world(rng, n_per=150, q1=0.8, q0=0.2)
+    rng = np.random.default_rng(3)
+    complete, _, _ = _world(rng, n_per=60)
+    m = fz.fit_admission_model(_records(biased, "self_report") + _records(complete, "complete"))
+    assert m.method == "hierarchical_v0_corrected"
+    assert m.shift == pytest.approx(np.log(4), abs=0.35)
+
+
+def test_new_programme_uses_family_and_is_less_certain():
+    import aisc.feasibility as fz
+
+    rng = np.random.default_rng(4)
+    recs, _, _ = _world(rng)
+    m = fz.fit_admission_model(_records(recs, "complete"))
+    known = m.predict("p0", (0.0, 0.0))
+    new = m.predict("p-new", (0.0, 0.0), family="f0")
+    assert (new.high - new.low) > (known.high - known.low)
+    with pytest.raises(ValueError):
+        m.predict("p-new", (0.0, 0.0))
+    with pytest.raises(ValueError):
+        m.predict("p0", (0.0,))
+
+
+def test_record_and_fit_validation():
+    import aisc.feasibility as fz
+
+    with pytest.raises(ValueError):
+        fz.AdmissionRecord("p", "f", (0.0,), 2)
+    with pytest.raises(ValueError):
+        fz.AdmissionRecord("p", "f", (0.0,), 1, "gradcafe")
+    with pytest.raises(ValueError):
+        fz.AdmissionRecord("p", "f", (float("nan"),), 1)
+    with pytest.raises(ValueError):
+        fz.fit_admission_model([])
+    r = [fz.AdmissionRecord("p", "f", (0.0,), 1), fz.AdmissionRecord("p", "g", (0.0,), 0)]
+    with pytest.raises(ValueError):
+        fz.fit_admission_model(r)

@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.7（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.9（研究原型）
 
 ---
 
@@ -20,7 +20,7 @@
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
-| 申請組合最佳化（選哪幾間申請） | C4.1 | ✅ 精確解 | ⚠️ 錄取機率須自行假設（C3 未完成） |
+| 申請組合最佳化（選哪幾間申請） | C4.1–C4.3 | ✅ 精確解；相關錄取（C4.2）與機率區間的穩健選擇（C4.3）可選用 | ⚠️ 錄取機率與相關係數都須自行假設（C3 未完成） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⬜ 未開始 | — |
 | 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
@@ -182,6 +182,7 @@ for r in result.known_good:
 | `k_new` | 「可能沒想過」最多列幾個 | 10 |
 | `k_known` | 「已知且適合」最多列幾個 | 5 |
 | `min_relevance` | 契合度下限 | 0.0 |
+| `diversity` | 同一 CIP 族群（前 4 碼）每多一個就扣這麼多分，讓推薦分散到不同族群；模擬中會降低推薦的相關性，**不建議使用**（[F124–F127](../results/synthetic-l3-diversity-findings.md)） | 0.0 |
 
 心中的錨點學程不會出現在任一區。
 
@@ -262,6 +263,30 @@ assumed = [
 utility = [round(100 * r.relevance) for r in shortlist_]
 chosen, value = dp_varied_cost([a.mean for a in assumed], utility, [1] * len(assumed), budget=3)
 print([shortlist_[j].program.degree_name for j in chosen], round(value, 1))
+```
+
+上面的期望效用假設**各校錄取互相獨立**。實際上同一份申請在各校的結果是相關的（整體競爭力是共同因素），獨立假設會讓期望效用偏樂觀（合成情境中 ρ = 0.4 時高估 3–10%，ρ = 0.8 時 9–23%），但選出的組合通常只差 1% 左右（[F109–F112](../results/synthetic-l3-portfolio-corr-findings.md)），所以預設不變。想看敏感度時可用 C4.2（ρ 是假設值，不是估計值）：
+
+```python
+import numpy as np
+
+from aisc.portfolio import admission_draws, portfolio_value_mc, recommend_portfolio
+
+p = [a.mean for a in assumed]
+for rho in (0.0, 0.4, 0.8):
+    draws = admission_draws(p, rho, 20_000, np.random.default_rng(0))
+    print(rho, round(portfolio_value_mc(utility, draws, chosen), 1))  # 同一個組合，相關越高越低
+best_if_correlated = recommend_portfolio(p, utility, [1] * len(p), budget=3, rho=0.4)
+```
+
+錄取機率本身也可能估錯。合成情境中，±20% 的誤差只讓點估計選出的組合平均少 1% 以內，「最壞情況」與「最小化最大遺憾」兩種穩健準則都沒有更好（[F120–F123](../results/synthetic-l3-portfolio-robust-findings.md)），所以預設仍用點估計。需要比較時：
+
+```python
+from aisc.portfolio import minimax_regret_portfolio, worst_case_portfolio
+
+low, high = [a.low for a in assumed], [a.high for a in assumed]
+cautious = worst_case_portfolio(low, utility, [1] * len(p), budget=3)  # 全部取下限
+balanced = minimax_regret_portfolio(low, high, p, utility, [1] * len(p), budget=3)
 ```
 
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
@@ -353,3 +378,5 @@ v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用
 | 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
 | 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
 | 2026-10-28 | v0.3.7 | v2 新增可選用的相關補全 `area_model="correlated"`（§4.8）；全領域參考表新增就業加權版本（參考用，非預設） | 架構檢討、W-71 |
+| 2026-10-28 | v0.3.8 | 申請組合新增 C4.2（錄取相關：`admission_draws`、`portfolio_value_mc`、`recommend_portfolio`）與 C4.3（機率區間的穩健選擇：`worst_case_portfolio`、`minimax_regret_portfolio`）；預設選擇不變（§4.7） | W-29、W-2A |
+| 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |

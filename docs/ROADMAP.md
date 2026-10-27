@@ -53,9 +53,9 @@ flowchart LR
 
 | ID | 工項 | 部件 | 產出 | 驗證／關卡 | 處理項目 | 依賴 |
 |---|---|---|---|---|---|---|
-| W-20 | 黃金標準 30 筆（兩位評分者） | C0.3、C6.3 | 人工標註 + κ：15 個需求維度**＋入學條件**（類別、必修／建議、原文、是否接受線上學分、可否錄取後補修）；樣本含 ≥ 6 筆條件明確的學程與 ≥ 4 筆範圍外學程（檢查評分準則能否跨領域） | L5 V-C0-3、V-C6-1/2 | B-C0-3、B-C0-1/7/8/9、B-C6-1/2 | W-16、W-60 |
+| W-20 | 黃金標準 30 筆（兩位評分者；候選清單：[w20-candidates.md](../results/w20-candidates.md)，同時作為 W-76 刺激物） | C0.3、C6.3 | 人工標註 + κ：15 個需求維度**＋入學條件**（類別、必修／建議、原文、是否接受線上學分、可否錄取後補修）；樣本含 ≥ 6 筆條件明確的學程與 ≥ 4 筆範圍外學程（檢查評分準則能否跨領域） | L5 V-C0-3、V-C6-1/2 | B-C0-3、B-C0-1/7/8/9、B-C6-1/2 | W-16、W-60 |
 | W-21 | LLM 課程擷取（附原文片段） | C0.3 | $x^{cur}$ | L5 V-C0-2 ≥ 90% | B-C0-3、A-C0-5 | W-20 |
-| W-22 | 融合與不一致審查佇列 | C0.4 | 最終 $x_p$ + 品質旗標 | L5 V-C0-4 | B-C0-1/2 | W-15、W-21 |
+| W-22 🟡 | 融合與不一致審查佇列 | C0.4 | 最終 $x_p$ + 品質旗標；v2 階層收縮的數學與 L2 ✅（`catalog/fusion.py`：後驗平均、經驗貝氏 τ、標準化不一致旗標），等 W-21 的課程證據 | L5 V-C0-4 | B-C0-1/2/3/9 | W-15、W-21 |
 | **W-23** ✅ | 錨點拆解 v1：錨點只作為未作答維度的先驗＋名氣放寬；修正未作答維度補 0（B-C1-14） | C1.2 | `blend_profile_v1`、`pipeline.prepare_profile`、`scripts/run_l3_c1.py`、`check_fill_c2.py` | L2 ✅；L3 ✅ 預先登記選擇失敗 → 確認候選在新種子通過（144 條件 0 顯著更差） | **B-C1-2** ✅、B-C1-9、**B-C1-10** ✅、**B-C1-14** ✅ | W-10 |
 | **W-24** ✅ | 熟悉度擷取（三級回答、短名單提問）＋ C5 回報誤差模擬（訊號偵測） | C1.4 | `profiling/familiarity.py`、`simulation/respondent.py` | L2 ✅、L3 ✅（F12：雜訊是關鍵槓桿） | B-C1-6、B-C1-12、B-C2-1 | W-10 |
 | **W-25** 🟡 | 題庫 + 自適應選題（4 種策略） | C1.3 | `profiling/adaptive.py`、`pipeline.run_questionnaire`、`scripts/run_l3_adaptive.py` | L2 ✅（含校準）；L3：V-C1-4 ✅、**V-C1-3 ❌**（節省 13–28%，兩次執行，F24）；L4：B-C1-5 探針 | B-C1-4、**B-C1-5**（已量化） | W-16、W-10、W-11 |
@@ -63,8 +63,8 @@ flowchart LR
 | **W-26** ✅ | 契合度 v1：計分器介面 + 預先登記 maximin 選擇 | C2.1 | `discovery/scorers.py`；`DEFAULT_SCORER` = blend(0.25)；`scripts/run_l3_c2_scorer.py` | L4 無尺度探針通過 ✅；L3：16 條件無顯著較差、新種子重選同一個 ✅；端到端回歸 ✅ | **B-C2-3** ✅（力道小，F38）、B-C5-5（新） | W-12 |
 | W-27 ⏸ | 新穎度 v1（未知機率）：大部分被 W-24／W-28 取代，只剩短名單外學程（B-C2-7 影響 ≤ 1.5%），暫緩 | C2.2 | — | — | B-C2-7 | W-24 |
 | **W-28** ✅ | 重排序 v1：分區呈現（依契合排序＋熟悉度分區）取代加成式新穎度 | C2.3 | `discovery/sectioned.py`、`pipeline.py` | L4 探針 v1 通過 ✅；L3 ✅ 相關且不知道高於純契合 12/12（中度雜訊內） | **B-C2-2** ✅、B-C2-4 | W-12、W-24 |
-| W-29 | 相關性評估器 | C4.2 | copula Monte Carlo | L2（ρ=0 一致）、L3 V-C4-2 | B-C4-1 | W-11 |
-| W-2A | 穩健選擇 | C4.3 | 三種準則比較 | L3 V-C4-3 | B-C4-2 | W-29 |
+| **W-29** ✅ | 相關性評估器 | C4.2 | `portfolio/correlated.py`（copula Monte Carlo、`recommend_portfolio`）、`scripts/run_l3_portfolio_corr.py` | L2 ✅（ρ=0 對解析值、ρ=1 對封閉解）；L3 V-C4-2 ✅：高估 3–23%，選擇遺憾 ≤ 3.5%，預設維持 C4.1（F109–F112） | **B-C4-1** ✅ | W-11 |
+| **W-2A** ✅ | 穩健選擇 | C4.3 | `portfolio/robust.py`（最壞情況、最小化最大遺憾）、`scripts/run_l3_portfolio_robust.py` | L2 ✅（對解析值、對窮舉）；L3 V-C4-3 ✅：估計誤差代價 ≤ 3.2%，穩健準則未改善，預設維持點估計（F120–F123） | **B-C4-2** ✅ | W-29 |
 | **W-60** ✅ | 條件差距 v0：契約（`RequirementItem`、`StudentRecord`、`RequirementGap`）＋跨領域條件類別 draft-0＋確定性比對；D9 守門測試 | C6.1、C6.2 | `requirements/gap.py`、`data/reference/requirement_taxonomy.json` | G0 ✅、L2 ✅；類別表待使用者審閱 | B-C1-8、B-C6-1/2 | — |
 | W-61 | 學經歷紀錄輸入：多學位、已修課程對應類別（附台灣課名例子）、考試、經驗 | C1、C6.4 | `StudentRecord` 擷取流程 | L2；W-41 認知訪談 | B-C6-2、A-C6-2 | W-60 |
 | W-62 | 探索／申請模式：管線輸出推薦＋差距卡；學生設定申請日期才啟動 C3／C4 | 系統 | `pipeline` | L2；D9 探針 | A-C6-3、B-C6-1 | W-60、W-61 |

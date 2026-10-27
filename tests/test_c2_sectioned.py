@@ -127,3 +127,47 @@ def test_explicit_scorer_changes_ranking_and_explanations(catalog):
     assert shortlist(profile, catalog, n=5, scorer=COSINE) == [
         r.program.program_id for r in a.discoveries[:5]
     ]
+
+
+def test_discoveries_can_be_diversified_by_cip_family():
+    """B-C2-9 (was a probe). 30 programmes per family and a student sitting on one
+    programme: the pure-fit discoveries come from at most two families (first written
+    as "one family"; the nearest neighbouring family also enters, so the premise was
+    relaxed). With family diversity (C2.3, A-C2-15) a strong enough penalty must bring
+    in other families, and diversity 0 must reproduce the pure-fit list exactly."""
+    import inspect
+
+    import numpy as np
+
+    from aisc.simulation.catalog_gen import synthetic_catalog
+
+    assert "diversity" in inspect.signature(discover).parameters
+    assert "diversity" in inspect.signature(shortlist).parameters
+    cat = synthetic_catalog(np.random.default_rng(0), n_per_family=30)
+    profile = StudentProfile("p", dict(cat[0].attributes))
+    plain = discover(profile, cat, k_new=10)
+    fams = {r.program.cip[:5] for r in plain.discoveries}
+    assert len(fams) <= 2
+    same = discover(profile, cat, k_new=10, diversity=0.0)
+    assert [r.program.program_id for r in same.discoveries] == [
+        r.program.program_id for r in plain.discoveries
+    ]
+    spread = discover(profile, cat, k_new=10, diversity=1.0)
+    assert len({r.program.cip[:5] for r in spread.discoveries}) >= 5
+    assert shortlist(profile, cat, n=10, diversity=0.0) == shortlist(profile, cat, n=10)
+
+
+def test_diversity_validates_and_keeps_exact_explanations():
+    import numpy as np
+
+    from aisc.simulation.catalog_gen import synthetic_catalog
+
+    cat = synthetic_catalog(np.random.default_rng(1), n_per_family=5)
+    profile = StudentProfile("p", dict(cat[3].attributes))
+    with pytest.raises(ValueError):
+        discover(profile, cat, diversity=-0.1)
+    with pytest.raises(ValueError):
+        shortlist(profile, cat, diversity=-0.1)
+    res = discover(profile, cat, k_new=8, diversity=0.05)
+    for r in res.discoveries:
+        assert sum(r.contributions.values()) == pytest.approx(r.relevance)

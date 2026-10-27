@@ -19,6 +19,7 @@
 | 評分準則跨領域外推（W-72） | 留一族群外推（leave-one-family-out）：在部分 CIP 族群開發，在未參與開發的族群檢驗一致性 | A-C0-8 |
 | LLM 屬性擷取 | 擷取式 NLP；幻覺風險見 Ji et al. (2023), *ACM Computing Surveys* | A-C0-5 擷取結果可由原文佐證 |
 | 一致性檢驗 | 心理計量的收斂效度（convergent validity）；評分者一致性 Cohen's κ | — |
+| 融合 v2：階層收縮（C0.4，架構檢討 C0 候選 B） | 常態－常態共軛的階層模型（Gelman et al., 2013, *Bayesian Data Analysis*, 3rd ed., ch. 5）：學程的真實屬性 x_p,d ~ N(m_c,d, τ_d²)，m_c 為所屬 CIP 的職業剖面（先驗）；課程擷取證據 e_p,d ~ N(x_p,d, σ_p,d²)。後驗平均 = (m/τ² + e/σ²)／(1/τ² + 1/σ²)，後驗變異數 = 1／(1/τ² + 1/σ²)；沒有證據的維度保留先驗。τ_d² 以參數經驗貝氏的動差法估計（Morris, 1983, *JASA* 78）：τ² = max(0, mean[(e − m)²] − mean[σ²])。不一致旗標：|e − m|／√(τ² + σ²) > z（預設 2）進人工審查佇列（C0.4 v1 的規則改為標準化）。同一 CIP 的學程因證據不同而不再相同（B-C0-1）；沒有職業剖面的「其他」代碼可由呼叫端提供 4 碼系列的平均作為先驗（B-C0-9） | A-C0-12、A-C0-13 |
 
 ## C1 學生側寫
 
@@ -47,6 +48,8 @@
 | 題目參數校準（W-73） | 等級反應模型（Samejima, 1969, *Psychometrika Monograph* 17） | A-C1-12 由校準後的作答模型取代 |
 | 兩階段提問（W-66） | 先粗後細：先測 RIASEC 與大領域群，依結果只深入相關子領域；切換規則以 L3 預先登記選擇 | A-C1-14 |
 | 領域相關補全（C1 v2，architecture-review §2.1） | 多變量常態條件期望：未答領域 ＝ μ_U + Σ_UO Σ_OO⁻¹ (y_O − μ_O)，O 為已觀測變數（已答領域與 12 個領域群分數，觀測雜訊加在對角）；條件變異數 Σ_UU − Σ_UO Σ_OO⁻¹ Σ_OU 作為先驗不確定性（Anderson, 2003, *An Introduction to Multivariate Statistical Analysis*, ch. 2）。μ、Σ 以 O\*NET 職業的 41 領域剖面與由其算出的群分數估計，Σ 以 Ledoit–Wolf 收縮（Ledoit & Wolf, 2004, *Journal of Multivariate Analysis* 88）穩定逆矩陣 | A-C1-25、A-C1-26 |
+| 領域的自適應提問（C1 v2，B-C1-21） | 貝氏實驗設計（Chaloner & Verdinelli, 1995, *Statistical Science* 10(3)）：沿用上一列的聯合常態模型，每答一題就以條件分佈更新所有領域；下一題選 (A) **A 最適**：讓 41 個領域的後驗變異數總和下降最多的領域，下降量 = Σ_k Cov(k, j)² ／ (Var(j) + σ²)；或 (U) **上信賴界**：後驗平均 + 後驗標準差最大的領域（Srinivas, Krause, Kakade & Seeger, 2010, *ICML* 的 GP-UCB 思路，目標是找出最高的領域）。兩階段提問（先 12 群、再細問最高的群）仍是對照組 | A-C1-25、A-C1-26、A-C1-27 |
+| 已答領域去雜訊（C1 v2，F116） | 經驗貝氏收縮（Efron & Morris, 1975, *JASA* 70；單變量即 Kelley 的真分數估計）：已答領域也以聯合常態的後驗平均 E[w_j ｜ 全部作答] 取代原始作答，等於把作答往「其他作答所預測的值」拉，拉的程度由作答雜訊 σ² 與後驗變異數決定。σ → 0 時就是原始作答 | A-C1-25、A-C1-26、A-C1-27 |
 | 跨領域領域層（W-64） | O\*NET 41 個細分興趣領域（Specific Interest Areas；研究文獻稱 basic interests），每個連到一或兩個 RIASEC 類型（Rounds, Putka & Lewis, 2022／2023，*Updating Vocational Interests Information for the O\*NET Content Model*）；職業評分以 AI＋專家混合法產生（Liu, Putka, Wu & Lewis, 2026，*Using a Hybrid Artificial Intelligence-Expert Method to Develop Basic Interest Ratings for the O\*NET System*）；O\*NET 31.0 檔案 `specific_interest_areas.csv`（891 個職業 × 41 領域，OI 1–7）與 `specific_interest_areas_to_career_interest_types.csv` | A-C1-20、A-C0-9、B-C0-14、B-C1-19 |
 | 細分興趣領域分群（W-64 方案 B） | 領域之間以「跨職業評分的 Pearson 相關」為相似度，平均連結階層分群；k 以輪廓係數選擇（Rousseeuw, 1987, *J. Comput. Appl. Math.*）；以自助法的調整 Rand 指數檢驗穩定度（Hubert & Arabie, 1985, *J. Classification*） | A-C1-21、B-C1-23 |
 
@@ -62,6 +65,7 @@
 | 層權重的測量誤差校正：迴歸校正（W-76） | 成對特徵 D_l(B) − D_l(A) = mean_d[(x_B,d² − x_A,d²) − 2 w_d (x_B,d − x_A,d)] 對學生需求 w **線性**，因此以 E[w ｜ 作答] 取代作答時，特徵的期望值正確（Carroll, Ruppert, Stefanski & Crainiceanu, 2006, *Measurement Error in Nonlinear Models*, 2nd ed., ch. 4；logistic 迴歸的迴歸校正：Rosner, Spiegelman & Willett, 1990, *American Journal of Epidemiology* 132）。每題以線性預測 ŵ_d = μ_d + λ_d (s_d − μ_d)，λ_d = cov(第一次, 第二次) / var(第一次)（重測估計，截在 [0, 1]）；區間以受訪者自助法，每次重抽都重新估計 λ（含重測子樣本） | A-C2-13、A-C2-14、B-C2-14 |
 | 新穎度、意外性、覆蓋率 | Kaminskas & Bridge (2016), *ACM TiiS*；Vargas & Castells (2011), RecSys | A-C2-2 新穎價值可與契合度線性相加；A-C2-3 分類距離代理「不知道」 |
 | 多樣化 | Carbonell & Goldstein (1998), SIGIR：Maximal Marginal Relevance | — |
+| 短名單族群多樣化（C2.3 v1，B-C2-9） | 以類別做多樣化的 MMR 變體（Carbonell & Goldstein, 1998；以類別相似度做清單多樣化：Ziegler, McNee, Konstan & Lausen, 2005, *WWW*「topic diversification」）：依序挑選，每一步取 契合度 − λ·（已選中同族群的數量）最大者；族群 = CIP 前 4 碼（XX.XX）。λ = 0 時完全等於現行的契合度排序。同時用於熟悉度確認的短名單與「可能沒想過」區；「已知且適合」區不變。推薦理由仍是契合度的精確分解，多樣化只改變順序 | A-C2-15、A-C2-16 |
 | 分區呈現（C2.3 v1） | 依 L3 F7 的證據設計；與意外性文獻中「相關且非預期」的定義一致（Kaminskas & Bridge 2016）：以契合度排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區，而非以分數懲罰已知學程 | A-C2-5 「新穎」以學生回報的熟悉度定義 |
 | 熱門度偏誤 | Abdollahpouri, Burke & Mobasher (2019), FLAIRS | — |
 | 清單長度 | Iyengar & Lepper (2000), *JPSP*：選擇過載 | — |
@@ -72,6 +76,8 @@
 | 方法 | 理論來源 | 引入的假設 |
 |---|---|---|
 | 階層貝氏 logistic | 部分合併（partial pooling）：資料少的學程向群體平均收縮 | A-C3-1 過去結果可預測未來（定態） |
+| C3.2 v0 估計方式（W-44） | logit P(錄取) = a_p + β·x + b·[自陳]；a_p ~ N(μ_f, τ²)（學程向所屬 CIP 族群 f 收縮），μ_f ~ N(0, 2²)，β ~ N(0, 1)。以後驗眾數（MAP，牛頓法）估計，區間用 Laplace 近似（Tierney & Kadane, 1986, *JASA* 81）：線性預測的後驗變異數 = zᵀ H⁻¹ z，再經 logistic 轉成機率區間；τ 以 Laplace 近似的邊際概似在格點上選擇（經驗貝氏） | A-C3-3、A-C3-4、A-C3-5 |
+| 自陳資料的選擇偏誤校正（B-C3-1） | 結果決定的抽樣（outcome-dependent sampling）下，logistic 的斜率不偏，只有截距平移 log(q₁／q₀)（q₁、q₀ = 錄取者、未錄取者回報的機率；Prentice & Pyke, 1979, *Biometrika* 66；King & Zeng, 2001, *Political Analysis* 9 的 prior correction）。模型對自陳紀錄加一個共同平移 b，預測時取 b = 0。b 的辨識來源：(1) 完整紀錄的顧問案例（同時有兩種來源）；(2) 官方錄取率 r_p 作為軟限制：(logit r_p − a_p)² ／ (2κ²)，假設特徵以申請者母體標準化（平均 0） | A-C3-3、A-C3-4、A-C3-5 |
 | 選擇偏誤 | Heckman (1979), *Econometrica* | A-C3-2 訓練樣本具代表性（GradCafe **不符合**） |
 | 機率校準 | Brier (1950)；Niculescu-Mizil & Caruana (2005), ICML | — |
 | 不可觀測因素 | Zhao et al. (2023), *PLOS ONE*：推薦信帶有預測訊號 | 說明區間為何必須夠寬（B-C3-5） |
@@ -83,8 +89,8 @@
 | 申請組合問題 | Kapur & Hong (2022), arXiv:2205.01869 | A-C4-1 錄取彼此獨立；A-C4-2 只就讀一所、目標是期望最佳結果 |
 | 序列決策對照 | Weitzman (1979), *Econometrica*：Pandora's box | A-C4-3 所有申請同時決定（靜態） |
 | 市場均衡 | Fu (2014), *Journal of Political Economy* | S-5 大量使用會改變錄取率 |
-| 相關性 | Sklar 定理／Gaussian copula | — |
-| 穩健最佳化 | Bertsimas & Sim (2004), *Operations Research*, "The Price of Robustness" | — |
+| 相關性（C4.2，W-29） | Sklar 定理／Gaussian copula：潛在變數 Z_j = √ρ·F + √(1−ρ)·E_j，Z_j < Φ⁻¹(p_j) 即錄取，邊際機率不變；以共同隨機數的 Monte Carlo 估計 v(S)；組合以 C4.1 解為起點做加入／移除／交換的局部搜尋（小問題以窮舉作參考） | A-C4-5 |
+| 穩健選擇（C4.3，W-2A） | 不確定集合：每校錄取機率落在 C3 區間 [low, high] 內（盒狀集合；Ben-Tal, El Ghaoui & Nemirovski, 2009, *Robust Optimization*；預算式集合見 Bertsimas & Sim, 2004, *Operations Research* 52(1)）。三種準則：(E) 期望值：用點估計（C4.1）；(W) 最壞情況：max_S min_p v(S, p)，因 v 對每個 p_j 不減，最壞情況就是全部取 low，可直接用 C4.1；(R) 最小化最大遺憾（Savage, 1951, *JASA* 46；Kouvelis & Yu, 1997, *Robust Discrete Optimization*）：min_S max_p [v*(p) − v(S, p)]，以盒內抽樣的情境（含全 low、全 high、點估計）近似最大值，學校 ≤ 12 間時窮舉組合 | A-C4-6、A-C4-7 |
 | 多屬性效用 | Keeney & Raiffa (1976), *Decisions with Multiple Objectives*；AHP (Saaty) | A-C4-4 效用可由屬性加權組成 |
 
 ## C5 模擬與系統層

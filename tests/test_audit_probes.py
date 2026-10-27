@@ -83,3 +83,25 @@ def test_adjacent_fallback_is_relabelled():
 
     assert hasattr(fields, "realised_transition")
     assert fields.realised_transition("adjacent", "f1", ("f1",)) == "continuing"
+
+
+# --- third audit (2026-10-28): C4.2 / C2 diversity --------------------------------
+
+
+def test_cip_family_handles_unpadded_codes():
+    from dataclasses import replace
+
+    from aisc.discovery.sectioned import cip_family
+    from aisc.simulation.catalog_gen import synthetic_catalog
+
+    p = synthetic_catalog(np.random.default_rng(0), n_per_family=1)[0]
+    assert cip_family(replace(p, cip="9.0101")) == "09.01"
+    assert cip_family(replace(p, cip="52.1301")) == "52.13"
+
+
+def test_recommend_portfolio_validates_rho_with_draws():
+    import aisc.portfolio as pf
+
+    p, u = [0.3, 0.6], [1.0, 0.5]
+    d = pf.admission_draws(p, 0.5, 100, np.random.default_rng(0))
+    assert _raises(lambda: pf.recommend_portfolio(p, u, [1, 1], 1, rho=-0.5, draws=d))
