@@ -11,6 +11,13 @@ scorer) without touching its neighbours.
     C3 feasibility-> AdmitEstimate
     C4 portfolio  -> PortfolioResult
     C5 simulation -> consumes all of the above against known ground truth
+    C6 requirements -> RequirementGap (from RequirementItem + StudentRecord)
+
+Needs and abilities are kept apart on purpose (design principle D9):
+StudentProfile holds what the student wants and is the only student input C2
+ranks on; StudentRecord holds what the student has done and is read only by
+C6 (requirement gaps) and C3 (admission). A requirement the student can still
+meet is shown as a gap, never used to drop or demote a program.
 
 See docs/ARCHITECTURE.md for the full graph.
 """
@@ -173,6 +180,90 @@ class AdmitEstimate:
     def __post_init__(self) -> None:
         if not 0 <= self.low <= self.mean <= self.high <= 1:
             raise ValueError("Require 0 <= low <= mean <= high <= 1")
+
+
+# --- C6: requirements (D9) ----------------------------------------------------
+
+REQUIREMENT_KINDS = ("course", "test", "portfolio", "experience", "credential", "language", "other")
+
+
+@dataclass(frozen=True)
+class RequirementItem:
+    """One published requirement of a program, quoted from the official page.
+
+    `category` is a key of data/reference/requirement_taxonomy.json, or None when
+    the text does not map to one (then C6 reports it as 'unknown', never as met).
+    `completable_after_admission`: the program lets admitted students finish it
+    before or during the first term (bridge course, conditional admission).
+    """
+
+    program_id: str
+    kind: str
+    category: str | None
+    level: str  # "required" | "recommended"
+    text: str  # verbatim quote
+    source_url: str
+    retrieved_at: str
+    accepts_online: bool | None = None
+    completable_after_admission: bool | None = None
+
+    def __post_init__(self) -> None:
+        if self.kind not in REQUIREMENT_KINDS:
+            raise ValueError(f"kind must be one of {REQUIREMENT_KINDS}")
+        if self.level not in ("required", "recommended"):
+            raise ValueError("level must be 'required' or 'recommended'")
+        if not self.text.strip():
+            raise ValueError("text must quote the official requirement")
+        if not (self.source_url and self.retrieved_at):
+            raise ValueError("requirements need source_url and retrieved_at")
+
+
+@dataclass(frozen=True)
+class Degree:
+    level: str  # "bachelor" | "master" | "doctorate" | "professional" | "other"
+    field: str  # as the student names it, e.g. "Materials Science", "Dentistry (DDS)"
+    cip: str | None = None
+    year: int | None = None
+
+
+@dataclass
+class StudentRecord:
+    """What the student has done (abilities, not wants). Never read by C2.
+
+    `completed`: taxonomy category -> evidence the student gave (course name etc.).
+    `planned`:   taxonomy category -> expected completion (ISO date or free text).
+    `target_apply_by`: ISO date set BY THE STUDENT; None = exploring, no deadline
+    is assumed (D9).
+    """
+
+    student_id: str
+    degrees: list[Degree] = field(default_factory=list)
+    completed: dict[str, str] = field(default_factory=dict)
+    planned: dict[str, str] = field(default_factory=dict)
+    target_apply_by: str | None = None
+
+
+@dataclass(frozen=True)
+class RequirementGap:
+    """C6 output for one program. Shown next to a recommendation; never a filter.
+
+    `none_published`: the official page lists no requirements of this kind; this
+    is NOT evidence that there is no bar (B-C6-1: implicit thresholds belong to C3).
+    `before_target`: missing required items that cannot be finished after
+    admission, reported only when the student set `target_apply_by`.
+    """
+
+    program_id: str
+    met: tuple[RequirementItem, ...] = ()
+    planned: tuple[RequirementItem, ...] = ()
+    missing: tuple[RequirementItem, ...] = ()
+    unknown: tuple[RequirementItem, ...] = ()
+    none_published: bool = False
+    before_target: tuple[RequirementItem, ...] = ()
+
+    @property
+    def missing_required(self) -> tuple[RequirementItem, ...]:
+        return tuple(r for r in self.missing if r.level == "required")
 
 
 # --- C4 output -------------------------------------------------------------
