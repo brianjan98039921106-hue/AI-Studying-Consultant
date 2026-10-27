@@ -20,9 +20,11 @@ import numpy as np
 from aisc.contracts import Program, StudentProfile
 from aisc.dimensions import (
     BASIC_INTEREST_KEYS,
+    LAYERS,
     NEED_KEYS,
     NEED_KEYS_V2,
     V1_DOMAIN_TO_V2,
+    keys_in_layer,
     migrate_needs_v1_to_v2,
 )
 from aisc.profiling.hierarchy import AREA_GROUPS, GROUP_LABELS, areas_in_group
@@ -77,6 +79,52 @@ def v2_catalog(
         v1.append(replace(p, attributes=to_v1(attrs), dims="v1"))
         residual[p.program_id] = rng.random(N_RESIDUAL)
     return v2, v1, residual
+
+
+TRUTH_WEIGHTINGS = ("dim", "layer")
+
+
+def truth_scale(weighting: str = "dim") -> np.ndarray:
+    """Per-coordinate scale of the truth over (51 v2 dims + residual).
+
+    "dim":   every coordinate weighs the same (the registered truth; the 41 domain
+             dims are 41/54 of it).
+    "layer": interest, intensity, domain, orientation and residual weigh 1/5 each
+             (A-C5-13). How much each layer matters to real students is unknown
+             (B-C5-8), so v2 claims must hold under both.
+    """
+    if weighting == "dim":
+        return np.ones(len(NEED_KEYS_V2) + N_RESIDUAL)
+    if weighting != "layer":
+        raise ValueError(f"unknown truth weighting {weighting!r}; expected {TRUTH_WEIGHTINGS}")
+    size = {lay: len(keys_in_layer(lay, "v2")) for lay in LAYERS}
+    layer_of = {k: lay for lay in LAYERS for k in keys_in_layer(lay, "v2")}
+    s = [1 / np.sqrt(size[layer_of[k]]) for k in NEED_KEYS_V2]
+    return np.array(s + [1 / np.sqrt(N_RESIDUAL)] * N_RESIDUAL)
+
+
+def relevant_ids_weighted(
+    w2: np.ndarray,
+    catalog_v2: list[Program],
+    kind: str,
+    residual: dict[str, np.ndarray],
+    w_residual: np.ndarray,
+    weighting: str = "dim",
+    top_frac: float = 0.1,
+) -> set[str]:
+    """Top programs under the truth with the given layer weighting. Scaling coordinates
+    gives a weighted distance / weighted cosine; only the ranking is used."""
+    s = truth_scale(weighting)
+    w = np.concatenate([w2, w_residual]) * s
+    X = np.array([np.concatenate([p.vector, residual[p.program_id]]) for p in catalog_v2]) * s
+    if kind == "distance":
+        u = -np.linalg.norm(X - w, axis=1)
+    elif kind == "cosine":
+        u = X @ w / (np.linalg.norm(X, axis=1) * np.linalg.norm(w))
+    else:
+        raise ValueError(f"unknown truth kind {kind!r}")
+    n = max(1, int(np.ceil(top_frac * len(catalog_v2))))
+    return {catalog_v2[i].program_id for i in np.argsort(-u, kind="stable")[:n]}
 
 
 def v2_students(
