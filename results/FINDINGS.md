@@ -21,6 +21,7 @@
 | sc | [synthetic-l3-c2-scorer-findings.md](synthetic-l3-c2-scorer-findings.md) | W-26 |
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
 | r3 | [reference-all-v3-findings.md](reference-all-v3-findings.md)（**真實資料**） | W-65、W-70 |
+| im | [interest-area-imputation-findings.md](interest-area-imputation-findings.md)（**真實資料**，O\*NET 職業） | 架構檢討 §2.1 |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
 | dl | [domain-layer-findings.md](domain-layer-findings.md)（**真實資料**） | W-64 |
@@ -59,6 +60,9 @@
 | F102 | 就業加權讓單一職業主導剖面（最大權重中位數 0.65；28% 的 CIP 單一 SOC ≥ 0.8） | ✅ | r3 | B-C0-16 |
 | F103 | 就業加權放大教職稀釋（物理科學「教學與教育」0.42 → 0.65；DVM 第一名變教學） | ✅ | r3 | 就業加權不作預設 |
 | F104 | 排除教職後就業加權與等權差異小（0.022）；全國就業不代表畢業生去向 | ✅（數據）／💭（解讀） | r3 | 預設維持非學術等權 |
+| F105 | 相關補全（G2）在 6 個設定都降低未答領域誤差（−0.029～−0.112），但 1 個設定前 5 名找回率略低，預先登記未通過 | ✅ | im | 預設維持領域群先驗；新增可選用 `area_model="correlated"` |
+| F106 | 答得越少相關補全好處越大（m = 1：RMSE 0.188 → 0.076，前 5 名 0.576 → 0.736） | ✅ | im | W-41 後重驗，可能改預設 |
+| F107 | 唯一損失在 H 已近完美時（條件期望往平均收縮） | 💭 | im | — |
 
 ## C2 探索推薦
 

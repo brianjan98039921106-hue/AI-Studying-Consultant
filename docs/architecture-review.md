@@ -99,7 +99,7 @@
 | 檢驗（預先登記） | 以 O\*NET 職業作為「已知完整剖面」：交叉驗證中只「回答」部分領域，比較各方法對未答領域的預測誤差與排序 |
 | 限制 | 職業的領域結構不一定等於學生的興趣結構；這是 W-41 前的暫時證據 |
 
-結果見 [interest-area-imputation-findings](../results/interest-area-imputation-findings.md)（執行後補上）。
+結果（[F105–F107](../results/interest-area-imputation-findings.md)）：相關補全在 6 個設定都大幅降低未答領域的誤差（RMSE −0.029～−0.112），答得越少好處越大；但「雜訊 0、細問 3 群」時前 5 名找回率略低，依預先登記**不改預設**，改為可選用的 `area_model="correlated"`，待 W-41 學生資料再檢驗。
 
 ## 3. 參考文獻
 

@@ -254,3 +254,32 @@ def test_domain_gate_validates():
         domain_gated(0.3, -1.0)
     with pytest.raises(ValueError):
         domain_gated(0.3, 1.0).score(np.zeros(15), np.zeros(15))
+
+
+# --- correlated completion (opt-in, F105-F107) ----------------------------------------
+
+
+def test_correlated_area_priors_use_related_areas():
+    from aisc.profiling.hierarchy import BASE_RATE, correlated_area_priors
+
+    pri = correlated_area_priors({"bi_medical_science": 0.95}, {6: 0.9, 1: 0.1})
+    assert set(pri) == set(BASIC_INTEREST_KEYS) - {"bi_medical_science"}
+    assert all(0 <= m <= 1 and s >= 0.05 for m, s in pri.values())
+    # a related area is pulled up, an unrelated one stays low
+    assert pri["bi_life_science"][0] > BASE_RATE["bi_life_science"] + 0.2
+    assert pri["bi_sales"][0] < pri["bi_life_science"][0]
+    with pytest.raises(ValueError):
+        correlated_area_priors({"riasec_i": 0.5}, {})
+
+
+def test_complete_neutral_correlated_option():
+    from aisc.profiling import complete_neutral
+
+    p = StudentProfile("s", {"bi_medical_science": 0.95}, dims="v2", group_scores={6: 0.9})
+    hier = complete_neutral(p)
+    corr = complete_neutral(p, area_model="correlated")
+    assert hier.needs["bi_medical_science"] == corr.needs["bi_medical_science"] == 0.95
+    assert set(corr.needs) == set(hier.needs)
+    assert corr.needs["bi_life_science"] != hier.needs["bi_life_science"]
+    with pytest.raises(ValueError):
+        complete_neutral(p, area_model="knn")

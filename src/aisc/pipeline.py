@@ -31,7 +31,9 @@ def c2_scores(w: np.ndarray, X: np.ndarray) -> np.ndarray:
     return _scorers.default_scorer(len(w)).score_matrix(w, X)
 
 
-def prepare_profile(profile: StudentProfile, catalog: list[Program]) -> StudentProfile:
+def prepare_profile(
+    profile: StudentProfile, catalog: list[Program], area_model: str = "hierarchy"
+) -> StudentProfile:
     """Complete unanswered dimensions before ranking (B-C1-14).
 
     Without this, `StudentProfile.vector` treats an unanswered dimension as 0
@@ -39,7 +41,7 @@ def prepare_profile(profile: StudentProfile, catalog: list[Program]) -> StudentP
     defaults (results/synthetic-l3-c1-v1-findings.md): anchors act only as a
     prior for unanswered dimensions; answered dimensions are left unchanged.
     """
-    return blend_profile_v1(profile, {p.program_id: p for p in catalog})
+    return blend_profile_v1(profile, {p.program_id: p for p in catalog}, area_model=area_model)
 
 
 def run_questionnaire(
