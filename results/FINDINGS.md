@@ -24,6 +24,7 @@
 | im | [interest-area-imputation-findings.md](interest-area-imputation-findings.md)（**真實資料**，O\*NET 職業） | 架構檢討 §2.1 |
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
 | dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
+| dvs | [synthetic-l3-diversity-findings.md](synthetic-l3-diversity-findings.md) | B-C2-9 |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | pr | [synthetic-l3-portfolio-robust-findings.md](synthetic-l3-portfolio-robust-findings.md) | W-2A |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
@@ -100,6 +101,10 @@
 | F39 | 此模擬器中 cosine 與考慮強度的計分幾乎可互換；取捨取決於哪種真相較接近真實學生 | ✅（取捨歸屬待 L5） | sc | A-C2-8 待 L5 |
 | F40 | 換成 blend(0.25) 後端到端 H-E1～H-E4 仍成立 | ✅ | sc、e2e 回歸 × 2 組種子 | V-S-3 維持通過 |
 | F41 | F33 的殘差在新計分器下部分縮小 | 💭 | e2e 回歸（單次，未檢定） | — |
+| F124 | 大目錄（每族群 30 個）下純契合的 10 個推薦只來自 1.8–3.0 個族群；最佳族群出現率 0.76–0.96 | ✅ | dvs | B-C2-9 已量化 |
+| F125 | 族群多樣化提高最佳族群出現率（最多 +0.178），但每個條件都降低新且相關比例（最多 −0.302）；預先登記無候選通過 | ✅ | dvs | 預設不多樣化 |
+| F126 | 多樣化帶進的族群常是隱藏領域不符的學程（隱藏不符最多 +0.064，最佳學程保留最多 −0.204） | ✅（數據）／💭（機制） | dvs | 同上 |
+| F127 | 集中反映真實契合；若要處理應另設標示的「其他領域」區塊 | 💭 | dvs | 待 W-41 回饋 |
 
 ## D12 背景分層
 
