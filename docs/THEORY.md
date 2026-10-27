@@ -62,6 +62,7 @@
 | 層權重的測量誤差校正：迴歸校正（W-76） | 成對特徵 D_l(B) − D_l(A) = mean_d[(x_B,d² − x_A,d²) − 2 w_d (x_B,d − x_A,d)] 對學生需求 w **線性**，因此以 E[w ｜ 作答] 取代作答時，特徵的期望值正確（Carroll, Ruppert, Stefanski & Crainiceanu, 2006, *Measurement Error in Nonlinear Models*, 2nd ed., ch. 4；logistic 迴歸的迴歸校正：Rosner, Spiegelman & Willett, 1990, *American Journal of Epidemiology* 132）。每題以線性預測 ŵ_d = μ_d + λ_d (s_d − μ_d)，λ_d = cov(第一次, 第二次) / var(第一次)（重測估計，截在 [0, 1]）；區間以受訪者自助法，每次重抽都重新估計 λ（含重測子樣本） | A-C2-13、A-C2-14、B-C2-14 |
 | 新穎度、意外性、覆蓋率 | Kaminskas & Bridge (2016), *ACM TiiS*；Vargas & Castells (2011), RecSys | A-C2-2 新穎價值可與契合度線性相加；A-C2-3 分類距離代理「不知道」 |
 | 多樣化 | Carbonell & Goldstein (1998), SIGIR：Maximal Marginal Relevance | — |
+| 短名單族群多樣化（C2.3 v1，B-C2-9） | 以類別做多樣化的 MMR 變體（Carbonell & Goldstein, 1998；以類別相似度做清單多樣化：Ziegler, McNee, Konstan & Lausen, 2005, *WWW*「topic diversification」）：依序挑選，每一步取 契合度 − λ·（已選中同族群的數量）最大者；族群 = CIP 前 4 碼（XX.XX）。λ = 0 時完全等於現行的契合度排序。同時用於熟悉度確認的短名單與「可能沒想過」區；「已知且適合」區不變。推薦理由仍是契合度的精確分解，多樣化只改變順序 | A-C2-15、A-C2-16 |
 | 分區呈現（C2.3 v1） | 依 L3 F7 的證據設計；與意外性文獻中「相關且非預期」的定義一致（Kaminskas & Bridge 2016）：以契合度排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區，而非以分數懲罰已知學程 | A-C2-5 「新穎」以學生回報的熟悉度定義 |
 | 熱門度偏誤 | Abdollahpouri, Burke & Mobasher (2019), FLAIRS | — |
 | 清單長度 | Iyengar & Lepper (2000), *JPSP*：選擇過載 | — |
