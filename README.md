@@ -4,13 +4,15 @@
 >
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
-**Status:** v0.2 · research prototype · all program data in this repo is **synthetic**.
+**Status:** v0.2 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+
+**範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
 
 ## 要解決的問題
 
 台灣學生對研究所的理解，多半建立在台灣有限的學程分類上。要找到更適合的美國 program，需要**自我洞察**和**資訊接觸**，但兩者互為前提：不知道有哪些 program，就很難描述需求；描述不出需求，就搜尋不到新的 program。結果是學生在預設的學校清單裡打轉。
 
-這個專案把它當成**冷啟動推薦 + 探索**問題，拆成六個可以獨立開發、獨立驗證的部件：
+這個專案把它當成**冷啟動推薦 + 探索**問題，拆成七個可以獨立開發、獨立驗證的部件：
 
 摘要如下；**正式狀態以 [docs/VALIDATION.md §5](docs/VALIDATION.md) 為準**。
 

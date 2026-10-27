@@ -15,7 +15,8 @@ Built by `scripts/build_reference.py` from the official files as downloaded; nev
 
 | File | Content | Source |
 |---|---|---|
-| `reference/mvp_scope.json` | CIP 2020 prefixes of the MVP (hand-written decision, versioned; B-C0-6) | — |
+| `reference/mvp_scope.json` | CIP 2020 prefixes of data rollout v1 (hand-written decision, versioned). The product covers all fields (D10); this only limits the first rollout (B-C0-6) | — |
+| `reference/requirement_taxonomy.json` | C6 requirement categories across all fields (draft-1; audited by V-C6-4) | — |
 | `reference/cip2020_mvp.csv` | 6-digit CIP codes in scope, official titles and definitions | NCES CIP 2020 |
 | `reference/ipeds_masters_mvp.csv` | school x CIP rows with master's awards (first major) — not yet programs (B-C0-7) | IPEDS Completions + Directory |
 | `reference/cip_soc_mvp.csv` | CIP -> SOC 2018 pairs for codes in scope | NCES/BLS CIP2020-SOC2018 crosswalk |

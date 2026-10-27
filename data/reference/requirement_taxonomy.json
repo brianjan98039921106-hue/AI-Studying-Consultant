@@ -1,6 +1,6 @@
 {
-  "version": "draft-0",
-  "status": "DRAFT 2026-10-27 — pending user review; categories are field-agnostic on purpose (business, data, engineering, design, health and career changers)",
+  "version": "draft-1",
+  "status": "DRAFT-1 2026-10-27 — product scope is all backgrounds and all fields (D10). Completeness is audited against the W-20 gold standard (V-C6-4: share of requirements that map to no category, per CIP family); the user confirms only the Taiwan course-name mapping examples (W-61).",
   "note": "Categories describe WHAT a requirement asks for, not how a school words it. Program requirement text is quoted verbatim in RequirementItem.text; mapping text or a student's course to a category is A-C6-2 / B-C6-2.",
   "categories": {
     "course": {
@@ -24,31 +24,47 @@
       "general_biology": "General biology with lab",
       "anatomy_physiology": "Human anatomy and physiology",
       "design_foundations": "Drawing, 2D/3D design, visual communication foundations",
-      "writing": "English composition / academic writing"
+      "writing": "English composition / academic writing",
+      "research_methods": "Research methods (social science or field-specific)",
+      "studio_art": "Studio art (drawing, painting, sculpture) beyond design foundations",
+      "music_theory": "Music theory / ear training",
+      "physiology_or_health_science": "Health science courses beyond anatomy and physiology (e.g. microbiology, nutrition)"
     },
     "test": {
       "gre": "GRE General Test",
       "gmat": "GMAT",
       "dat": "Dental Admission Test",
       "mcat": "Medical College Admission Test",
-      "subject_test": "Subject or field-specific exam"
+      "subject_test": "Subject or field-specific exam",
+      "lsat": "Law School Admission Test",
+      "licensing_exam": "Professional licensing exam (e.g. nursing, bar, engineering)"
     },
     "language": {
-      "english_proficiency": "TOEFL / IELTS / Duolingo or equivalent"
+      "english_proficiency": "TOEFL / IELTS / Duolingo or equivalent",
+      "other_language": "Proficiency in a language other than English"
     },
     "portfolio": {
       "design_portfolio": "Portfolio of design / creative work",
       "writing_sample": "Writing or research sample",
-      "code_portfolio": "Code or project portfolio"
+      "code_portfolio": "Code or project portfolio",
+      "audition": "Audition or performance recording (music, theatre, dance)"
     },
     "experience": {
       "work_experience": "Full-time professional experience (years)",
       "research_experience": "Research or lab experience",
-      "clinical_shadowing": "Clinical or shadowing hours"
+      "clinical_shadowing": "Clinical or shadowing hours",
+      "teaching_experience": "Teaching experience",
+      "volunteer_service": "Volunteer or community service hours"
     },
     "credential": {
       "bachelor_degree": "Accredited bachelor's degree (any field unless stated)",
-      "professional_license": "Professional license (e.g. DDS/DMD, PE)"
+      "professional_license": "Professional license (e.g. DDS/DMD, PE)",
+      "bachelor_equivalency": "Evaluation that the degree equals a U.S. four-year bachelor's (e.g. junior college + two-year technical bachelor, three-year degrees, foreign degrees); follow the program's stated evaluation method (B-C6-5)",
+      "teaching_license": "Teaching certificate or license"
+    },
+    "other": {
+      "interview": "Admission interview",
+      "prerequisite_program": "Completion of a specific preparatory or bridge program"
     }
   }
 }

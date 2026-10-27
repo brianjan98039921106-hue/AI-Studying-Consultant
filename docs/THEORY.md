@@ -13,6 +13,8 @@
 | 職業興趣剖面 | O*NET Occupational Interest Profiles（RIASEC） | A-C0-3 職業的興趣剖面可轉嫁到對應學程 |
 | MVP 範圍篩選（W-14） | CIP 2020 代碼前綴清單（`data/reference/mvp_scope.json`），award level 7、第一主修（MAJORNUM=1）、最近一年畢業人數 > 0 | A-C0-4、A-C0-7 |
 | 職業剖面量尺與合成（W-15 v1） | O*NET 職業興趣量尺 OI 為 1–7（Rounds et al., 1999, *Development of Occupational Interest Profiles for O\*NET*），線性轉為 $(v-1)/6 \in [0,1]$；同一 SOC 下多個 O\*NET-SOC 細項取平均，一個 CIP 對應多個 SOC 時等權平均（v1；v2 以就業人數加權） | A-C0-2、A-C0-3、A-C0-6 |
+| 職業剖面 v2：就業加權（W-71） | BLS Occupational Employment and Wage Statistics（OEWS）各 SOC 就業人數作為權重（沒有自由參數）；教職 SOC 另行處理（B-C0-8） | A-C0-2、A-C0-3 |
+| 評分準則跨領域外推（W-72） | 留一族群外推（leave-one-family-out）：在部分 CIP 族群開發，在未參與開發的族群檢驗一致性 | A-C0-8 |
 | LLM 屬性擷取 | 擷取式 NLP；幻覺風險見 Ji et al. (2023), *ACM Computing Surveys* | A-C0-5 擷取結果可由原文佐證 |
 | 一致性檢驗 | 心理計量的收斂效度（convergent validity）；評分者一致性 Cohen's κ | — |
 
@@ -38,6 +40,11 @@
 | 只用重複題學習雜訊（C1.3 v2b，B-C1-18） | 每個維度對 σ 的貢獻是條件概似 $p(y_2,\dots,y_n \mid y_1, \sigma)$，在平坦需求先驗下計算（只答一題時恰好不含 σ 的資訊），使先驗誤差不會被當成雜訊；給定 σ 後，需求後驗仍用真正的先驗。σ 先驗為縮放逆卡方，以均方根 $E[\sigma^2]^{1/2}=0.25$ 設定：$s_0^2 = 0.25^2(\nu_0-2)/\nu_0$（概念同 REML／組內估計：Patterson & Thompson 1971） | A-C1-15、A-C1-17、A-C1-18 |
 | 定錨效應 | Tversky & Kahneman (1974), *Science* | 說明為何錨點會扭曲判斷（B-C1-2） |
 | 熟悉度回報（C1.4） | 訊號偵測理論（Green & Swets, 1966）：回報錯誤分為漏報（miss，知道但沒勾）與誤報（false alarm，因名稱相似而誤以為知道）；只對候選短名單提問，控制作答負擔 | A-C1-9 只有短名單內的學程需要熟悉度資訊 |
+| 測量恆等性（W-73） | 多群組驗證性因素分析：形態、量尺、截距恆等性逐步檢驗（Vandenberg & Lance, 2000, *Organizational Research Methods*）；判準 ΔCFI ≤ 0.01（Cheung & Rensvold, 2002, *Structural Equation Modeling*） | A-C1-19 |
+| 題目差異功能 DIF（W-73） | Mantel–Haenszel 與邏輯斯迴歸 DIF（Holland & Wainer, 1993, *Differential Item Functioning*） | A-C1-19 |
+| 題目參數校準（W-73） | 等級反應模型（Samejima, 1969, *Psychometrika Monograph* 17） | A-C1-12 由校準後的作答模型取代 |
+| 兩階段提問（W-66） | 先粗後細：先測 RIASEC 與大領域群，依結果只深入相關子領域；切換規則以 L3 預先登記選擇 | A-C1-14 |
+| 跨領域領域層（W-64，候選） | O\*NET 自 30.3 版提供每個職業的細分興趣領域資料（release notes：「41 specific interest areas」）；**理論來源與檔案待確認後才能通過 G0** | B-C1-19 |
 
 ## C2 探索推薦
 
@@ -89,12 +96,15 @@
 | 排序一致性 | Kendall (1945), *Biometrika*：含同分的 τ-b | — |
 | 分布差異 | Kullback & Leibler (1951) KL 散度（加平滑） | — |
 | 機率評分 | Brier (1950) | — |
+| 最差群體評估（D12） | 以最差群體表現作為選擇準則（group distributionally robust 的想法：Sagawa et al., 2020, *ICLR*）；本專案延伸既有的跨真相 maximin（F37）到背景分層 | S-8 |
+| 背景分布校準（W-67） | 教育部統計處大專校院畢業生學門統計（官方檔案待下載） | A-C5-9 |
 
 ## C6 先修與申請條件差距
 
 | 方法 | 理論／資料來源 | 引入的假設 |
 |---|---|---|
 | 條件類別與確定性比對 | 各學程官網公布的入學條件（C0.3 擷取，附原文）；類別表為本專案自訂、版本化（`requirement_taxonomy.json`） | A-C6-1、A-C6-2 |
+| 學歷等值（C6，B-C6-5） | 以各學程官網規定的學歷認證方式為準（常見為 NACES 會員機構的學歷評估）；系統只呈現規定，不自行判斷等值 | A-C6-1 |
 | 探索／申請模式分離 | 設計決策 D9（不假設申請時間） | A-C6-3 |
 
 ## 相關開源專案與資料

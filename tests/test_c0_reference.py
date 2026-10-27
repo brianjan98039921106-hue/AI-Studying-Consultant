@@ -410,3 +410,17 @@ def test_committed_reference_tables_are_consistent():
             r[k] for k in ("riasec_r", "riasec_i", "riasec_a", "riasec_s", "riasec_e", "riasec_c")
         ]
         assert all(v == "" for v in vals) or all(0 <= float(v) <= 1 for v in vals)
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C0-10: data rollout v1 covers only master's degrees (award level 7)",
+)
+def test_probe_scope_covers_other_graduate_award_levels():
+    """All-backgrounds scope (D10) needs professional and research doctorates and
+    post-baccalaureate certificates, not only master's degrees."""
+    spec = json.loads((ROOT / "data" / "reference" / "mvp_scope.json").read_text())
+    levels = spec.get("award_levels", [spec["award_level"]])
+    assert len(levels) > 1
