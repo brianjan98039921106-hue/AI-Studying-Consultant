@@ -16,7 +16,7 @@ All numeric defaults are uncalibrated assumptions (A-C1-8); W-41 re-estimates th
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from aisc.contracts import StudentProfile
 from aisc.dimensions import RIASEC_KEYS
@@ -87,11 +87,12 @@ def apply_prior(
         w_p, w_s = 1.0 / p_sd**2, 1.0 / s_sd**2
         needs[key] = (p_mean * w_p + needs[key] * w_s) / (w_p + w_s)
         uncertainty[key] = (1.0 / (w_p + w_s)) ** 0.5
-    return StudentProfile(
-        student_id=profile.student_id,
+    return replace(
+        profile,
         needs=needs,
         uncertainty=uncertainty,
         anchors=list(profile.anchors),
         familiar=list(profile.familiar),
         hard_constraints=dict(profile.hard_constraints),
+        group_scores=dict(profile.group_scores),
     )

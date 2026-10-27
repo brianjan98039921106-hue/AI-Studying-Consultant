@@ -17,6 +17,8 @@ simulator has no ground truth for understanding.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 from aisc.contracts import StudentProfile
 
 LEVELS: tuple[str, ...] = ("unknown", "heard", "can_describe")
@@ -46,11 +48,12 @@ def apply_familiarity(
     known = known_ids(report, known_levels)
     unknown = set(report) - known
     familiar = (set(profile.familiar) - unknown) | known
-    return StudentProfile(
-        student_id=profile.student_id,
+    return replace(
+        profile,
         needs=dict(profile.needs),
         uncertainty=dict(profile.uncertainty),
         anchors=list(profile.anchors),
         familiar=sorted(familiar),
         hard_constraints=dict(profile.hard_constraints),
+        group_scores=dict(profile.group_scores),
     )

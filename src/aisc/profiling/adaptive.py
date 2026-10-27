@@ -140,6 +140,11 @@ class AdaptiveSession:
             raise ValueError("noise_prior_center must be 'scale' or 'rms'")
         if self.noise_prior_center == "rms" and self.noise_prior_df <= 2:
             raise ValueError("noise_prior_center='rms' needs noise_prior_df > 2")
+        if self.prior.dims != "v1":
+            raise NotImplementedError(
+                "the adaptive questionnaire supports v1 profiles only; the v2 two-stage "
+                "questionnaire is W-66"
+            )
         missing = set(NEED_KEYS) - set(self.prior.needs)
         if missing:
             raise ValueError(
