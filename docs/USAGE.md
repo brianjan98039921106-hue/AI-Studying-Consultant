@@ -371,7 +371,7 @@ print(round(est.low, 2), round(est.mean, 2), round(est.high, 2))
 new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學程：用族群平均，區間較寬
 ```
 
-紀錄來自不同申請年度時，在 `AdmissionRecord(..., year=2024)` 標上年度（要嘛全部標、要嘛都不標）：每個較舊的年度有自己的整體難度，預測一律針對最新年度（官方錄取率也請用最新年度的）。知道各學程的申請流程類型（一般、面試制、作品集審查、專業學位）時，傳入 `types={program_id: 類型}`；預測新學程時再給 `ptype=`。模擬中這能讓新學程的錄取機率更準，類型沒有效果時也不會變差（[F145–F147](../results/synthetic-l3-admission-types-findings.md)）。
+紀錄來自不同申請年度時，在 `AdmissionRecord(..., year=2024)` 標上年度（要嘛全部標、要嘛都不標）：每個較舊的年度有自己的整體難度，預測一律針對最新年度（官方錄取率也請用最新年度的；[F148–F150](../results/synthetic-l3-admission-years-findings.md)）。知道各學程的申請流程類型（一般、面試制、作品集審查、專業學位）時，傳入 `types={program_id: 類型}`；預測新學程時再給 `ptype=`。模擬中這能讓新學程的錄取機率更準，類型沒有效果時也不會變差（[F145–F147](../results/synthetic-l3-admission-types-findings.md)）。
 
 有了留出的真實結果後，可用 `aisc.feasibility` 的 `brier_skill`（是否勝過「官方錄取率」常數預測）、`calibration_slope`（理想為截距 0、斜率 1；斜率小於 1 表示過度自信）、`reliability_table` 與 `by_group`（例如台灣／國際申請者分開）檢查校準（V-C3-2～4）。
 
