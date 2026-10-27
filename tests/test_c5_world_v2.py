@@ -11,11 +11,12 @@ from aisc.profiling.hierarchy import GROUP_LABELS, areas_in_group
 from aisc.simulation.catalog_gen import synthetic_catalog
 from aisc.simulation.fields import HIDDEN_KEYS, all_fields_catalog
 from aisc.simulation.population import SimConfig, generate_population
-from aisc.simulation.truth import relevant_ids
+from aisc.simulation.truth import best_fit_id, relevant_ids
 from aisc.simulation.world_v2 import (
     AREA_LOW,
     N_RESIDUAL,
     TRUTH_WEIGHTINGS,
+    best_fit_weighted,
     group_answer,
     relevant_ids_weighted,
     to_v1,
@@ -90,6 +91,10 @@ def test_truth_weightings(world):
         for kind in ("distance", "cosine"):
             assert relevant_ids_weighted(w, v2, kind, res, r, "dim") == relevant_ids(
                 w, v2, kind, 0.1, res, r
+            )
+            ex = {v2[0].program_id}
+            assert best_fit_weighted(w, v2, ex, kind, res, r, "dim") == best_fit_id(
+                w, v2, ex, kind, res, r
             )
     s = truth_scale("layer") ** 2
     domain = [NEED_KEYS_V2.index(k) for k in BASIC_INTEREST_KEYS]
