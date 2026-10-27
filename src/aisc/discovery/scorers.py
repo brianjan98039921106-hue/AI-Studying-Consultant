@@ -22,7 +22,16 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from aisc.dimensions import LAYERS, dims_for_length, dims_keys, keys_in_layer
+from aisc.dimensions import (
+    BASIC_INTEREST_KEYS,
+    LAYERS,
+    NEED_KEYS,
+    NEED_KEYS_V2,
+    V1_DOMAIN_TO_V2,
+    dims_for_length,
+    dims_keys,
+    keys_in_layer,
+)
 
 
 def layer_index(layer: str, n_dims: int) -> np.ndarray:
@@ -146,6 +155,86 @@ def layer_balanced(weights: dict[str, float], base: Scorer | None = None) -> Lay
     norm = tuple((lay, weights[lay] / total) for lay in LAYERS)
     label = ",".join(f"{lay[:3]}={w:.2f}" for lay, w in norm)
     return LayerBalanced(f"layered-balance({label};{b.name})", norm, b)
+
+
+def v1_projection() -> np.ndarray:
+    """(15 x 51) matrix taking a v2 vector to its v1 view: shared dimensions are
+    copied, each v1 domain is the mean of its mapped v2 areas (A-C1-23)."""
+    P = np.zeros((len(NEED_KEYS), len(NEED_KEYS_V2)))
+    for i, key in enumerate(NEED_KEYS):
+        if key in V1_DOMAIN_TO_V2:
+            areas = V1_DOMAIN_TO_V2[key]
+            for a in areas:
+                P[i, NEED_KEYS_V2.index(a)] = 1.0 / len(areas)
+        else:
+            P[i, NEED_KEYS_V2.index(key)] = 1.0
+    return P
+
+
+_P_V1 = v1_projection()
+_AREA_IDX = np.array([NEED_KEYS_V2.index(k) for k in BASIC_INTEREST_KEYS])
+
+
+@dataclass(frozen=True)
+class DomainGated:
+    """v1 relevance plus a non-compensatory domain gate (W-16c hybrid; THEORY
+    "領域把關", A-C2-10, B-C2-11). For v2 vectors only.
+
+    score = base(P w, P x) - lam * max(0, tau - a),  a = sum_a x_a w_a / sum_a x_a
+    where P is the v1 projection and a the student's interest in the areas the
+    programme is about (programme-content weighted). lam = 0 reproduces v1 scoring
+    on the v1 view exactly. Explanations stay exact: base terms of a v1 domain are
+    spread evenly over its mapped areas; the penalty is spread over the areas in
+    proportion to the programme's content x_a.
+    """
+
+    name: str
+    tau: float
+    lam: float
+    base: Scorer
+
+    def __post_init__(self) -> None:
+        if not 0 <= self.tau <= 1:
+            raise ValueError("tau must lie in [0, 1]")
+        if self.lam < 0:
+            raise ValueError("lam must be non-negative")
+
+    def affinity(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
+        """Programme-content weighted student interest in the programme's areas."""
+        X = np.atleast_2d(X)
+        xd, wd = X[:, _AREA_IDX], w[_AREA_IDX]
+        tot = xd.sum(axis=1)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            a = (xd @ wd) / tot
+        return np.where(tot == 0, self.tau, a)  # no domain content -> no penalty
+
+    def terms(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
+        X = np.atleast_2d(X)
+        if X.shape[1] != len(NEED_KEYS_V2) or len(w) != len(NEED_KEYS_V2):
+            raise ValueError("DomainGated scores v2 vectors (51 dimensions) only")
+        out = self.base.terms(_P_V1 @ w, X @ _P_V1.T) @ _P_V1
+        if self.lam:
+            pen = self.lam * np.maximum(0.0, self.tau - self.affinity(w, X))
+            xd = X[:, _AREA_IDX]
+            tot = xd.sum(axis=1)
+            share = np.divide(xd, tot[:, None], out=np.zeros_like(xd), where=tot[:, None] > 0)
+            out[:, _AREA_IDX] -= pen[:, None] * share
+        return out
+
+    def score_matrix(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
+        return self.terms(w, X).sum(axis=1)
+
+    def score(self, w: np.ndarray, x: np.ndarray) -> float:
+        return float(self.score_matrix(w, x[None, :])[0])
+
+    def explain(self, w: np.ndarray, x: np.ndarray) -> dict[str, float]:
+        t = self.terms(w, x[None, :])[0]
+        return {k: float(v) for k, v in zip(NEED_KEYS_V2, t, strict=True)}
+
+
+def domain_gated(tau: float, lam: float, base: Scorer | None = None) -> DomainGated:
+    b = base if base is not None else blend(0.25)
+    return DomainGated(f"domain-gate(τ={tau:g},λ={lam:g};{b.name})", tau, lam, b)
 
 
 # W-26: selected by the pre-registered maximin rule on the archetype generator,

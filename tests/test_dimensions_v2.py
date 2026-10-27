@@ -198,3 +198,59 @@ def test_v2_discovery_end_to_end_and_mixing_is_rejected():
     v1prof = complete_neutral(StudentProfile("s", {}))
     with pytest.raises(ValueError, match="dimension set"):
         shortlist(v1prof, progs, n=3)
+
+
+# --- W-16c hybrid: v1 relevance + domain gate (A-C2-10, B-C2-11) -----------------
+
+
+def _v2_vec(over=None, base=0.5):
+    from aisc.dimensions import BASIC_INTEREST_KEYS, NEED_KEYS_V2
+
+    d = {k: base for k in NEED_KEYS_V2}
+    d.update({k: 0.05 for k in BASIC_INTEREST_KEYS})
+    d.update(over or {})
+    return np.array([d[k] for k in NEED_KEYS_V2])
+
+
+def test_domain_gate_without_penalty_is_v1_scoring_on_the_v1_view():
+    from aisc.dimensions import NEED_KEYS, NEED_KEYS_V2
+    from aisc.discovery import DEFAULT_SCORER, domain_gated
+    from aisc.simulation.world_v2 import to_v1
+
+    rng = np.random.default_rng(3)
+    X = rng.random((20, len(NEED_KEYS_V2)))
+    w = rng.random(len(NEED_KEYS_V2))
+
+    def view(v):
+        d = to_v1(dict(zip(NEED_KEYS_V2, map(float, v), strict=True)))
+        return np.array([d[k] for k in NEED_KEYS])
+
+    X1 = np.array([view(x) for x in X])
+    gate = domain_gated(0.3, 0.0)
+    np.testing.assert_allclose(gate.score_matrix(w, X), DEFAULT_SCORER.score_matrix(view(w), X1))
+
+
+def test_domain_gate_penalises_only_low_interest_domains_and_explains_exactly():
+    from aisc.discovery import domain_gated
+
+    w = _v2_vec({"bi_medical_science": 0.9, "bi_finance": 0.1})
+    med = _v2_vec({"bi_medical_science": 0.9})
+    fin = _v2_vec({"bi_finance": 0.9})
+    off, on = domain_gated(0.3, 0.0), domain_gated(0.3, 2.0)
+    assert on.affinity(w, med)[0] > 0.3 > on.affinity(w, fin)[0]
+    assert on.score(w, med) == pytest.approx(off.score(w, med))  # above tau: untouched
+    assert on.score(w, fin) < off.score(w, fin)
+    ex = on.explain(w, fin)
+    assert len(ex) == 51 and sum(ex.values()) == pytest.approx(on.score(w, fin))
+    assert min(ex, key=ex.get) == "bi_finance"  # the reason points at the far domain
+
+
+def test_domain_gate_validates():
+    from aisc.discovery import domain_gated
+
+    with pytest.raises(ValueError):
+        domain_gated(1.5, 1.0)
+    with pytest.raises(ValueError):
+        domain_gated(0.3, -1.0)
+    with pytest.raises(ValueError):
+        domain_gated(0.3, 1.0).score(np.zeros(15), np.zeros(15))
