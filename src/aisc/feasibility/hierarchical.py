@@ -11,6 +11,13 @@ Hessian). Predictions are for the applicant population, i.e. with b = 0. b is on
 estimated when something identifies it (complete records next to self-reports, or
 official-rate anchors); otherwise it is fixed at 0 and the model is labelled
 uncorrected. Features must be standardised against the applicant pool (A-C3-5).
+
+v0.1 candidate options (THEORY "C3.2 v0.1 候選"; A-C3-6), off by default:
+    anchor="pool"     anchor r_p to the mean of sigmoid(a_p + beta.x) over the
+                      programme's records, admitted self-reports weighted by e^(-b)
+                      (Gauss-Newton term, backtracking line search)
+    tau_average=True  average over TAU_GRID with Laplace marginal-likelihood weights
+                      instead of picking one tau (B-C3-9)
 """
 
 from __future__ import annotations
@@ -57,10 +64,13 @@ class AdmissionModel:
     tau: float
     shift_estimated: bool
     method: str
+    mixture: tuple = ()  # ((weight, theta, cov, tau), ...) when tau is averaged
 
     @property
     def shift(self) -> float:
         """Estimated logit shift of self-reported records (log q1 / q0 under A-C3-3)."""
+        if self.mixture:
+            return float(sum(w * th[-1] for w, th, _, _ in self.mixture))
         return float(self.theta[-1])
 
     def _z(self, program_id: str, features: Sequence[float], family: str | None):
@@ -92,8 +102,15 @@ class AdmissionModel:
         if not 0 < level < 1:
             raise ValueError("level must lie in (0, 1)")
         z, extra = self._z(program_id, features, family)
-        eta = float(z @ self.theta)
-        sd = math.sqrt(max(float(z @ self.cov @ z) + extra, 0.0))
+        if self.mixture:  # moment-matched mixture over tau (B-C3-9)
+            comps = [(w, float(z @ th), float(z @ cv @ z) + (t**2 if extra else 0.0))
+                     for w, th, cv, t in self.mixture]  # fmt: skip
+            eta = sum(w * e for w, e, _ in comps)
+            var = sum(w * (v + e**2) for w, e, v in comps) - eta**2
+        else:
+            eta = float(z @ self.theta)
+            var = float(z @ self.cov @ z) + extra
+        sd = math.sqrt(max(var, 0.0))
         q = NormalDist().inv_cdf(0.5 + level / 2)
 
         def sig(v: float) -> float:
@@ -135,21 +152,50 @@ def _prior(programs, families, fam_of, k, tau, anchors, kappa, estimate_shift):
     return Q, c
 
 
-def _fit(Z, y, Q, c, max_iter=100):
-    theta = np.zeros(Z.shape[1])
-    for _ in range(max_iter):
-        p = 1 / (1 + np.exp(-(Z @ theta)))
-        g = Z.T @ (p - y) + Q @ theta - c
-        H = Z.T @ (Z * (p * (1 - p))[:, None]) + Q
-        step = np.linalg.solve(H, g)
-        theta -= step
-        if np.max(np.abs(step)) < 1e-10:
-            break
-    p = 1 / (1 + np.exp(-(Z @ theta)))
-    H = Z.T @ (Z * (p * (1 - p))[:, None]) + Q
+def _objective(theta, Z, y, Q, c, pool, k, kappa, use_b):
+    """Negative log posterior, gradient and (Gauss-Newton) Hessian."""
     eta = Z @ theta
-    nll = float(np.sum(np.logaddexp(0, eta) - y * eta))
-    return theta, H, nll
+    p = 1 / (1 + np.exp(-eta))
+    f = float(np.sum(np.logaddexp(0, eta) - y * eta)) + 0.5 * theta @ Q @ theta - c @ theta
+    g = Z.T @ (p - y) + Q @ theta - c
+    H = Z.T @ (Z * (p * (1 - p))[:, None]) + Q
+    b = theta[-1] if use_b else 0.0
+    for ai, rows, lr in pool:  # pool-integrated anchors (v0.1)
+        X, yy, ss = Z[rows, :k], y[rows], Z[rows, -1]
+        w = np.exp(-b * yy * ss)
+        s0 = 1 / (1 + np.exp(-(theta[ai] + X @ theta[:k])))
+        d0 = s0 * (1 - s0)
+        W = w.sum()
+        m = float(np.clip((w * s0).sum() / W, 1e-9, 1 - 1e-9))
+        rho = math.log(m / (1 - m)) - lr
+        dm = np.zeros_like(theta)
+        dm[ai] = (w * d0).sum() / W
+        dm[:k] = (w * d0) @ X / W
+        if use_b:
+            dm[-1] = (-(w * yy * ss * s0).sum() + m * (w * yy * ss).sum()) / W
+        J = dm / (m * (1 - m))
+        f += rho**2 / (2 * kappa**2)
+        g = g + J * rho / kappa**2
+        H = H + np.outer(J, J) / kappa**2
+    return f, g, H
+
+
+def _fit(Z, y, Q, c, pool=(), k=0, kappa=1.0, use_b=False, max_iter=200):
+    theta = np.zeros(Z.shape[1])
+    f, g, H = _objective(theta, Z, y, Q, c, pool, k, kappa, use_b)
+    for _ in range(max_iter):
+        step = np.linalg.solve(H, g)
+        t = 1.0
+        while True:
+            cand = theta - t * step
+            f_new, g_new, H_new = _objective(cand, Z, y, Q, c, pool, k, kappa, use_b)
+            if f_new <= f - 1e-4 * t * float(g @ step) or t < 1e-8:
+                break
+            t /= 2
+        theta, f, g, H = cand, f_new, g_new, H_new
+        if np.max(np.abs(t * step)) < 1e-10:
+            break
+    return theta, H, f
 
 
 def fit_admission_model(
@@ -158,10 +204,17 @@ def fit_admission_model(
     official_rates: Mapping[str, float] | None = None,
     tau: float | None = None,
     kappa: float = 0.3,
+    anchor: str = "mean",
+    tau_average: bool = False,
 ) -> AdmissionModel:
     """Fit C3.2 v0. `families` maps programme -> CIP family (default: from records);
     `official_rates` anchors programme intercepts (A-C3-5); `tau` None selects it on
-    TAU_GRID by the Laplace marginal likelihood."""
+    TAU_GRID by the Laplace marginal likelihood. `anchor="pool"` and `tau_average`
+    are the v0.1 candidate options (module docstring)."""
+    if anchor not in ("mean", "pool"):
+        raise ValueError('anchor must be "mean" or "pool"')
+    if tau_average and tau is not None:
+        raise ValueError("tau_average needs tau=None")
     if not records:
         raise ValueError("no records")
     k = len(records[0].features)
@@ -183,31 +236,45 @@ def fit_admission_model(
     has_self = "self_report" in srcs
     estimate_shift = has_self and ("complete" in srcs or bool(anchors))
     Z, y = _design(records, list(programs), list(fams), k)
+    nf = len(fams)
+    pool, mean_anchors = [], anchors
+    if anchor == "pool":
+        mean_anchors = {}
+        for pid, lr in anchors.items():
+            rows = np.array([i for i, r in enumerate(records) if r.program_id == pid])
+            pool.append((k + nf + programs.index(pid), rows, lr))
 
     def run(t):
-        Q, c = _prior(list(programs), list(fams), fam_of, k, t, anchors, kappa, estimate_shift)
-        theta, H, nll = _fit(Z, y, Q, c)
-        pen = 0.5 * theta @ Q @ theta - c @ theta
+        Q, c = _prior(list(programs), list(fams), fam_of, k, t, mean_anchors, kappa,
+                      estimate_shift)  # fmt: skip
+        theta, H, f = _fit(Z, y, Q, c, pool, k, kappa, estimate_shift)
         _, logdet = np.linalg.slogdet(H)
-        log_ml = -(nll + pen + len(programs) * math.log(t)) - 0.5 * logdet
-        return theta, H, log_ml
+        log_ml = -(f + len(programs) * math.log(t)) - 0.5 * logdet
+        cov = np.linalg.inv(H)
+        if not estimate_shift:
+            cov[-1, :] = cov[:, -1] = 0.0
+        return theta, cov, log_ml
 
+    mixture: tuple = ()
     if tau is None:
         fits = {t: run(t) for t in TAU_GRID}
         tau = max(fits, key=lambda t: fits[t][2])
-        theta, H, _ = fits[tau]
+        theta, cov, _ = fits[tau]
+        if tau_average:
+            top = max(v[2] for v in fits.values())
+            raw = {t: math.exp(v[2] - top) for t, v in fits.items()}
+            tot = sum(raw.values())
+            mixture = tuple((raw[t] / tot, fits[t][0], fits[t][1], t) for t in TAU_GRID)
     else:
         if tau <= 0:
             raise ValueError("tau must be positive")
-        theta, H, _ = run(tau)
-    cov = np.linalg.inv(H)
-    if not estimate_shift:
-        cov[-1, :] = cov[:, -1] = 0.0
+        theta, cov, _ = run(tau)
+    version = "v0" if anchor == "mean" and not tau_average else "v0.1"
     if not has_self:
-        method = "hierarchical_v0"
+        method = f"hierarchical_{version}"
     elif estimate_shift:
-        method = "hierarchical_v0_corrected"
+        method = f"hierarchical_{version}_corrected"
     else:
-        method = "hierarchical_v0_uncorrected"
+        method = f"hierarchical_{version}_uncorrected"
     return AdmissionModel(programs, fams, {p: fam_of[p] for p in programs}, k, theta, cov,
-                          float(tau), estimate_shift, method)  # fmt: skip
+                          float(tau), estimate_shift, method, mixture)  # fmt: skip

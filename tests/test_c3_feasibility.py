@@ -166,3 +166,29 @@ def test_probe_intervals_cover_nominally_when_well_specified():
             e = m.predict(pid, (0.0, 0.0))
             hits.append(e.low <= 1 / (1 + np.exp(-ai)) <= e.high)
     assert np.mean(hits) >= 0.90 - 3 * np.sqrt(0.09 / len(hits))
+
+
+def test_v01_options_validate_and_behave():
+    """v0.1 candidate options: the pool anchor matches the official rate as an average
+    over the programme's (reweighted) records rather than at x = 0; tau averaging
+    returns mixture weights that sum to 1."""
+    import aisc.feasibility as fz
+
+    rng = np.random.default_rng(6)
+    recs, rates, _ = _world(rng, q1=0.8, q0=0.2)
+    data = _records(recs, "self_report")
+    with pytest.raises(ValueError):
+        fz.fit_admission_model(data, anchor="median")
+    with pytest.raises(ValueError):
+        fz.fit_admission_model(data, tau=0.5, tau_average=True)
+    m = fz.fit_admission_model(data, official_rates=rates, anchor="pool", tau_average=True)
+    assert m.method == "hierarchical_v0.1_corrected"
+    assert sum(w for w, *_ in m.mixture) == pytest.approx(1.0)
+    gaps = {"pool": [], "mean": []}
+    for name, model in (("pool", m), ("mean", fz.fit_admission_model(data, official_rates=rates))):
+        for pid, r in rates.items():
+            rows = [d for d in data if d.program_id == pid]
+            w = np.array([np.exp(-model.shift * d.admitted) for d in rows])
+            p = np.array([model.predict(pid, d.features).mean for d in rows])
+            gaps[name].append(abs(float((w * p).sum() / w.sum()) - r))
+    assert np.mean(gaps["pool"]) < np.mean(gaps["mean"])
