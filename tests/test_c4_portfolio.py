@@ -7,6 +7,7 @@
 
 import random
 
+import numpy as np
 import pytest
 
 from aisc.portfolio import brute_force, dp_varied_cost, greedy_same_cost, portfolio_value
@@ -79,25 +80,79 @@ def test_input_validation():
         dp_varied_cost([0.5], [1], [1.5], 3)
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C4-1: the recommended portfolio ignores correlated admissions",
-)
-def test_probe_recommendation_accounts_for_admission_correlation():
-    """With strongly correlated admissions (rho = 0.7) three long-shot reaches are worth
-    less than the independence model says; the recommended portfolio should keep a
-    safer option. Checked against brute force under the same Monte Carlo draws."""
-    import numpy as np
-
+def test_recommendation_accounts_for_admission_correlation():
+    """B-C4-1 (was a probe): with correlated admissions (rho = 0.7) the independence
+    optimum is not the best portfolio; the recommendation matches brute force under
+    the same Monte Carlo draws. Scenario found by random search over 6-school cases
+    after the probe was written (the probe's first scenario had the same optimum under
+    both models, so it could not separate them)."""
     import aisc.portfolio as pf
 
-    p = [0.15, 0.15, 0.15, 0.6, 0.95]
-    u = [1.0, 0.98, 0.96, 0.6, 0.3]
-    cost, budget = [1, 1, 1, 1, 1], 3
-    assert hasattr(pf, "recommend_portfolio") and hasattr(pf, "admission_draws")
+    p = [0.09, 0.53, 0.46, 0.11, 0.63, 0.82]
+    u = [0.87, 0.8, 0.67, 0.61, 0.61, 0.41]
+    cost, budget = [1] * 6, 3
     draws = pf.admission_draws(p, 0.7, 40_000, np.random.default_rng(0))
-    best = max(pf.portfolio_value_mc(u, draws, s) for s in pf.subsets_within_budget(cost, budget))
+    vals = {s: pf.portfolio_value_mc(u, draws, s) for s in pf.subsets_within_budget(cost, budget)}
+    best = max(vals.values())
+    indep, _ = pf.dp_varied_cost(p, u, cost, budget)
+    assert pf.portfolio_value_mc(u, draws, indep) < best - 0.02  # the blind spot is real
     chosen = pf.recommend_portfolio(p, u, cost, budget, rho=0.7, draws=draws)
     assert pf.portfolio_value_mc(u, draws, chosen) >= best - 1e-9
+
+
+def test_mc_value_matches_analytic_when_independent():
+    import aisc.portfolio as pf
+
+    p = [0.2, 0.5, 0.8, 0.35]
+    u = [1.0, 0.7, 0.4, 0.9]
+    draws = pf.admission_draws(p, 0.0, 200_000, np.random.default_rng(1))
+    for s in ([0, 1, 2], [3], [0, 3], [0, 1, 2, 3]):
+        assert pf.portfolio_value_mc(u, draws, s) == pytest.approx(
+            pf.portfolio_value(p, u, s), abs=0.006
+        )
+
+
+def test_mc_value_matches_comonotone_closed_form():
+    """rho = 1: one common uniform U, school j admits iff U < p_j, so
+    v(S) = integral_0^1 max{u_j : j in S, p_j > x} dx."""
+    import aisc.portfolio as pf
+
+    p = [0.2, 0.5, 0.8, 0.35]
+    u = [1.0, 0.7, 0.4, 0.9]
+    draws = pf.admission_draws(p, 1.0, 200_000, np.random.default_rng(2))
+    for s in ([0, 1, 2], [0, 3], [1, 2]):
+        cuts = sorted({0.0, 1.0, *(p[j] for j in s)})
+        exact = sum(
+            (b - a) * max([u[j] for j in s if p[j] > a] or [0.0])
+            for a, b in zip(cuts, cuts[1:], strict=False)
+        )
+        assert pf.portfolio_value_mc(u, draws, s) == pytest.approx(exact, abs=0.006)
+
+
+def test_marginals_preserved_and_rho_validated():
+    import aisc.portfolio as pf
+
+    p = [0.0, 0.1, 0.5, 0.9, 1.0]
+    d = pf.admission_draws(p, 0.6, 100_000, np.random.default_rng(3))
+    assert d.mean(axis=0) == pytest.approx(p, abs=0.005)
+    with pytest.raises(ValueError):
+        pf.admission_draws(p, 1.2, 10, np.random.default_rng(0))
+    with pytest.raises(ValueError):
+        pf.admission_draws([1.1], 0.5, 10, np.random.default_rng(0))
+
+
+def test_recommend_rho_zero_is_c41_dp_and_local_search_runs():
+    import aisc.portfolio as pf
+
+    p = [0.09, 0.53, 0.46, 0.11, 0.63, 0.82]
+    u = [0.87, 0.8, 0.67, 0.61, 0.61, 0.41]
+    cost = [1, 2, 1, 1, 2, 1]
+    dp, _ = pf.dp_varied_cost(p, u, cost, 4)
+    assert pf.recommend_portfolio(p, u, cost, 4) == sorted(dp)
+    draws = pf.admission_draws(p, 0.7, 20_000, np.random.default_rng(0))
+    exact = pf.recommend_portfolio(p, u, cost, 4, rho=0.7, draws=draws)
+    local = pf.recommend_portfolio(p, u, cost, 4, rho=0.7, draws=draws, exact_limit=0)
+    assert sum(cost[j] for j in local) <= 4
+    v_dp = pf.portfolio_value_mc(u, draws, dp)
+    assert pf.portfolio_value_mc(u, draws, local) >= v_dp - 1e-12
+    assert pf.portfolio_value_mc(u, draws, exact) >= pf.portfolio_value_mc(u, draws, local) - 1e-12
