@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.16（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.17（研究原型）
 
 ---
 
@@ -371,7 +371,7 @@ print(round(est.low, 2), round(est.mean, 2), round(est.high, 2))
 new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學程：用族群平均，區間較寬
 ```
 
-知道各學程的申請流程類型（一般、面試制、作品集審查、專業學位）時，傳入 `types={program_id: 類型}`；預測新學程時再給 `ptype=`。模擬中這能讓新學程的錄取機率更準，類型沒有效果時也不會變差（[F145–F147](../results/synthetic-l3-admission-types-findings.md)）。
+紀錄來自不同申請年度時，在 `AdmissionRecord(..., year=2024)` 標上年度（要嘛全部標、要嘛都不標）：每個較舊的年度有自己的整體難度，預測一律針對最新年度（官方錄取率也請用最新年度的）。知道各學程的申請流程類型（一般、面試制、作品集審查、專業學位）時，傳入 `types={program_id: 類型}`；預測新學程時再給 `ptype=`。模擬中這能讓新學程的錄取機率更準，類型沒有效果時也不會變差（[F145–F147](../results/synthetic-l3-admission-types-findings.md)）。
 
 有了留出的真實結果後，可用 `aisc.feasibility` 的 `brier_skill`（是否勝過「官方錄取率」常數預測）、`calibration_slope`（理想為截距 0、斜率 1；斜率小於 1 表示過度自信）、`reliability_table` 與 `by_group`（例如台灣／國際申請者分開）檢查校準（V-C3-2～4）。
 
@@ -464,3 +464,4 @@ print(md.splitlines()[0])
 | 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
 | 2026-10-28 | v0.3.15 | v2 新增 `areas_to_ask`：依第一層群分數排出第二層要細問的領域（§4.8；m、q 無預設） | W-66 |
 | 2026-10-28 | v0.3.16 | 錄取機率模型可加入學程類型（`types=`、`predict(..., ptype=)`，§4.9） | W-74 |
+| 2026-10-28 | v0.3.17 | 錄取紀錄可標申請年度（`AdmissionRecord(..., year=)`），模型估計年度波動、預測針對最新年度（§4.9） | B-C3-3 |

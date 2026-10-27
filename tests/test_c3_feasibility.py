@@ -229,16 +229,10 @@ def test_type_level_validation():
     assert 0 < m.predict("new", (0.0, 0.0), family="f0", ptype="b").mean < 1
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C3-3: older, easier years are pooled with the latest year",
-)
-def test_probe_year_effects_keep_predictions_on_the_latest_year():
-    """Two older years were easier (logit +1.0) than the latest one. With records
-    labelled by year, predictions for the latest year must stay close to its truth;
-    pooling all years ignores the change and overestimates."""
+def test_year_effects_keep_predictions_on_the_latest_year():
+    """B-C3-3 (was a probe; pooled without years the mean error is +0.16). Two
+    older years were easier (logit +1.0) than the latest one. With records labelled
+    by year, predictions for the latest year must stay close to its truth."""
     import dataclasses
 
     import aisc.feasibility as fz
@@ -259,3 +253,16 @@ def test_probe_year_effects_keep_predictions_on_the_latest_year():
     m = fz.fit_admission_model(recs, families=fams)
     err = [m.predict(p, (0.0, 0.0)).mean - t for p, t in truth.items()]
     assert abs(np.mean(err)) < 0.05
+
+
+def test_years_all_or_none():
+    import aisc.feasibility as fz
+
+    r = [fz.AdmissionRecord("p", "f", (0.0,), 1, "complete", 2024),
+         fz.AdmissionRecord("p", "f", (0.1,), 0, "complete", None)]  # fmt: skip
+    with pytest.raises(ValueError):
+        fz.fit_admission_model(r)
+    ok = [fz.AdmissionRecord("p", "f", (0.0,), 1, "complete", 2024),
+          fz.AdmissionRecord("p", "f", (0.1,), 0, "complete", 2025)]  # fmt: skip
+    m = fz.fit_admission_model(ok)
+    assert m.reference_year == 2025 and m.years == (2024,)

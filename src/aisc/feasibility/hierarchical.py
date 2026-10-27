@@ -34,7 +34,7 @@ import numpy as np
 from aisc.contracts import AdmitEstimate
 
 SOURCES = ("self_report", "complete")
-FAMILY_SD, BETA_SD, SHIFT_SD, TYPE_SD = 2.0, 1.0, 2.0, 1.0
+FAMILY_SD, BETA_SD, SHIFT_SD, TYPE_SD, YEAR_SD = 2.0, 1.0, 2.0, 1.0, 1.0
 TAU_GRID = (0.25, 0.5, 0.75, 1.0, 1.5)
 
 
@@ -45,6 +45,7 @@ class AdmissionRecord:
     features: tuple[float, ...]
     admitted: int
     source: str = "complete"
+    year: int | None = None  # application year (B-C3-3); all records or none
 
     def __post_init__(self) -> None:
         if self.admitted not in (0, 1):
@@ -61,7 +62,7 @@ class AdmissionModel:
     families: tuple[str, ...]
     program_family: dict[str, str]
     n_features: int
-    theta: np.ndarray  # [beta (k), mu_f (F), eta_t (T), a_p (P), b]
+    theta: np.ndarray  # [beta (k), mu_f (F), eta_t (T), a_p (P), delta_y (Y), b]
     cov: np.ndarray  # Laplace covariance
     tau: float
     shift_estimated: bool
@@ -69,6 +70,8 @@ class AdmissionModel:
     mixture: tuple = ()  # ((weight, theta, cov, tau), ...) when tau is averaged
     ptypes: tuple[str, ...] = ()  # programme types (W-74); empty = no type level
     program_type: dict = field(default_factory=dict)
+    years: tuple[int, ...] = ()  # non-reference years with an effect (B-C3-3)
+    reference_year: int | None = None  # predictions are for this (latest) year
 
     @property
     def shift(self) -> float:
@@ -79,10 +82,10 @@ class AdmissionModel:
 
     def _z(self, program_id: str, features: Sequence[float], family: str | None, ptype: str | None):
         k, nf, nt = self.n_features, len(self.families), len(self.ptypes)
-        npg = len(self.programs)
+        npg, ny = len(self.programs), len(self.years)
         if len(features) != k:
             raise ValueError(f"expected {k} features")
-        z = np.zeros(k + nf + nt + npg + 1)
+        z = np.zeros(k + nf + nt + npg + ny + 1)  # delta_y = 0: the reference year
         z[:k] = features
         extra = 0.0
         if program_id in self.program_family:
@@ -129,22 +132,24 @@ class AdmissionModel:
                              self.method)  # fmt: skip
 
 
-def _design(records, programs, families, k, nt=0):
+def _design(records, programs, families, k, nt=0, years=()):
     nf, npg = len(families), len(programs)
-    Z = np.zeros((len(records), k + nf + nt + npg + 1))
+    Z = np.zeros((len(records), k + nf + nt + npg + len(years) + 1))
     y = np.zeros(len(records))
     for i, r in enumerate(records):
         Z[i, :k] = r.features
         Z[i, k + nf + nt + programs.index(r.program_id)] = 1.0
+        if r.year in years:  # older year: its own level shift (B-C3-3)
+            Z[i, k + nf + nt + npg + years.index(r.year)] = 1.0
         Z[i, -1] = 1.0 if r.source == "self_report" else 0.0
         y[i] = r.admitted
     return Z, y
 
 
 def _prior(programs, families, fam_of, k, tau, anchors, kappa, estimate_shift,
-           ptypes=(), type_of=None):  # fmt: skip
+           ptypes=(), type_of=None, ny=0):  # fmt: skip
     nf, npg, nt = len(families), len(programs), len(ptypes)
-    d = k + nf + nt + npg + 1
+    d = k + nf + nt + npg + ny + 1
     Q, c = np.zeros((d, d)), np.zeros(d)
     Q[np.arange(k), np.arange(k)] = 1 / BETA_SD**2
     for j in range(nf):
@@ -162,6 +167,8 @@ def _prior(programs, families, fam_of, k, tau, anchors, kappa, estimate_shift,
         if pid in anchors:
             Q[a, a] += 1 / kappa**2
             c[a] += anchors[pid] / kappa**2
+    for j in range(ny):
+        Q[k + nf + nt + npg + j, k + nf + nt + npg + j] += 1 / YEAR_SD**2
     Q[-1, -1] = 1 / SHIFT_SD**2 if estimate_shift else 1e12  # pinned at 0 when not identified
     return Q, c
 
@@ -229,7 +236,9 @@ def fit_admission_model(
     `anchor` "pool" (default since F139) anchors official rates over the programme's
     reweighted records; "mean" is the v0 / v0.1 reference (module docstring).
     `types` maps every programme to an admission-process type (W-74, A-C3-7); it adds
-    a type effect shared across families. None = no type level (unchanged model)."""
+    a type effect shared across families. None = no type level (unchanged model).
+    Records with `year`: every older year gets a common logit shift and predictions
+    are for the latest year (B-C3-3, A-C3-8); official rates should be that year's."""
     if anchor not in ("mean", "pool"):
         raise ValueError('anchor must be "mean" or "pool"')
     if tau_average and tau is not None:
@@ -254,6 +263,11 @@ def fit_admission_model(
             raise ValueError(f"no type for programmes {untyped}")
     ptypes = tuple(sorted({type_of[p] for p in programs})) if types is not None else ()
     nt = len(ptypes)
+    yrs = {r.year for r in records}
+    if None in yrs and len(yrs) > 1:
+        raise ValueError("give a year for every record or for none")
+    ref_year = max(yrs) if None not in yrs else None
+    years = tuple(sorted(y for y in yrs if y is not None and y != ref_year))
     anchors = {}
     for pid, rate in (official_rates or {}).items():
         if pid in programs:
@@ -263,7 +277,7 @@ def fit_admission_model(
     srcs = {r.source for r in records}
     has_self = "self_report" in srcs
     estimate_shift = has_self and ("complete" in srcs or bool(anchors))
-    Z, y = _design(records, list(programs), list(fams), k, nt)
+    Z, y = _design(records, list(programs), list(fams), k, nt, years)
     nf = len(fams)
     pool, mean_anchors = [], anchors
     if anchor == "pool":
@@ -274,7 +288,7 @@ def fit_admission_model(
 
     def run(t):
         Q, c = _prior(list(programs), list(fams), fam_of, k, t, mean_anchors, kappa,
-                      estimate_shift, list(ptypes), type_of)  # fmt: skip
+                      estimate_shift, list(ptypes), type_of, len(years))  # fmt: skip
         theta, H, f = _fit(Z, y, Q, c, pool, k, kappa, estimate_shift)
         _, logdet = np.linalg.slogdet(H)
         log_ml = -(f + len(programs) * math.log(t)) - 0.5 * logdet
@@ -306,4 +320,5 @@ def fit_admission_model(
         method = f"hierarchical_{version}_uncorrected"
     return AdmissionModel(programs, fams, {p: fam_of[p] for p in programs}, k, theta, cov,
                           float(tau), estimate_shift, method, mixture, ptypes,
-                          {p: type_of[p] for p in programs} if nt else {})  # fmt: skip
+                          {p: type_of[p] for p in programs} if nt else {},
+                          years, ref_year)  # fmt: skip
