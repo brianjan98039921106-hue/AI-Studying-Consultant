@@ -30,6 +30,7 @@
 | ab | [synthetic-l3-admission-bias-findings.md](synthetic-l3-admission-bias-findings.md) | W-44 |
 | a01 | [synthetic-l3-admission-v01-findings.md](synthetic-l3-admission-v01-findings.md) | W-44 |
 | apc | [synthetic-l3-admission-pool-confirm-findings.md](synthetic-l3-admission-pool-confirm-findings.md) | W-44 |
+| ayr | [synthetic-l3-admission-years-findings.md](synthetic-l3-admission-years-findings.md) | B-C3-3 |
 | aty | [synthetic-l3-admission-types-findings.md](synthetic-l3-admission-types-findings.md) | W-74 |
 | ap | [synthetic-l3-admission-portfolio-findings.md](synthetic-l3-admission-portfolio-findings.md) | W-44 × W-29／W-2A |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
@@ -211,6 +212,9 @@
 | F145 | 類型層第一次登記執行的設計有缺陷（類型與族群完全重疊），無法回答問題 | ✅（設計錯誤） | aty | 以設計 v2 重新登記 |
 | F146 | 類型不重疊時，類型層讓新學程的誤差下降（RMSE 0.133 → 0.119、0.146 → 0.116），沒有類型效果時不變差 | ✅ | aty | 有類型資訊時建議使用 |
 | F147 | 加入類型層後新學程的 90% 涵蓋率略低（0.857–0.872），仍在 85–95% | ✅ | aty | — |
+| F148 | 標記年度讓最新年度的錄取機率較準（RMSE 0.042 → 0.040、0.041 → 0.038），沒有波動時不變差 | ✅ | ayr | 建議標記年度 |
+| F149 | 改善小是因為最新年度官方錄取率已吸收整體難度變化；沒有官方錄取率時不分年度高估 +0.16 | 💭 | ayr | 官方錄取率缺少時年度標記最重要 |
+| F150 | 舊年度平移估計接近真值；涵蓋率 0.903–0.945 | ✅ | ayr | — |
 
 ## C4 申請組合
 
