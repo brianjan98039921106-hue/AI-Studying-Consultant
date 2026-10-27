@@ -65,7 +65,8 @@ CIP_ROWS = [
     ['="52"', '="52.02"', "No substantive changes", "No", "Fixture Management.", "def"],
     ['="52"', '="52.0201"', "No substantive changes", "No", "Fixture Admin.", "def a"],
     ['="52"', '="52.0205"', "No substantive changes", "No", "Fixture Ops.", "def b"],
-    ['="52"', '="52.0299"', "Moved to", "No", "Fixture Moved.", "gone"],
+    ['="52"', '="52.0299"', "Moved from", "No", "Fixture Moved.", "Moved from 52.0299 to 01.8001"],
+    ['="01"', '="01.8001"', "Moved to", "No", "Fixture Moved Here.", "def e"],
     ['="30"', '="30.7102"', "New", "No", "Fixture Analytics.", "def c"],
     ['="27"', '="27.0501"', "No substantive changes", "No", "Fixture Stats.", "def d"],
 ]
@@ -143,15 +144,24 @@ def test_provenance(tmp_path):
 
 def test_load_cip2020_drops_moved_codes_and_cleans_titles(cip_file):
     cip = load_cip2020(cip_file)
-    assert "52.0299" not in cip
+    assert "52.0299" not in cip  # 'Moved from' = obsolete code (B-C0-15)
+    assert cip["01.8001"].title == "Fixture Moved Here"  # 'Moved to' = current code
     assert cip["52.0201"].title == "Fixture Admin"
-    assert {"52", "52.02", "52.0201", "52.0205", "30.7102", "27.0501"} == set(cip)
+    assert {"52", "52.02", "52.0201", "52.0205", "30.7102", "27.0501", "01.8001"} == set(cip)
 
 
 def test_load_cip2020_from_xlsx(tmp_path):
     rows = [[c.strip('="') for c in r] for r in CIP_ROWS]
     x = _xlsx(tmp_path / "CIPCode2020.xlsx", CIP_HEADER, rows, title_rows=1)
-    assert set(load_cip2020(x)) == {"52", "52.02", "52.0201", "52.0205", "30.7102", "27.0501"}
+    assert set(load_cip2020(x)) == {
+        "52",
+        "52.02",
+        "52.0201",
+        "52.0205",
+        "30.7102",
+        "27.0501",
+        "01.8001",
+    }
 
 
 def test_select_cips_longest_prefix_and_unknown_prefix(cip_file):
@@ -464,14 +474,7 @@ def test_nonacademic_profiles_leave_out_teachers():
     assert checked > 700
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C0-15: the CIP loader keeps obsolete 'Moved from' codes and drops their "
-    "current 'Moved to' codes",
-)
-def test_probe_moved_cip_codes_are_current_codes():
+def test_moved_cip_codes_are_current_codes():
     """In CIPCode2020, 'Moved to' rows are the live destination codes (e.g. 01.8001
     Veterinary Medicine) and 'Moved from' rows the obsolete ones (51.2401). Both
     01.8001 and 51.1202 (Osteopathic Medicine) award graduate degrees in IPEDS 2025."""

@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.5 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.6 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -56,9 +56,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
 | 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
 | 2026-10-28 | v0.3.4 | 新增 v2 題庫中文草案（`data/items/item_bank_v2.json`，取自 O\*NET 31.0 代表活動；[item-bank-v2.md](docs/item-bank-v2.md)），尚未驗證、不可施測（§6） | W-41 |
-| 2026-10-28 | v0.3.3 | 新增全領域官方參考表（`data/reference/*_all.csv`，範圍 `all_scope.json`）：1,209 個 CIP、含專業／研究型博士與研究所證書；推薦目錄不變（§6） | W-65、W-70 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
