@@ -23,6 +23,7 @@
 | r3 | [reference-all-v3-findings.md](reference-all-v3-findings.md)（**真實資料**） | W-65、W-70 |
 | im | [interest-area-imputation-findings.md](interest-area-imputation-findings.md)（**真實資料**，O\*NET 職業） | 架構檢討 §2.1 |
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
+| dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
@@ -69,7 +70,10 @@
 | F113 | A 最適選題比兩階段順序差（RMSE +0.017～+0.020，前 5 名 −0.034～−0.058） | ✅（數據）／💭（機制） | aq | 不採用 |
 | F114 | 上信賴界選題只在無雜訊、題數多時較好，預先登記未通過 | ✅ | aq | 不採用；兩階段不變 |
 | F115 | 兩階段＋相關補全只細問 4 個領域，RMSE 即低於現行預設細問 12 個；前 5 名找回率雜訊 0 時需 8 題 | ✅（數據）／💭（省題解讀） | aq | B-C1-21：W-41 重驗 |
-| F116 | 有雜訊時已答領域直接用作答值，增加題數不再降低誤差；去雜訊可能有幫助（未檢驗） | 💭 | aq | 後續候選，須預先登記 |
+| F116 | 有雜訊時已答領域直接用作答值，增加題數不再降低誤差；去雜訊可能有幫助 | 💭 → 已檢驗（F117–F119） | aq | 見 F117–F119 |
+| F117 | 去雜訊（已答領域用後驗平均）RMSE：答 4 題時略差（+0.002～+0.003），12 題時較好（−0.001～−0.010）；預先登記未通過 | ✅ | dn | 不新增選項 |
+| F118 | 去雜訊在所有設定都提高前 5 名找回率（+0.009～+0.065），模型雜訊設錯時仍成立 | ✅（數據）／💭（意義） | dn | W-41 以前 5 名為主要指標重新預先登記 |
+| F119 | 收縮沒有壓低真正高的領域，反而減少因雜訊誤入前 5 名的領域 | 💭 | dn | — |
 
 ## C2 探索推薦
 
