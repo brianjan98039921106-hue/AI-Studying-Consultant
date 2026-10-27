@@ -12,6 +12,11 @@ Pipeline position:
     shortlist()  -> candidates for the C1.4 familiarity check
     discover()   -> after the check, split candidates into
                     discoveries (not known) and known_good (known), by fit
+
+Family diversity (B-C2-9, A-C2-15, A-C2-16): with `diversity` = lambda > 0 the
+shortlist and the discoveries are picked greedily by fit - lambda * (number already
+picked from the same CIP family, first 4 digits). lambda = 0 is the pure fit order.
+Explanations stay the scorer's exact decomposition of fit; only the order changes.
 """
 
 from __future__ import annotations
@@ -54,12 +59,41 @@ def _ranked(
     return scored
 
 
+def cip_family(program: Program) -> str:
+    """Diversity unit: the 4-digit CIP series (e.g. "52.13")."""
+    return program.cip[:5]
+
+
+def _diversified(ranked: list, n: int, diversity: float) -> list:
+    """Greedy pick of n items from (fit, program) pairs sorted by fit: each step takes
+    the largest fit - diversity * (count of its CIP family already picked); ties keep
+    the fit order. diversity = 0 returns ranked[:n]."""
+    if diversity < 0:
+        raise ValueError("diversity must be non-negative")
+    if diversity == 0:
+        return ranked[:n]
+    rest = list(ranked)
+    picked: list = []
+    counts: dict[str, int] = {}
+    while rest and len(picked) < n:
+        best = max(
+            range(len(rest)),
+            key=lambda i: (rest[i][0] - diversity * counts.get(cip_family(rest[i][1]), 0), -i),
+        )
+        item = rest.pop(best)
+        picked.append(item)
+        fam = cip_family(item[1])
+        counts[fam] = counts.get(fam, 0) + 1
+    return picked
+
+
 def shortlist(
     profile: StudentProfile,
     catalog: list[Program],
     n: int = 25,
     min_relevance: float = 0.0,
     scorer: _scorers.Scorer | None = None,
+    diversity: float = 0.0,
 ) -> list[str]:
     """Top-n programs by fit (anchors excluded): the ones to ask about in C1.4.
 
@@ -70,7 +104,7 @@ def shortlist(
         raise ValueError("n must be non-negative")
     profile.require_complete("C2 shortlist")
     ranked = _ranked(profile, catalog, min_relevance, _resolve(scorer, len(profile.vector)))
-    return [p.program_id for _, p in ranked[:n]]
+    return [p.program_id for _, p in _diversified(ranked, n, diversity)]
 
 
 def discover(
@@ -81,30 +115,33 @@ def discover(
     min_relevance: float = 0.0,
     asked: list[str] | None = None,
     scorer: _scorers.Scorer | None = None,
+    diversity: float = 0.0,
 ) -> DiscoveryResult:
-    """Split fit-ranked programs by the student's reported familiarity."""
+    """Split fit-ranked programs by the student's reported familiarity.
+
+    `diversity` spreads the discoveries over CIP families (module docstring); the
+    known-and-good section stays in fit order."""
     if k_new < 0 or k_known < 0:
         raise ValueError("k_new and k_known must be non-negative")
+    if diversity < 0:
+        raise ValueError("diversity must be non-negative")
     profile.require_complete("C2 discover")
     scorer = _resolve(scorer, len(profile.vector))
     familiar = set(profile.familiar)
     target = profile.vector
-    new: list[Recommendation] = []
-    known: list[Recommendation] = []
-    for rel, p in _ranked(profile, catalog, min_relevance, scorer):
-        is_known = p.program_id in familiar
-        bucket = known if is_known else new
-        limit = k_known if is_known else k_new
-        if len(bucket) < limit:
-            bucket.append(
-                Recommendation(
-                    program=p,
-                    relevance=rel,
-                    novelty=0.0 if is_known else 1.0,
-                    score=rel,
-                    contributions=scorer.explain(target, p.vector),
-                )
-            )
-        if len(new) >= k_new and len(known) >= k_known:
-            break
+    ranked = _ranked(profile, catalog, min_relevance, scorer)
+    unknown = [t for t in ranked if t[1].program_id not in familiar]
+    known_ranked = [t for t in ranked if t[1].program_id in familiar]
+
+    def rec(rel: float, p: Program, is_known: bool) -> Recommendation:
+        return Recommendation(
+            program=p,
+            relevance=rel,
+            novelty=0.0 if is_known else 1.0,
+            score=rel,
+            contributions=scorer.explain(target, p.vector),
+        )
+
+    new = [rec(r, p, False) for r, p in _diversified(unknown, k_new, diversity)]
+    known = [rec(r, p, True) for r, p in known_ranked[:k_known]]
     return DiscoveryResult(discoveries=new, known_good=known, asked=list(asked or []))

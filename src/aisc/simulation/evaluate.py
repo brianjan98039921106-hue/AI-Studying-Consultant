@@ -77,12 +77,21 @@ def c2_pipeline(
     return run
 
 
-def c2_v1_pipeline(n_shortlist: int = 25, k_known: int = 5) -> InteractiveRecommender:
-    """C2.3 v1 via the system pipeline: shortlist -> familiarity check -> sections."""
+def c2_v1_pipeline(
+    n_shortlist: int = 25, k_known: int = 5, diversity: float = 0.0
+) -> InteractiveRecommender:
+    """C2.3 v1 via the system pipeline: shortlist -> familiarity check -> sections.
+    `diversity`: CIP-family diversity of shortlist and discoveries (B-C2-9)."""
 
     def run(profile: StudentProfile, catalog: list[Program], k: int, ask: AskFn):
         return interactive_discovery(
-            profile, catalog, ask, n_shortlist=n_shortlist, k_new=k, k_known=k_known
+            profile,
+            catalog,
+            ask,
+            n_shortlist=n_shortlist,
+            k_new=k,
+            k_known=k_known,
+            diversity=diversity,
         )
 
     run.interactive = True  # type: ignore[attr-defined]
