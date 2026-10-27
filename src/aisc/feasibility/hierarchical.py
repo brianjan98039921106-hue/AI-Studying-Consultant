@@ -12,12 +12,13 @@ estimated when something identifies it (complete records next to self-reports, o
 official-rate anchors); otherwise it is fixed at 0 and the model is labelled
 uncorrected. Features must be standardised against the applicant pool (A-C3-5).
 
-v0.1 candidate options (THEORY "C3.2 v0.1 候選"; A-C3-6), off by default:
+v0.1 options (THEORY "C3.2 v0.1 候選"; A-C3-6):
+    tau_average       average over TAU_GRID with Laplace marginal-likelihood weights
+                      instead of picking one tau (B-C3-9). DEFAULT since the
+                      pre-registered comparison F136; tau_average=False is v0.
     anchor="pool"     anchor r_p to the mean of sigmoid(a_p + beta.x) over the
                       programme's records, admitted self-reports weighted by e^(-b)
-                      (Gauss-Newton term, backtracking line search)
-    tau_average=True  average over TAU_GRID with Laplace marginal-likelihood weights
-                      instead of picking one tau (B-C3-9)
+                      (Gauss-Newton term, backtracking line search); not default
 """
 
 from __future__ import annotations
@@ -205,16 +206,19 @@ def fit_admission_model(
     tau: float | None = None,
     kappa: float = 0.3,
     anchor: str = "mean",
-    tau_average: bool = False,
+    tau_average: bool | None = None,
 ) -> AdmissionModel:
     """Fit C3.2 v0. `families` maps programme -> CIP family (default: from records);
-    `official_rates` anchors programme intercepts (A-C3-5); `tau` None selects it on
-    TAU_GRID by the Laplace marginal likelihood. `anchor="pool"` and `tau_average`
-    are the v0.1 candidate options (module docstring)."""
+    `official_rates` anchors programme intercepts (A-C3-5); `tau` None averages over
+    TAU_GRID with Laplace marginal-likelihood weights (default since F136; pass
+    tau_average=False for the v0 reference, which picks the single best tau).
+    `anchor="pool"` is a candidate option (module docstring)."""
     if anchor not in ("mean", "pool"):
         raise ValueError('anchor must be "mean" or "pool"')
     if tau_average and tau is not None:
         raise ValueError("tau_average needs tau=None")
+    if tau_average is None:
+        tau_average = tau is None
     if not records:
         raise ValueError("no records")
     k = len(records[0].features)

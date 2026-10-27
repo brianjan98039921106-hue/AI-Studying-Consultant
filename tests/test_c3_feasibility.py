@@ -56,7 +56,7 @@ def test_recovers_slopes_and_intervals_without_selection():
     rng = np.random.default_rng(1)
     recs, _, a = _world(rng, n_per=150)
     m = fz.fit_admission_model(_records(recs, "complete"))
-    assert m.method == "hierarchical_v0" and not m.shift_estimated
+    assert m.method == "hierarchical_v0.1" and not m.shift_estimated
     assert m.theta[:2] == pytest.approx([1.0, -0.5], abs=0.15)
     covered = 0
     for pid, ai in a.items():
@@ -74,7 +74,7 @@ def test_complete_records_identify_the_self_report_shift():
     rng = np.random.default_rng(3)
     complete, _, _ = _world(rng, n_per=60)
     m = fz.fit_admission_model(_records(biased, "self_report") + _records(complete, "complete"))
-    assert m.method == "hierarchical_v0_corrected"
+    assert m.method == "hierarchical_v0.1_corrected"
     assert m.shift == pytest.approx(np.log(4), abs=0.35)
 
 
@@ -145,14 +145,8 @@ def test_probe_intervals_cover_when_stronger_applicants_report_more():
     assert np.mean(hits) >= 0.8
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C3-9: plug-in tau makes 90% intervals too narrow even when the model is right",
-)
-def test_probe_intervals_cover_nominally_when_well_specified():
-    """Complete records from the model's own family of worlds: 90% intervals for the
+def test_intervals_cover_nominally_when_well_specified():
+    """B-C3-9 (was a probe; fixed by tau model averaging, F136). Complete records from the model's own family of worlds: 90% intervals for the
     known programmes should cover the true P(admit) at an average applicant at least
     0.90 - 3 SE (about 0.87 over 960 checks); plug-in tau gave 0.85."""
     import aisc.feasibility as fz

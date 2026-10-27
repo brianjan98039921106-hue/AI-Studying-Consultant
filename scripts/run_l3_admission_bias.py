@@ -121,8 +121,11 @@ def main() -> None:
                         [AdmissionRecord(x.program_id, x.family, x.features, x.admitted,
                                          "self_report") for x in u_recs],
                         families=fams,
+                        tau_average=False,  # pinned to v0 (default changed later, F136)
                     )  # fmt: skip
-                    mc = fit_admission_model(recs, families=fams, official_rates=rates)
+                    mc = fit_admission_model(
+                        recs, families=fams, official_rates=rates, tau_average=False
+                    )  # v0 pinned
                     rows["U"].append(evaluate(mu, tests))
                     rows["C"].append(evaluate(mc, tests))
                     rows["shift"].append(mc.shift)
