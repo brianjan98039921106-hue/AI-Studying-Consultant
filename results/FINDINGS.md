@@ -21,6 +21,7 @@
 | sc | [synthetic-l3-c2-scorer-findings.md](synthetic-l3-c2-scorer-findings.md) | W-26 |
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
 | r3 | [reference-all-v3-findings.md](reference-all-v3-findings.md)（**真實資料**） | W-65、W-70 |
+| cs | [catalog-spread.md](catalog-spread.md)（**真實資料**與合成，描述性） | B-C5-3 |
 | sf | [series-fallback-findings.md](series-fallback-findings.md)（**真實資料**） | B-C0-9 |
 | im | [interest-area-imputation-findings.md](interest-area-imputation-findings.md)（**真實資料**，O\*NET 職業） | 架構檢討 §2.1 |
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
@@ -236,3 +237,4 @@
 | ID | 結論 | 狀態 | 證據 | 對目前設計 |
 |---|---|---|---|---|
 | F10 | 原型混合模型高估所有方法的表現 | ✅ | cont | 以連續模型作為保守估計（B-C5-4） |
+| F144 | RIASEC 層的分散程度：合成目錄的族群內 SD 0.110、族群平均 SD 0.207（比值 1.89），介於真實 CIP 的 4 碼群組（0.087、0.209、2.41）與 2 碼系列（0.132、0.192、1.46）之間；興趣層沒有「合成目錄過度規整」的跡象 | 💭（探索性；只有 RIASEC、只有 CIP 層級） | cs | B-C5-3 部分量化；學程層級的差異待 C0.3 |
