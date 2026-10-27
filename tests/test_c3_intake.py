@@ -117,3 +117,139 @@ def test_fit_from_files_and_validation_script(tmp_path):
     assert run.returncode == 0, run.stderr
     text = out.read_text(encoding="utf-8")
     assert "Brier skill" in text and "校準截距" in text and "| taiwan |" in text
+
+
+# --- independent review of the intake (2026-10-28): B-C3-13..15 --------------------
+
+
+def _probe(reason):
+    def mark(fn):
+        return pytest.mark.probe(pytest.mark.xfail(strict=True, raises=AssertionError,
+                                                   reason=reason)(fn))  # fmt: skip
+
+    return mark
+
+
+def _refused(fn, *args, match=None):
+    try:
+        fn(*args)
+    except ValueError as exc:
+        return match is None or match in str(exc)
+    except Exception:  # noqa: BLE001 - any other crash is a failure of the probe
+        return False
+    return False
+
+
+ROW = ["R1", "2025", "P1", "52.1301", "", "complete", "admit", "", "80", "100"]
+ROW2 = ["R2", "2025", "P1", "52.1301", "", "complete", "reject", "", "70", "90"]
+
+
+@_probe("B-C3-13: identifier headers and cells in common formats get through")
+def test_probe_common_identifier_formats_are_refused(tmp_path):
+    slipped = []
+    for h in ["Student Name", "Email Address", "Phone Number", "mobile", "DOB", "LINE ID",
+              "Passport No", "學生姓名", "身分證字號", "手機號碼", "聯絡電話", "住址"]:  # fmt: skip
+        p = _write(tmp_path / "h.csv", [*HEAD, h], [[*ROW, "x"], [*ROW2, "y"]])
+        if not _refused(load_admission_records, p):
+            slipped.append(h)
+    for cell in ["0912 345 678", "+886 912 345 678", "a123456789", "A823456789",
+                 "聯絡 0912345678"]:  # fmt: skip
+        r = list(ROW)
+        r[7] = cell
+        p = _write(tmp_path / "c.csv", HEAD, [r, ROW2])
+        if not _refused(load_admission_records, p):
+            slipped.append(cell)
+    assert not slipped, slipped
+
+
+@_probe("B-C3-14: the time split fits a differently anchored, test-year-standardised model")
+def test_probe_time_split_is_disclosed_and_leak_free(tmp_path):
+    rec = _synthetic_records(tmp_path)
+    rates = _write(tmp_path / "rates.csv",
+                   ["program_id", "year", "admit_rate", "source_url", "retrieved_at"],
+                   [[f"P{i:02d}", 2025, "0.4", "https://example.edu", "2026-10-28"]
+                    for i in range(12)])  # fmt: skip
+    out = tmp_path / "check.md"
+    cmd = [sys.executable, str(ROOT / "scripts/validate_admission_model.py"), "--records",
+           str(rec), "--rates", str(rates), "--out", str(out)]  # fmt: skip
+    run = subprocess.run(cmd, capture_output=True, text=True, env={"PYTHONPATH": str(ROOT / "src")})
+    assert run.returncode == 0, run.stderr
+    text = out.read_text(encoding="utf-8")
+    assert "全部資料 12 個學程" in text and "訓練 0 個學程" in text
+    try:
+        train = load_admission_records(rec, years={2024})
+        test = load_admission_records(rec, years={2025}, standardize_with=train.report)
+    except TypeError:
+        raise AssertionError(
+            "no way to standardise the test year with training statistics"
+        ) from None
+    assert test.report.means == train.report.means
+    assert test.report.features == train.report.features
+
+
+@_probe("B-C3-15: ragged rows, blank lines, case and encoding are mishandled")
+def test_probe_loader_robustness(tmp_path):
+    p = tmp_path / "ragged.csv"
+    p.write_text(",".join(HEAD) + "\n" + ",".join(ROW) + ",extra\n" + ",".join(ROW2) + "\n",
+                 encoding="utf-8")  # fmt: skip
+    assert _refused(load_admission_records, p, match=":2")
+    p = tmp_path / "short.csv"
+    p.write_text(",".join(HEAD) + "\n" + ",".join(ROW) + "\nR3,2025,P1\n", encoding="utf-8")
+    assert _refused(load_admission_records, p, match=":3")
+    p = tmp_path / "blank.csv"
+    bad = list(ROW2)
+    bad[6] = "waitlist"
+    p.write_text(",".join(HEAD) + "\n" + ",".join(ROW) + "\n\n\n" + ",".join(bad) + "\n",
+                 encoding="utf-8")  # fmt: skip
+    assert _refused(load_admission_records, p, match=":5")
+    p = tmp_path / "big5.csv"
+    r = list(ROW)
+    r[6] = "錄取"
+    p.write_bytes((",".join(HEAD) + "\n" + ",".join(r) + "\n" + ",".join(ROW2) + "\n")
+                  .encode("cp950"))  # fmt: skip
+    assert _refused(load_admission_records, p, match="UTF-8")
+    head = [" X_gpa_pct " if h == "x_gpa_pct" else h for h in HEAD]
+    r1, r2 = list(ROW), list(ROW2)
+    r1[4], r2[4] = "Interview", "interview"
+    data = load_admission_records(_write(tmp_path / "case.csv", head, [r1, r2]))
+    assert "x_gpa_pct" in data.report.features and data.types == {"P1": "interview"}
+    # a feature only self-reports carry, with >= 30 complete records
+    rows = [[f"C{k}", "2025", "P1", "52.1301", "", "complete", "admit" if k % 2 else "reject",
+             "", str(70 + k % 9), ""] for k in range(30)]  # fmt: skip
+    rows += [[f"S{k}", "2025", "P1", "52.1301", "", "self_report", "admit", "", "80",
+              str(95 + k)] for k in range(5)]  # fmt: skip
+    data = load_admission_records(_write(tmp_path / "selfonly.csv", HEAD, rows))
+    assert "x_toefl" in data.report.features and data.report.warnings
+
+
+@_probe("B-C3-15: conflicting, percent or undated official rates are accepted or crash")
+def test_probe_rates_validation(tmp_path):
+    head = ["program_id", "year", "admit_rate", "source_url", "retrieved_at"]
+    ok = ["P1", "2025", "0.3", "https://example.edu", "2026-10-28"]
+    for bad in (["P1", "2025", "0.4", "https://example.edu", "2026-10-28"],
+                ["", "2025", "0.4", "https://example.edu", "2026-10-28"],
+                ["P2", "2025", "45%", "https://example.edu", "2026-10-28"],
+                ["P2", "2025", "0.4", "https://example.edu", "?"]):  # fmt: skip
+        p = _write(tmp_path / "rates.csv", head, [ok, bad])
+        assert _refused(load_official_rates, p, match=":3"), bad
+
+
+@_probe("B-C3-15: the validation script crashes on a new type or an all-admit test year")
+def test_probe_validation_script_survives_test_year_surprises(tmp_path):
+    rec = _synthetic_records(tmp_path)
+    lines = rec.read_text(encoding="utf-8").splitlines()
+    extra = [f"N{k},2025,P99,52.1301,portfolio,complete,{'admit' if k % 2 else 'reject'},"
+             f"taiwan,80,100" for k in range(5)]  # fmt: skip
+    rec.write_text("\n".join(lines + extra) + "\n", encoding="utf-8")
+    out = tmp_path / "check.md"
+    cmd = [sys.executable, str(ROOT / "scripts/validate_admission_model.py"), "--records",
+           str(rec), "--out", str(out)]  # fmt: skip
+    env = {"PYTHONPATH": str(ROOT / "src")}
+    run = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert run.returncode == 0, run.stderr[-500:]
+    assert "略過" in out.read_text(encoding="utf-8")
+    lines = [ln.replace(",reject,", ",admit,") if ",2025," in ln else ln
+             for ln in lines]  # fmt: skip
+    rec.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    run = subprocess.run(cmd, capture_output=True, text=True, env=env)
+    assert run.returncode == 0, run.stderr[-500:]
