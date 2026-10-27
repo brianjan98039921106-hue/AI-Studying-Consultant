@@ -9,7 +9,7 @@
 
 | ID | 功能 | 方法 |
 |---|---|---|
-| C3.1 | 資料與偏誤稽核 | 來源：GradCafe（需先確認服務條款）、顧問歷史案例、官方公布的錄取率；稽核各來源的回報機制與台灣申請者比例 |
+| C3.1 | 資料與偏誤稽核 | 來源：GradCafe（需先確認服務條款）、顧問歷史案例、官方公布的錄取率；稽核各來源的回報機制與台灣申請者比例。**已備**：CSV 範本、載入器（隱私欄位檢查、標準化、缺漏指標，A-C3-9）與時間切分檢查腳本（`intake.py`、`scripts/validate_admission_model.py`、[data-intake.md](../data-intake.md)） |
 | C3.2 | 模型 | 階層貝氏 logistic：學程層級隨機效果（資料少的學程向同 CIP 群組收縮）＋學生特徵；以官方錄取率作為先驗錨點校正自願回報偏誤。**v0.1 已實作**（`feasibility/hierarchical.py`）：後驗眾數＋Laplace 區間，自陳紀錄的截距平移，τ 以邊際概似加權平均（F136），官方錄取率以母體積分錨點（F139，v0.2）；v0、v0.1 保留為參考 |
 | C3.3 | 校準 | 留出集 Brier score、reliability curve、區間涵蓋率；分組（台灣／國際）檢查。**評估工具已實作**（`feasibility/calibration.py`：Brier 與 Brier skill、Cox 校準截距與斜率、可靠度表、分組；L2 ✅），等真實申請結果 |
 
