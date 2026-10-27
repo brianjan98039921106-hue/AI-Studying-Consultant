@@ -227,3 +227,35 @@ def test_type_level_validation():
     with pytest.raises(ValueError):
         m.predict("new", (0.0, 0.0), family="f0")  # unseen programme needs its type
     assert 0 < m.predict("new", (0.0, 0.0), family="f0", ptype="b").mean < 1
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C3-3: older, easier years are pooled with the latest year",
+)
+def test_probe_year_effects_keep_predictions_on_the_latest_year():
+    """Two older years were easier (logit +1.0) than the latest one. With records
+    labelled by year, predictions for the latest year must stay close to its truth;
+    pooling all years ignores the change and overestimates."""
+    import dataclasses
+
+    import aisc.feasibility as fz
+
+    assert "year" in {f.name for f in dataclasses.fields(fz.AdmissionRecord)}
+    rng = np.random.default_rng(10)
+    recs, truth, fams = [], {}, {}
+    for i in range(18):
+        pid, fam = f"p{i}", f"f{i % 3}"
+        fams[pid] = fam
+        a = (-1.5, -0.5, 0.5)[i % 3] + rng.normal(0, 0.4)
+        truth[pid] = 1 / (1 + np.exp(-a))
+        for year, n, shift in ((2023, 60, 1.0), (2024, 60, 1.0), (2025, 30, 0.0)):
+            X = rng.normal(0, 1, (n, 2))
+            y = rng.random(n) < 1 / (1 + np.exp(-(a + shift + X @ np.array([0.8, -0.4]))))
+            recs += [fz.AdmissionRecord(pid, fam, tuple(X[j]), int(y[j]), "complete", year)
+                     for j in range(n)]  # fmt: skip
+    m = fz.fit_admission_model(recs, families=fams)
+    err = [m.predict(p, (0.0, 0.0)).mean - t for p, t in truth.items()]
+    assert abs(np.mean(err)) < 0.05
