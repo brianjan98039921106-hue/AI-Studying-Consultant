@@ -1,0 +1,54 @@
+{
+  "version": "draft-0",
+  "status": "DRAFT 2026-10-27 — pending user review; categories are field-agnostic on purpose (business, data, engineering, design, health and career changers)",
+  "note": "Categories describe WHAT a requirement asks for, not how a school words it. Program requirement text is quoted verbatim in RequirementItem.text; mapping text or a student's course to a category is A-C6-2 / B-C6-2.",
+  "categories": {
+    "course": {
+      "calculus_1": "Single-variable calculus (differential and integral)",
+      "calculus_2": "Further calculus: series, multivariable calculus",
+      "linear_algebra": "Matrices, vector spaces, eigenvalues",
+      "probability": "Probability theory (random variables, distributions)",
+      "statistics": "Introductory or applied statistics (inference, regression)",
+      "discrete_math": "Discrete mathematics, proofs",
+      "programming_intro": "First programming course (e.g. Python, Java, C)",
+      "data_structures": "Data structures and algorithms",
+      "databases": "Databases / SQL",
+      "microeconomics": "Intermediate or principles of microeconomics",
+      "macroeconomics": "Principles of macroeconomics",
+      "accounting": "Financial or managerial accounting",
+      "finance_intro": "Corporate finance / financial management",
+      "physics": "Calculus-based or general physics",
+      "general_chemistry": "General chemistry with lab",
+      "organic_chemistry": "Organic chemistry with lab",
+      "biochemistry": "Biochemistry",
+      "general_biology": "General biology with lab",
+      "anatomy_physiology": "Human anatomy and physiology",
+      "design_foundations": "Drawing, 2D/3D design, visual communication foundations",
+      "writing": "English composition / academic writing"
+    },
+    "test": {
+      "gre": "GRE General Test",
+      "gmat": "GMAT",
+      "dat": "Dental Admission Test",
+      "mcat": "Medical College Admission Test",
+      "subject_test": "Subject or field-specific exam"
+    },
+    "language": {
+      "english_proficiency": "TOEFL / IELTS / Duolingo or equivalent"
+    },
+    "portfolio": {
+      "design_portfolio": "Portfolio of design / creative work",
+      "writing_sample": "Writing or research sample",
+      "code_portfolio": "Code or project portfolio"
+    },
+    "experience": {
+      "work_experience": "Full-time professional experience (years)",
+      "research_experience": "Research or lab experience",
+      "clinical_shadowing": "Clinical or shadowing hours"
+    },
+    "credential": {
+      "bachelor_degree": "Accredited bachelor's degree (any field unless stated)",
+      "professional_license": "Professional license (e.g. DDS/DMD, PE)"
+    }
+  }
+}

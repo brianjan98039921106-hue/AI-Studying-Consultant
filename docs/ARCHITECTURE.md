@@ -15,6 +15,8 @@
 | D6 | **先模擬驗證，再真人驗證** | 真人資料少且昂貴，演算法錯誤要先在已知真相的環境抓出來 | C5 模擬器提供已知的真實需求，每個部件都要先過 L3 |
 | D7 | **新穎 = 學生不知道，而非分類距離遠** | 分類距離只是代理變數 | C1.4 熟悉度擷取，C2.2 v1 改用「未知機率」 |
 | D8 | **每個版本保留參考實作** | 新版本必須能和舊版本、暴力法比對 | 例如 C4.1 精確解永遠保留，C4.2 只是評估它的誤差 |
+| D9 | **可補的門檻不是過濾條件** | 先修、作品集、考試都能在一段時間內補上；不能假設學生今年就申請。把「現在還沒有」當成「不適合」，會重演學生只在既有範圍打轉的問題 | 需求（`StudentProfile`）與能力（`StudentRecord`）分成兩個契約；C2 只讀需求；明示條件由 C6 以差距呈現；隱性競爭力由 C3 在申請模式處理；只有學生自己設定的條件能過濾 |
+| D10 | **結構與領域無關，資料範圍分版擴充** | 使用者不只商管背景（例如材料 → 牙醫 → 設計）；領域寫死在結構裡，日後擴充代價很高 | RIASEC、條件類別、學經歷紀錄都跨領域；只有 `mvp_scope.json` 與領域層維度依版本擴充（B-C0-6、B-C1-19） |
 
 ## 2. 部件圖
 
@@ -49,7 +51,13 @@ flowchart LR
     C14 -- familiar --> C22
     C24 -- Recommendation --> C44
     C33 -- AdmitEstimate --> C41
-    C5[C5 模擬與評估框架<br/>已知真相的合成學生] -. 驗證 .-> C0 & C1 & C2 & C3 & C4
+    subgraph C6[C6 先修與申請條件差距]
+        C61[C6.1 條件類別] --> C62[C6.2 差距比對]
+    end
+    C04 -- RequirementItem --> C62
+    C1 -- StudentRecord --> C62
+    C62 -- RequirementGap --> C24
+    C5[C5 模擬與評估框架<br/>已知真相的合成學生] -. 驗證 .-> C0 & C1 & C2 & C3 & C4 & C6
 ```
 
 ## 3. 部件總表
@@ -64,6 +72,7 @@ flowchart LR
 | **C3** 錄取可行性 | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) |
 | **C4** 申請組合 | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) |
 | **C5** 模擬與評估 | 合成族群 → 各部件指標 | 已知真相模擬 + 消融 + 盲區探針 | [C5](components/C5-simulation.md) |
+| **C6** 先修與申請條件差距 | `RequirementItem` + `StudentRecord` → `RequirementGap` | 跨領域條件類別 + 確定性比對；只呈現、不過濾（D9）；探索／申請兩種模式 | [C6](components/C6-requirements.md) |
 
 ## 4. 數學定義（v0）
 
@@ -96,6 +105,7 @@ src/aisc/
   feasibility/      # C3
   portfolio/        # C4
   simulation/       # C5
+  requirements/     # C6
 tests/
   test_contracts.py
   test_c0_*.py … test_c4_*.py   # 每個部件一組；@pytest.mark.probe 為盲區探針

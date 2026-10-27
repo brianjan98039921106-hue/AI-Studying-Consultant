@@ -88,6 +88,13 @@
 | V-C4-2 | L3 | 錄取相關係數 ρ = 0…0.8 時，獨立模型的期望效用高估幅度 | 回報曲線；高估 > 10% 時預設改用 C4.2 |
 | V-C4-3 | L3 | P(admit) ±20% 擾動下，最佳組合的變動率 | 回報；C4.3 須降低變動率 |
 
+### C6 先修與申請條件差距
+| ID | 層級 | 指標 | 門檻 |
+|---|---|---|---|
+| V-C6-1 | L5 | 條件擷取 vs 黃金標準（類別、必修／建議）一致率 | ≥ 90% |
+| V-C6-2 | L5 | 「已滿足」誤報率（學生課程被錯判為滿足條件） | ≤ 5%（寧可列為無法判斷） |
+| V-C6-3 | L2 | 差距不影響推薦：C2 讀不到學經歷；每個學程都有差距輸出 | ✅ `test_c6_requirements.py` |
+
 ### 系統層
 | ID | 層級 | 指標 | 門檻 |
 |---|---|---|---|
@@ -105,6 +112,7 @@
 | C3 | — | — | — | — |
 | C4 | ✅ C4.1 | ✅ C4.1 | 需 C4.2（V-C4-2/3） | — |
 | C5 | ✅ C5.1–C5.3 | ✅ C5.1–C5.3（L2 30 項） | 不適用 | — |
+| C6 | ✅ C6.1 draft-0、C6.2 v0 | ✅ C6.2 v0（V-C6-3） | 不適用（確定性比對） | V-C6-1/2 待 W-20 |
 
 所有發現的狀態：[results/FINDINGS.md](../results/FINDINGS.md)。最新 L3 結果：[C1.3 v2 雜訊模型](../results/synthetic-l3-noise-findings.md)、[端到端](../results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
 
