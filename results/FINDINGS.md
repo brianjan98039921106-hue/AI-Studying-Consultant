@@ -27,6 +27,7 @@
 | nz | [synthetic-l3-noise-findings.md](synthetic-l3-noise-findings.md) | C1.3 v2 |
 | dv | [synthetic-l3-dims-v2-findings.md](synthetic-l3-dims-v2-findings.md) | W-16c |
 | vs | [synthetic-l3-v2-scorer-findings.md](synthetic-l3-v2-scorer-findings.md) | W-16c |
+| dg | [synthetic-l3-domain-gate-findings.md](synthetic-l3-domain-gate-findings.md) | W-16c |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
 
@@ -100,6 +101,10 @@
 | F78 | 54 維等權真相下，不分層 U25 勝過 v1（7/8 格顯著，+0.038～+0.136）與現行 v2 計分器（+0.088～+0.191） | ✅（單次執行） | vs | — |
 | F79 | 5 層等權真相下，連續模型中沒有 v2 計分器勝過 v1（U25 −0.010～−0.052） | ✅（單次執行） | vs | B-C5-8 |
 | F80 | 候選中沒有計分器能讓 v2 在每個需求群都不輸 v1（maximin 全為負） | ✅（候選集合內）／💭（推論：取決於真實層權重） | vs | W-16c 等待 W-76 估計層權重 |
+| F81 | 混合設計（v1 計分 ＋ v2 領域把關）未通過預先登記：沒有候選能在所有格降低領域不符率 | ✅ | dg | 不採用；`domain_gated` 留作參考實作 |
+| F82 | 54 維等權真相下，中度把關提高「相關且不知道」（原型 +0.044～+0.073）並降低不符率 | ✅（單次執行） | dg | — |
+| F83 | 5 層等權真相下，把關不降低不符率；強把關傷害推薦（連續 −0.019～−0.062） | ✅（單次執行） | dg | B-C2-11：只能用中度設定 |
+| F84 | 領域不符率在 5 層等權真相下主要量到權重差異，不是遠領域（v1 本身 0.109–0.211 vs 0.053–0.071） | ✅（數據）／💭（解讀） | dg | B-C5-9：遠領域指標須直接定義 |
 
 ## C1 學生側寫
 

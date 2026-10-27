@@ -1,6 +1,6 @@
 # 需求維度 v2 規格（W-16c，W-64 方案 B）
 
-> 狀態：G0 ✅；**步驟 1 已實作**（登錄 v2、契約 `dims`、`LayerBalanced`、領域群先驗 `profiling/hierarchy.py`；使用說明 §4.8，可選用）。**步驟 2 的第一次 L3 未通過**（[F70–F76](../results/synthetic-l3-dims-v2-findings.md)）：v2 降低領域不符，但暫定的四層等權計分器讓推薦品質低於 v1，v1 維持預設。預先登記的計分器選擇也未通過驗證（[F77–F80](../results/synthetic-l3-v2-scorer-findings.md)）：哪個計分器較好、v2 是否優於 v1，取決於真實學生各層的重要性（B-C5-8）。**W-16c 等待 W-76 估計層權重。**依據：[F63–F66](../results/domain-layer-findings.md)（只用 RIASEC 分不出領域，加入 41 個細分興趣領域後可以）、[F67–F69](../results/interest-area-clusters-findings.md)（41 領域穩定分成 12 群）、[F59–F61](../results/synthetic-l3-fields-findings.md)（遠領域假陽性）。
+> 狀態：G0 ✅；**步驟 1 已實作**（登錄 v2、契約 `dims`、`LayerBalanced`、領域群先驗 `profiling/hierarchy.py`；使用說明 §4.8，可選用）。**步驟 2 的第一次 L3 未通過**（[F70–F76](../results/synthetic-l3-dims-v2-findings.md)）：v2 降低領域不符，但暫定的四層等權計分器讓推薦品質低於 v1，v1 維持預設。預先登記的計分器選擇也未通過驗證（[F77–F80](../results/synthetic-l3-v2-scorer-findings.md)）：哪個計分器較好、v2 是否優於 v1，取決於真實學生各層的重要性（B-C5-8）。「v1 計分 ＋ v2 領域把關」的混合設計同樣未通過（[F81–F84](../results/synthetic-l3-domain-gate-findings.md)）。**W-16c 等待 W-76 估計層權重。**依據：[F63–F66](../results/domain-layer-findings.md)（只用 RIASEC 分不出領域，加入 41 個細分興趣領域後可以）、[F67–F69](../results/interest-area-clusters-findings.md)（41 領域穩定分成 12 群）、[F59–F61](../results/synthetic-l3-fields-findings.md)（遠領域假陽性）。
 > v1（15 維）保留為參考實作，直到 v2 通過下列 L3 關卡。
 
 ## 1. 維度

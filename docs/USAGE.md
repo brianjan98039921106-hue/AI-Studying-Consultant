@@ -266,7 +266,7 @@ print([shortlist_[j].program.degree_name for j in chosen], round(value, 1))
 
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
 
-v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。
+v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
 
 ```python
 from aisc.contracts import StudentProfile
@@ -345,3 +345,4 @@ v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用
 | 2026-10-27 | v0.2 | 首版使用說明：安裝、示範、逐步 API、顧問流程、限制；範例納入 CI 執行 | W-05 |
 | 2026-10-27 | v0.3 | 新增實驗中的需求維度 v2（`dims="v2"`、`group_scores`、`migrate_needs_v1_to_v2`），預設仍為 v1（§4.8） | W-16c |
 | 2026-10-27 | v0.3.1 | v2 的 L3 結果：未通過，v2 推薦品質目前低於 v1，請勿用於實際推薦（§1、§4.8）；用法沒有改變 | W-16c |
+| 2026-10-27 | v0.3.2 | 新增實驗用計分器 `domain_gated`（v2 作答 → v1 計分 ＋ 遠領域扣分）；L3 未通過，不建議使用（§4.8） | W-16c |
