@@ -56,6 +56,7 @@
 | 契合度 v1 候選（W-26） | (a) **分層懲罰**：cosine 減去強度層（數理、程式）的平方差平均 × γ；依據是評分準則把強度層定義為「想要多深」，高估與低估都是不契合（rubric §2–§4）；(b) **混合**：(1−λ)·cosine + λ·(1 − 平均平方差)；(c) **平方距離**：1 − 平均平方差（與 distance 真相的排序完全相同，屬循環比較，只作參考）。三者都可做成「各維度貢獻加總 = 分數」的精確分解 | A-C2-6、A-C2-7 |
 | 兩種真相下的選擇 | Maximin（Wald, 1950）：在兩種同樣可信的真相下，選「較差那一種表現」最好的方案 | A-C2-8 |
 | 領域把關（W-16c 混合設計） | 非補償式篩選：先以單一屬性淘汰不可接受的選項，再在剩下的選項中補償式比較（Einhorn, 1970, *Psychological Bulletin* 73(3)；Tversky, 1972, *Psychological Review* 79(4) 的 elimination by aspects）。做法：契合度用 v1 計分器在 v2 作答的 v1 投影上計算（不改變 v1 的排序行為）；另以 41 領域計算「學程內容加權的學生領域興趣」a = Σ x_a·w_a / Σ x_a，a 低於門檻 τ 時扣 λ·(τ − a)。λ = 0 時完全等於 v1 計分；扣分可依領域精確分解到各領域（推薦理由） | A-C2-10、B-C2-11 |
+| 需求層權重估計（W-76） | 成對比較的條件 logit（Bradley & Terry, 1952, *Biometrika* 39；McFadden, 1974, conditional logit）：P(選 A) = σ(Σ_l β_l·(D_l(B) − D_l(A)))，β_l = exp(θ_l) ≥ 0，最大概似；以受訪者為單位的集群自助法估計區間（Efron & Tibshirani, 1993）；測量誤差偏誤必要時以 SIMEX 校正（Cook & Stefanski, 1994, *JASA* 89）。規格見 [layer-weights.md](layer-weights.md) | A-C2-11、A-C2-12、B-C2-12、B-C2-13 |
 | 新穎度、意外性、覆蓋率 | Kaminskas & Bridge (2016), *ACM TiiS*；Vargas & Castells (2011), RecSys | A-C2-2 新穎價值可與契合度線性相加；A-C2-3 分類距離代理「不知道」 |
 | 多樣化 | Carbonell & Goldstein (1998), SIGIR：Maximal Marginal Relevance | — |
 | 分區呈現（C2.3 v1） | 依 L3 F7 的證據設計；與意外性文獻中「相關且非預期」的定義一致（Kaminskas & Bridge 2016）：以契合度排序，再依學生回報的熟悉度分成「可能沒想過」與「已知且適合」兩區，而非以分數懲罰已知學程 | A-C2-5 「新穎」以學生回報的熟悉度定義 |

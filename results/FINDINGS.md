@@ -28,6 +28,7 @@
 | dv | [synthetic-l3-dims-v2-findings.md](synthetic-l3-dims-v2-findings.md) | W-16c |
 | vs | [synthetic-l3-v2-scorer-findings.md](synthetic-l3-v2-scorer-findings.md) | W-16c |
 | dg | [synthetic-l3-domain-gate-findings.md](synthetic-l3-domain-gate-findings.md) | W-16c |
+| lw | [layer-weight-recovery-findings.md](layer-weight-recovery-findings.md) | W-76 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
 
@@ -105,6 +106,9 @@
 | F82 | 54 維等權真相下，中度把關提高「相關且不知道」（原型 +0.044～+0.073）並降低不符率 | ✅（單次執行） | dg | — |
 | F83 | 5 層等權真相下，把關不降低不符率；強把關傷害推薦（連續 −0.019～−0.062） | ✅（單次執行） | dg | B-C2-11：只能用中度設定 |
 | F84 | 領域不符率在 5 層等權真相下主要量到權重差異，不是遠領域（v1 本身 0.109–0.211 vs 0.053–0.071） | ✅（數據）／💭（解讀） | dg | B-C5-9：遠領域指標須直接定義 |
+| F85 | 層權重研究設計（200 人 × 20 組）足以區分兩種模擬真相（區間 100% 排除另一假設） | ✅ | lw | W-76 規模可行 |
+| F86 | 作答雜訊使領域份量被高估（+0.003～+0.059；雜訊 0.30 時至 +0.187），偏向支持 v2 | ✅ | lw | B-C2-12：須加 SIMEX |
+| F87 | 偏誤使區間涵蓋率不足（0.60–0.95），人數越多越差 | ✅ | lw | 同上；W-41 須含重測 |
 
 ## C1 學生側寫
 
