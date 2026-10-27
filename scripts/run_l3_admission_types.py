@@ -1,6 +1,14 @@
 """Does a programme-type level help the admission model? (W-74, B-C3-6; THEORY
 "學程類型層"; A-C3-7.)
 
+DESIGN v2 (2026-10-28, written after the first registered run and committed before
+this one): in v1 the type (i % 2) was completely confounded with the family (i % 4),
+so a type effect could not be separated from family means and the run could not
+answer the question (results/synthetic-l3-admission-types-confounded.md). v2 assigns
+the type by (i // 4) % 2, so every family has both types, holds out p00-p07 (four of
+each type, one per family and type) and uses a fresh seed (2033). The decision rule
+below is unchanged.
+
 Worlds as in run_l3_admission_bias.py (4 CIP families, 30 programmes, 3 features,
 self-reports with q1 / q0 = 0.8 / 0.2, official rates as anchors, C3.2 v0.2 default),
 plus a programme type: programmes alternate between "standard" and "interview".
@@ -8,8 +16,8 @@ Generators:
   typed     interview programmes have a logit shift of -1.0 (in every family)
   untyped   no type effect (the type label carries no information)
 Data: self-reports only, or plus complete advisor records for 10 programmes (15 each).
-Six programmes (3 per type) are held out entirely and predicted as unseen
-programmes from their family (and type). 30 replicate worlds per setting.
+Eight programmes (v2: 4 per type, one per family x type) are held out entirely and
+predicted as unseen programmes from their family (and type). 30 replicate worlds per setting.
 Compared: T (types given) vs N (no type level), both with official rates for the
 observed programmes only (the held-out programmes have none, as for a new programme).
 Metrics per replicate: RMSE of predicted P vs true P over 200 fresh applicants per
@@ -47,14 +55,14 @@ ROOT = Path(__file__).resolve().parents[1]
 GENS = ("typed", "untyped")
 DATA = ("self_only", "with_advisor")
 SHIFT = -1.0
-HELD = ("p00", "p01", "p02", "p03", "p04", "p05")  # alternating types: 3 + 3
+HELD = tuple(f"p{i:02d}" for i in range(8))  # v2: one per family x type
 N_REP = 30
-SEED = 2032
+SEED = 2033  # v2 (v1 used 2032)
 
 
 def world(gen, data, rng):
     fam = {f"p{i:02d}": f"f{i % 4}" for i in range(N_PROG)}
-    ptype = {f"p{i:02d}": ("interview" if i % 2 else "standard") for i in range(N_PROG)}
+    ptype = {f"p{i:02d}": ("interview" if (i // 4) % 2 else "standard") for i in range(N_PROG)}
     a = {}
     for i in range(N_PROG):
         pid = f"p{i:02d}"
@@ -74,7 +82,7 @@ def world(gen, data, rng):
         idx = np.flatnonzero(rng.random(5000) < np.where(y, 0.8, 0.2))[: int(rng.integers(10, 81))]
         recs += [AdmissionRecord(pid, fam[pid], tuple(pool[j]), int(y[j]), "self_report")
                  for j in idx]  # fmt: skip
-        if data == "with_advisor" and i < 16:
+        if data == "with_advisor" and 8 <= i < 18:
             Xa = rng.normal(0, 1, (15, 3))
             ya = rng.random(15) < sig(a[pid] + Xa @ BETA)
             recs += [AdmissionRecord(pid, fam[pid], tuple(Xa[j]), int(ya[j]), "complete")
@@ -139,7 +147,8 @@ def main() -> None:
         "",
         f"- 產生日期：{date.today().isoformat()} · "
         "指令：`python scripts/run_l3_admission_types.py`",
-        f"- {N_PROG} 個學程（6 個完全未觀測、當作新學程預測）；每個設定 {args.reps} 個世界",
+        f"- {N_PROG} 個學程（{len(HELD)} 個完全未觀測、當作新學程預測）；"
+        f"每個設定 {args.reps} 個世界；設計 v2（類型與族群不重疊）",
         "- 預先登記見腳本檔頭；全部是合成資料",
         "",
         f"## 判定：(a) 有類型效果時新學程顯著較準 {'✅' if a_ok else '❌'}；"
