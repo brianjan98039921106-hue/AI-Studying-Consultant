@@ -103,6 +103,27 @@ def truth_scale(weighting: str = "dim") -> np.ndarray:
     return np.array(s + [1 / np.sqrt(N_RESIDUAL)] * N_RESIDUAL)
 
 
+def weighted_utilities(
+    w2: np.ndarray,
+    catalog_v2: list[Program],
+    kind: str,
+    residual: dict[str, np.ndarray],
+    w_residual: np.ndarray,
+    weighting: str = "dim",
+) -> np.ndarray:
+    """Rank-equivalent true utility under a truth layer weighting (A-C5-13). Scaling
+    the coordinates gives a weighted distance / weighted cosine; only the order of the
+    returned values is meaningful."""
+    s = truth_scale(weighting)
+    w = np.concatenate([w2, w_residual]) * s
+    X = np.array([np.concatenate([p.vector, residual[p.program_id]]) for p in catalog_v2]) * s
+    if kind == "distance":
+        return -np.linalg.norm(X - w, axis=1)
+    if kind == "cosine":
+        return X @ w / (np.linalg.norm(X, axis=1) * np.linalg.norm(w))
+    raise ValueError(f"unknown truth kind {kind!r}")
+
+
 def relevant_ids_weighted(
     w2: np.ndarray,
     catalog_v2: list[Program],
@@ -112,19 +133,27 @@ def relevant_ids_weighted(
     weighting: str = "dim",
     top_frac: float = 0.1,
 ) -> set[str]:
-    """Top programs under the truth with the given layer weighting. Scaling coordinates
-    gives a weighted distance / weighted cosine; only the ranking is used."""
-    s = truth_scale(weighting)
-    w = np.concatenate([w2, w_residual]) * s
-    X = np.array([np.concatenate([p.vector, residual[p.program_id]]) for p in catalog_v2]) * s
-    if kind == "distance":
-        u = -np.linalg.norm(X - w, axis=1)
-    elif kind == "cosine":
-        u = X @ w / (np.linalg.norm(X, axis=1) * np.linalg.norm(w))
-    else:
-        raise ValueError(f"unknown truth kind {kind!r}")
+    """Top `top_frac` of the catalogue under the weighted truth."""
+    u = weighted_utilities(w2, catalog_v2, kind, residual, w_residual, weighting)
     n = max(1, int(np.ceil(top_frac * len(catalog_v2))))
     return {catalog_v2[i].program_id for i in np.argsort(-u, kind="stable")[:n]}
+
+
+def best_fit_weighted(
+    w2: np.ndarray,
+    catalog_v2: list[Program],
+    exclude: set[str],
+    kind: str,
+    residual: dict[str, np.ndarray],
+    w_residual: np.ndarray,
+    weighting: str = "dim",
+) -> str | None:
+    """Highest-utility program not in `exclude` under the weighted truth."""
+    u = weighted_utilities(w2, catalog_v2, kind, residual, w_residual, weighting)
+    for i in np.argsort(-u, kind="stable"):
+        if catalog_v2[i].program_id not in exclude:
+            return catalog_v2[i].program_id
+    return None
 
 
 def v2_students(
