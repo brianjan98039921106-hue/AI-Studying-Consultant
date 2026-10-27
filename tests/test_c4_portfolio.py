@@ -216,3 +216,29 @@ def test_minimax_regret_is_exact_on_its_scenarios_and_validates():
     # degenerate box: every criterion is the C4.1 optimum
     same = pf.minimax_regret_portfolio(p, p, p, u, cost, budget, n_scenarios=5)
     assert pf.portfolio_value(p, u, same) == pytest.approx(pf.dp_varied_cost(p, u, cost, budget)[1])
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C4-3: utility is fit only; tuition, location etc. cannot be weighed in",
+)
+def test_probe_multi_attribute_utility_with_elicited_weights():
+    """Weights from a consistent pairwise-comparison matrix are recovered exactly, an
+    inconsistent matrix is flagged, and a cheaper programme can outrank a slightly
+    better-fitting one when the student weighs cost."""
+    import aisc.portfolio as pf
+
+    assert hasattr(pf, "ahp_weights") and hasattr(pf, "multi_attribute_utility")
+    w_true = np.array([0.6, 0.3, 0.1])
+    M = w_true[:, None] / w_true[None, :]  # perfectly consistent
+    w, cr = pf.ahp_weights(M)
+    assert w == pytest.approx(w_true) and cr == pytest.approx(0.0, abs=1e-9)
+    bad = np.array([[1, 9, 1 / 9], [1 / 9, 1, 9], [9, 1 / 9, 1]])
+    assert pf.ahp_weights(bad)[1] > 0.1
+    u = pf.multi_attribute_utility(
+        {"a": {"fit": 0.90, "cost": 0.2}, "b": {"fit": 0.85, "cost": 0.9}},
+        {"fit": 0.5, "cost": 0.5},
+    )
+    assert u["b"] > u["a"]
