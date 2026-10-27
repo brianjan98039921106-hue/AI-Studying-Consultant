@@ -25,6 +25,7 @@
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
 | dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
+| pr | [synthetic-l3-portfolio-robust-findings.md](synthetic-l3-portfolio-robust-findings.md) | W-2A |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
 | dl | [domain-layer-findings.md](domain-layer-findings.md)（**真實資料**） | W-64 |
@@ -184,6 +185,10 @@
 | F110 | C4.1 選出的組合遺憾小：ρ = 0.4 時 0.2–1.1%，ρ = 0.8 時 ≤ 3.5% | ✅ | pc | 預設維持 C4.1 |
 | F111 | 假設 ρ = 0.4 的組合在 ρ = 0.8 時較好，但實際獨立時最多少 1.2%；沒有一致更好的選擇 | ✅ | pc | C4.2 為可選用 |
 | F112 | 相關錄取的主要影響是期望效用數字太樂觀，不是選錯學校 | 💭 | pc | 輸出註明獨立假設；C3 後估計 ρ |
+| F120 | 錄取機率估錯的代價不大：±20% 時點估計組合遺憾 0.01–0.96%，logit σ = 0.5 時 0.04–3.24%（p95 最高 9.85%） | ✅ | pr | 預設維持點估計 |
+| F121 | 最壞情況準則從未較好，多格顯著較差（最多 +1.37 個百分點） | ✅ | pr | 不採用 |
+| F122 | 最小化最大遺憾與點估計幾乎相同（−0.12～+0.14 個百分點） | ✅ | pr | 可選用，非預設 |
+| F123 | 誤差代價最大在夢幻校多、申請少、相對誤差大時；C3 對低錄取率學程的準確度最重要 | 💭 | pr | C3 設計重點 |
 
 ## 端到端（系統層）
 

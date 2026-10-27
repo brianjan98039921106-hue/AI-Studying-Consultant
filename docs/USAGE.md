@@ -20,7 +20,7 @@
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
-| 申請組合最佳化（選哪幾間申請） | C4.1、C4.2 | ✅ 精確解；相關錄取的敏感度分析可選用（C4.2） | ⚠️ 錄取機率與相關係數都須自行假設（C3 未完成） |
+| 申請組合最佳化（選哪幾間申請） | C4.1–C4.3 | ✅ 精確解；相關錄取（C4.2）與機率區間的穩健選擇（C4.3）可選用 | ⚠️ 錄取機率與相關係數都須自行假設（C3 未完成） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⬜ 未開始 | — |
 | 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
@@ -278,6 +278,16 @@ for rho in (0.0, 0.4, 0.8):
 best_if_correlated = recommend_portfolio(p, utility, [1] * len(p), budget=3, rho=0.4)
 ```
 
+錄取機率本身也可能估錯。合成情境中，±20% 的誤差只讓點估計選出的組合平均少 1% 以內，「最壞情況」與「最小化最大遺憾」兩種穩健準則都沒有更好（[F120–F123](../results/synthetic-l3-portfolio-robust-findings.md)），所以預設仍用點估計。需要比較時：
+
+```python
+from aisc.portfolio import minimax_regret_portfolio, worst_case_portfolio
+
+low, high = [a.low for a in assumed], [a.high for a in assumed]
+cautious = worst_case_portfolio(low, utility, [1] * len(p), budget=3)  # 全部取下限
+balanced = minimax_regret_portfolio(low, high, p, utility, [1] * len(p), budget=3)
+```
+
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
 
 v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
@@ -367,4 +377,4 @@ v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用
 | 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
 | 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
 | 2026-10-28 | v0.3.7 | v2 新增可選用的相關補全 `area_model="correlated"`（§4.8）；全領域參考表新增就業加權版本（參考用，非預設） | 架構檢討、W-71 |
-| 2026-10-28 | v0.3.8 | 申請組合新增 C4.2（錄取相關）：`admission_draws`、`portfolio_value_mc`、`recommend_portfolio`，可看期望效用對相關係數的敏感度；預設選擇不變（§4.7） | W-29 |
+| 2026-10-28 | v0.3.8 | 申請組合新增 C4.2（錄取相關：`admission_draws`、`portfolio_value_mc`、`recommend_portfolio`）與 C4.3（機率區間的穩健選擇：`worst_case_portfolio`、`minimax_regret_portfolio`）；預設選擇不變（§4.7） | W-29、W-2A |

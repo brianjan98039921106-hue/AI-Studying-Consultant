@@ -162,7 +162,7 @@
 | A-C4-6 | 假設 | 真實錄取機率落在 C3 給的區間 [low, high] 內 | C4.3 設計（W-2A，2026-10-28） | 區間太窄時穩健選擇失去保護；太寬時過度保守 | V-C4-3 用兩種估計誤差模型（其中一種的區間不一定涵蓋真值） | C3 以 conformal 區間保證涵蓋率 | — | — |
 | A-C4-7 | 假設 | 最小化最大遺憾以盒內有限個抽樣情境近似最大值；各情境同等可能 | C4.3 設計 | 漏掉真正最壞的情境，低估最大遺憾 | 單元測試比對盒的頂點 | 情境數量依問題大小調整 | — | — |
 | B-C4-1 | 盲區 | **錄取正相關**：同一份申請在各校結果相關 | — | 高估「多申請夢幻校」的價值 | V-C4-2 | C4.2 copula 評估（`aisc.portfolio.recommend_portfolio`、`portfolio_value_mc`，A-C4-5） | H | 🟢（`test_recommendation_accounts_for_admission_correlation`；是否改為預設見 V-C4-2） |
-| B-C4-2 | 盲區 | **把點估計當真值** | Bertsimas & Sim 2004 | 組合對機率誤差敏感 | V-C4-3 | C4.3 穩健選擇（`worst_case_portfolio`、`minimax_regret_portfolio`，A-C4-6、A-C4-7） | M | 🟡（可選用，`test_robust_choice_over_probability_intervals`；預設由 V-C4-3 決定） |
+| B-C4-2 | 盲區 | **把點估計當真值** | Bertsimas & Sim 2004 | 組合對機率誤差敏感 | V-C4-3 | C4.3 穩健選擇（`worst_case_portfolio`、`minimax_regret_portfolio`，A-C4-6、A-C4-7） | M | 🟢（`test_robust_choice_over_probability_intervals`；代價已量化 F120，穩健準則未改善，預設不變 F121–F122） |
 | B-C4-3 | 盲區 | **效用 ≠ 契合度**：獎學金、學費、地點、家庭考量未納入 | — | 選出契合但負擔不起的組合 | 使用者研究 | C4.4 效用擷取 | M | 🔴 |
 | B-C4-4 | 盲區 | **Spring／Fall 多輪次**：先後順序影響後續決策 | — | 靜態模型給出錯誤時程建議 | — | 兩階段模型 | L | 🔴 |
 | B-C4-5 | 盲區 | **成本不只申請費**：文件準備時間、推薦人負擔 | — | 低估邊際申請成本 | — | 成本加入時間單位 | L | 🔴 |
