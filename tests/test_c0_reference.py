@@ -640,3 +640,19 @@ def test_w20_candidates_follow_their_rules():
         c = cips[r["cip"]]
         assert int(c["awards_level_7"]) >= 500 or int(c["awards_level_18"]) >= 200
         assert r["school_options"]
+
+
+def test_series_fallback_uses_group_then_series():
+    from aisc.catalog.occupation import series_fallback
+
+    prof = {
+        "52.1301": {"x": 0.2},
+        "52.1302": {"x": 0.4},
+        "52.0201": {"x": 0.9},
+        "11.0701": {"x": 0.5},
+    }
+    fb = series_fallback(prof, ["52.1399", "52.9999", "24.0101", "52.1301"])
+    assert fb["52.1399"] == ({"x": pytest.approx(0.3)}, "group")
+    assert fb["52.9999"] == ({"x": pytest.approx(0.5)}, "series")
+    assert "24.0101" not in fb  # nothing in its series
+    assert fb["52.1301"] == ({"x": pytest.approx(0.4)}, "group")  # never uses itself
