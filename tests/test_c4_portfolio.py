@@ -158,16 +158,11 @@ def test_recommend_rho_zero_is_c41_dp_and_local_search_runs():
     assert pf.portfolio_value_mc(u, draws, exact) >= pf.portfolio_value_mc(u, draws, local) - 1e-12
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C4-2: the portfolio treats point estimates of P(admit) as the truth",
-)
-def test_probe_robust_choice_over_probability_intervals():
-    """With probability intervals [low, high], a minimax-regret portfolio has a maximum
-    regret over the interval box no larger than the point-estimate portfolio's (on the
-    same scenario set), and the worst-case portfolio is the C4.1 optimum at `low`."""
+def test_robust_choice_over_probability_intervals():
+    """B-C4-2 (was a probe). With probability intervals [low, high], a minimax-regret
+    portfolio has a maximum regret over the interval box no larger than the
+    point-estimate portfolio's (on the same scenario set), and the worst-case
+    portfolio is the C4.1 optimum at `low`."""
     import aisc.portfolio as pf
 
     assert hasattr(pf, "minimax_regret_portfolio") and hasattr(pf, "worst_case_portfolio")
@@ -185,3 +180,39 @@ def test_probe_robust_choice_over_probability_intervals():
     assert sorted(pf.worst_case_portfolio(low, u, cost, budget)) == sorted(
         pf.dp_varied_cost(low, u, cost, budget)[0]
     )
+
+
+def test_values_matrix_matches_analytic_value():
+    import aisc.portfolio as pf
+
+    rng = np.random.default_rng(4)
+    u = rng.uniform(0.2, 1, 7).tolist()
+    scen = rng.uniform(0, 1, (5, 7))
+    ports = [(), (0,), (1, 3, 5), (0, 2, 4, 6)]
+    V = pf.values_matrix(u, scen, ports)
+    for r, s in enumerate(ports):
+        for c in range(5):
+            assert V[r, c] == pytest.approx(pf.portfolio_value(list(scen[c]), u, list(s)))
+
+
+def test_minimax_regret_is_exact_on_its_scenarios_and_validates():
+    import aisc.portfolio as pf
+
+    p = [0.3, 0.5, 0.15, 0.7, 0.9]
+    u = [0.95, 0.8, 1.0, 0.6, 0.35]
+    low, high = [q * 0.7 for q in p], [min(1.0, q * 1.3) for q in p]
+    cost, budget = [1, 1, 2, 1, 1], 3
+    scen = pf.box_scenarios(low, high, p, 100, np.random.default_rng(1))
+    chosen = pf.minimax_regret_portfolio(low, high, p, u, cost, budget, scenarios=scen)
+    best = min(
+        pf.max_regret(u, cost, budget, scen, s) for s in pf.subsets_within_budget(cost, budget)
+    )
+    assert pf.max_regret(u, cost, budget, scen, chosen) == pytest.approx(best)
+    assert sum(cost[j] for j in chosen) <= budget
+    with pytest.raises(ValueError):
+        pf.box_scenarios([0.5], [0.4], None, 3, np.random.default_rng(0))
+    with pytest.raises(ValueError):
+        pf.box_scenarios([0.1], [0.4], [0.5], 3, np.random.default_rng(0))
+    # degenerate box: every criterion is the C4.1 optimum
+    same = pf.minimax_regret_portfolio(p, p, p, u, cost, budget, n_scenarios=5)
+    assert pf.portfolio_value(p, u, same) == pytest.approx(pf.dp_varied_cost(p, u, cost, budget)[1])
