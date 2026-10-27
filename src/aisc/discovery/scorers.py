@@ -4,7 +4,8 @@ Every scorer provides
     score(w, x)          -> float
     score_matrix(w, X)   -> scores for every row of X (vectorised, must equal `score`)
     explain(w, x)        -> {dimension: contribution}, an exact additive decomposition:
-                            sum(explain(w, x).values()) == score(w, x)   (B-C2-6)
+                            sum(explain(w, x).values()) == score(w, x)   (B-C2-6;
+                            equality up to floating-point rounding)
 
 Candidates (docs/THEORY.md, W-26):
     cosine            v0 reference: direction only (B-C2-3)

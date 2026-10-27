@@ -6,7 +6,7 @@ relevance and novel-relevant rate under every simulator setting). v0
 
 Relevance comes from a C2.1 `Scorer` (default `scorers.DEFAULT_SCORER`); each
 Recommendation's `contributions` is that scorer's exact additive explanation, so
-the values sum to `relevance` (B-C2-6).
+the values sum to `relevance` (B-C2-6) up to floating-point rounding (~1e-16).
 
 Pipeline position:
     shortlist()  -> candidates for the C1.4 familiarity check

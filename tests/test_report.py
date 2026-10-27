@@ -43,3 +43,36 @@ def test_report_validates_inputs(catalog):
         render_profile_report(StudentProfile("other", NEEDS), completed, result)
     with pytest.raises(ValueError):
         render_profile_report(profile, profile, result)  # not completed
+
+
+def test_report_shows_gaps_without_changing_order(catalog):
+    from aisc.contracts import RequirementGap, RequirementItem
+
+    profile, completed, result = _run(catalog)
+    pid = result.discoveries[0].program.program_id
+
+    def item(level, cat="calculus"):
+        return RequirementItem(
+            pid, "course", cat, level, "quote", "https://example.edu", "2026-10-28"
+        )
+
+    gap = RequirementGap(
+        pid,
+        missing=(item("required"), item("recommended")),
+        planned=(item("required"),),
+        unknown=(item("required", None),),
+        none_published=True,
+        before_target=(item("required"),),
+    )
+    gaps = {pid: gap}
+    md = render_profile_report(profile, completed, result, gaps=gaps)
+    assert "缺必修 1" in md and "缺建議 1" in md and "規劃中 1" in md
+    assert "無法判讀 1" in md and "官網未列條件" in md and "申請前須完成 1" in md
+    assert "不會**影響上面的排序" in md
+    names = [r.program.degree_name for r in result.discoveries]
+    order = [md.index(f"| {n} |") for n in names]
+    assert order == sorted(order)  # same order as the discoveries
+    other = result.discoveries[1].program.program_id
+    md2 = render_profile_report(profile, completed, result,
+                                gaps={other: RequirementGap(other)})  # fmt: skip
+    assert "條件皆已符合" in md2
