@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.3 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.4 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -56,9 +56,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-28 | v0.3.4 | 新增 v2 題庫中文草案（`data/items/item_bank_v2.json`，取自 O\*NET 31.0 代表活動；[item-bank-v2.md](docs/item-bank-v2.md)），尚未驗證、不可施測（§6） | W-41 |
 | 2026-10-28 | v0.3.3 | 新增全領域官方參考表（`data/reference/*_all.csv`，範圍 `all_scope.json`）：1,209 個 CIP、含專業／研究型博士與研究所證書；推薦目錄不變（§6） | W-65、W-70 |
 | 2026-10-27 | v0.3.2 | 新增實驗用計分器 `domain_gated`（v2 作答 → v1 計分 ＋ 遠領域扣分）；L3 未通過，不建議使用（§4.8） | W-16c |
-| 2026-10-27 | v0.3.1 | v2 的 L3 結果：未通過，v2 推薦品質目前低於 v1，請勿用於實際推薦（§1、§4.8）；用法沒有改變 | W-16c |
 <!-- AUTO:changelog END -->
 
 ## 下一步
