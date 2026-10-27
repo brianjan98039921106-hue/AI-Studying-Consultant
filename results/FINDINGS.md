@@ -30,6 +30,7 @@
 | dg | [synthetic-l3-domain-gate-findings.md](synthetic-l3-domain-gate-findings.md) | W-16c |
 | lw | [layer-weight-recovery-findings.md](layer-weight-recovery-findings.md) | W-76 |
 | sx | [layer-weight-simex-findings.md](layer-weight-simex-findings.md) | W-76 |
+| sb | [layer-weight-simex-boot-findings.md](layer-weight-simex-boot-findings.md) | W-76 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
 
@@ -113,6 +114,9 @@
 | F88 | SIMEX 通過偏誤（R1）與區分力（R3），但平移區間在 1 格涵蓋不足（0.82） | ✅ | sx | 區間改為自助法包住整個 SIMEX，重驗 |
 | F89 | 雜訊 0.15 時 SIMEX 幾乎消除偏誤（領域 −0.036～+0.010）；雜訊 0.30 只部分校正（+0.004～+0.042） | ✅ | sx | W-41 題目雜訊要低 |
 | F90 | σ 高估 30% 會過度校正（−0.087），低估 30% 在高雜訊時校正不足（+0.110） | ✅ | sx | W-41 重測須把 σ 估到 ±30% 內 |
+| F91 | 自助法包住 SIMEX 後涵蓋率合格（0.85–0.95），但 equal 情境點估計過度校正（領域 −0.083、−0.082），R1 未過 | ✅ | sb | SIMEX 不採用 |
+| F92 | SIMEX 偏誤隨模擬世界大幅變動（同設定：種子 1600 為 −0.012／−0.036，種子 1700 為 −0.083／−0.082） | ✅（數據）；比較未預先登記 | sb | 校正方法不能依賴名目 σ |
+| F93 | 推測：[0, 1] 截斷使多數領域題的實際誤差小於名目 σ，SIMEX 因此過度校正領域層 | 💭 | sb | B-C2-14；下一候選：迴歸校正 |
 
 ## C1 學生側寫
 
