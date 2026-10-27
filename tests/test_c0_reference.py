@@ -629,3 +629,14 @@ def test_interest_area_clusters_cover_all_41_areas_once():
     assert len(keys) == len(set(keys)) == 41
     assert set(keys) == {r["key"] for r in _ref("basic_interest_map.csv")}
     assert spec["k"] == len(spec["clusters"]) and spec["bootstrap_mean_ari"] >= 0.60
+
+
+def test_w20_candidates_follow_their_rules():
+    rows = _ref("w20_candidates.csv")
+    cips = {r["cip"]: r for r in _ref("cip2020_all.csv")}
+    assert len(rows) == 30 and len({r["cip"] for r in rows}) == 30
+    assert len({r["primary_group"] for r in rows}) >= 10
+    for r in rows:
+        c = cips[r["cip"]]
+        assert int(c["awards_level_7"]) >= 500 or int(c["awards_level_18"]) >= 200
+        assert r["school_options"]
