@@ -33,4 +33,4 @@
 | W-14、W-15 | 完成 v1；輸出已提交於 `data/reference/` |
 | C0.2 方法 | 維持 G0 登記的 v1（等權）；B-C0-8 的修正（排除或降低教職 SOC）是新方法，需先 G0，並以 C0.3 課程向量交叉驗證後才能採用 |
 | 範圍 | mvp-v1 不變；F53：保留資訊科學族群（2026-10-27 決策：產品範圍為全背景、全領域，範圍只會擴大，見 docs/expansion.md） |
-| 待確認 | O*NET 檔名為 `career_interest_types.csv`，欄位與 O*NET Interests 一致，但版本號無法從檔案本身確認（評分日期至 02/2026）。決策：重新自 O*NET 官網下載同一版本的 Interests 與細分興趣領域檔（W-64 也需要），記錄版本號後重建 |
+| O*NET 版本 | 已確認來源（2026-10-27）：`career_interest_types.csv` 是 O*NET 自 30.3 版起的官方檔名（原名 Interests）；檔案的 8,307 筆資料與 9 個欄位和 O*NET 31.0 CSV 資料字典完全相符，判定為 31.0 版，不需重新下載。W-64 只需另外下載同版本的 Specific Interest Areas 檔 |

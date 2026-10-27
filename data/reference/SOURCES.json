@@ -2,7 +2,7 @@
   "built": "2026-10-26",
   "scope_version": "mvp-v1",
   "ipeds_year": "2025",
-  "onet_release": "unknown (ratings dated up to 02/2026)",
+  "onet_release": "31.0 (identified 2026-10-27: the file name career_interest_types.csv is the official name since release 30.3, and its 8,307 data rows and 9 columns match the O*NET 31.0 CSV data dictionary)",
   "inputs": {
     "cip2020": {
       "file_name": "CIPCode2020.csv",
