@@ -343,8 +343,8 @@ records = [
 ]
 model = fit_admission_model(records, official_rates={"prog-a": 0.3, "prog-b": 0.4})
 est = model.predict("prog-a", (0.5, 0.0))  # AdmitEstimate：mean、low、high（90%）
-print(model.method,  # hierarchical_v0.2_corrected
-      round(est.low, 2), round(est.mean, 2), round(est.high, 2))
+print(model.method)  # hierarchical_v0.2_corrected
+print(round(est.low, 2), round(est.mean, 2), round(est.high, 2))
 new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學程：用族群平均，區間較寬
 ```
 
