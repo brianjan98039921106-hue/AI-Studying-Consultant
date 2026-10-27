@@ -183,7 +183,7 @@
 | A-C4-8 | 假設 | 屬性之間彼此偏好獨立（mutual preferential independence），所以加法效用成立；各屬性的價值函數是線性的 | C4.4 v0（2026-10-28） | 例如「地點」的重要性取決於「學費」時，加法模型會錯 | W-42 使用者研究：比較加法模型與學生的整體排序 | 必要時改用乘法效用或非線性價值函數 | — | — |
 | B-C4-1 | 盲區 | **錄取正相關**：同一份申請在各校結果相關 | — | 高估「多申請夢幻校」的價值 | V-C4-2 | C4.2 copula 評估（`aisc.portfolio.recommend_portfolio`、`portfolio_value_mc`，A-C4-5） | H | 🟢（`test_recommendation_accounts_for_admission_correlation`；是否改為預設見 V-C4-2） |
 | B-C4-2 | 盲區 | **把點估計當真值** | Bertsimas & Sim 2004 | 組合對機率誤差敏感 | V-C4-3 | C4.3 穩健選擇（`worst_case_portfolio`、`minimax_regret_portfolio`，A-C4-6、A-C4-7） | M | 🟢（`test_robust_choice_over_probability_intervals`；代價已量化 F120，穩健準則未改善，預設不變 F121–F122） |
-| B-C4-3 | 盲區 | **效用 ≠ 契合度**：獎學金、學費、地點、家庭考量未納入 | — | 選出契合但負擔不起的組合 | 使用者研究 | C4.4 效用擷取 | M | 🔴 |
+| B-C4-3 | 盲區 | **效用 ≠ 契合度**：獎學金、學費、地點、家庭考量未納入 | — | 選出契合但負擔不起的組合 | 使用者研究 | C4.4 效用擷取：AHP 權重＋加法效用（`portfolio/utility.py`，A-C4-8） | M | 🟡（工具可用，`test_multi_attribute_utility_with_elicited_weights`；效度待 W-42） |
 | B-C4-4 | 盲區 | **Spring／Fall 多輪次**：先後順序影響後續決策 | — | 靜態模型給出錯誤時程建議 | — | 兩階段模型 | L | 🔴 |
 | B-C4-5 | 盲區 | **成本不只申請費**：文件準備時間、推薦人負擔 | — | 低估邊際申請成本 | — | 成本加入時間單位 | L | 🔴 |
 | B-C4-6 | 盲區 | **申請成本與時程依學位類型差異大**（集中申請費、面試旅費、作品集製作時間） | 全背景決策（2026-10-27） | 申請組合低估某些學程的實際成本 | — | 成本由學生輸入或取自官網；只在申請模式使用 | L | 🔴 |

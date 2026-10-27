@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.13（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.14（研究原型）
 
 ---
 
@@ -302,6 +302,25 @@ print(plan.chosen_ids, round(plan.result.expected_utility, 1), plan.result.metho
 print({rho: round(v, 1) for rho, v in plan.value_if_correlated.items()})  # ρ 越高越低
 ```
 
+契合度不是唯一考量（學費、地點、學制長度……，B-C4-3）。可以用成對比較請學生給屬性權重（AHP；一致性比率 ≥ 0.1 時請學生重新比較），再組成效用交給 `plan_applications(..., utility=...)`。這個工具尚未經使用者研究驗證（W-42）：
+
+```python
+from aisc.portfolio import ahp_weights, multi_attribute_utility, scale_linear
+
+# 契合度比學費重要 3 倍
+w, cr = ahp_weights([[1, 3], [1 / 3, 1]])
+values = {
+    r.program.program_id: {
+        "fit": r.relevance,
+        "cost": scale_linear(r.program.tuition_usd or 60_000, worst=90_000, best=20_000),
+    }
+    for r in shortlist_
+}
+utility_mau = multi_attribute_utility(values, {"fit": w[0], "cost": w[1]})
+plan_mau = plan_applications(shortlist_, admit, budget=3, utility=utility_mau)
+print(round(cr, 3), plan_mau.chosen_ids)
+```
+
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
 
 v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
@@ -438,3 +457,4 @@ print(md.splitlines()[0])
 | 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
 | 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
 | 2026-10-28 | v0.3.13 | 輸入檢查更嚴格（第五次稽核）：拼錯的維度、超出 0–1 的作答、未知或型別錯誤的硬條件、重複的學程代碼都會報錯；作答預設不確定性改為 0.25（原 0.5 讓問卷重問已答維度）；重複的錨點只算一次；自適應問卷只為可推薦的學程挑題（§4.2、§4.3、§4.5） | B-C1-26～31、B-C2-20～21 |
+| 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
