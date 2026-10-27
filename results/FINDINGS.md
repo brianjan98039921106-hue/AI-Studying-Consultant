@@ -21,6 +21,7 @@
 | sc | [synthetic-l3-c2-scorer-findings.md](synthetic-l3-c2-scorer-findings.md) | W-26 |
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
+| fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
 | nz | [synthetic-l3-noise-findings.md](synthetic-l3-noise-findings.md) | C1.3 v2 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
@@ -66,7 +67,12 @@
 | F54 | 分區的效益在轉換者身上同樣成立（switching 層 +0.046～+0.111，無負值） | ✅ | st（兩次執行 × 8 條件） | C2 v1 通過第一次分層檢查 |
 | F55 | 原型模型下轉換者增益較小但絕對水準較高（只依契合時本來就多半不認識） | ✅ | st | — |
 | F56 | 分區的相關率代價集中在延續者（原型 −0.26～−0.31 vs −0.13～−0.15） | ✅ | st | 報告時兩區一起呈現 |
-| F57 | 目前模擬器的轉換很溫和，尚未檢驗遠領域假陽性 | 💭 | st（依構造） | W-63、W-67 |
+| F57 | 目前模擬器的轉換很溫和，尚未檢驗遠領域假陽性 | 💭 → 已處理 | st（依構造）；W-63／W-67 已加入（F58–F62） | — |
+| F58 | 分區的效益對所有轉換類型都成立（含遠距與多學位，+0.067～+0.205） | ✅ | fd（兩次執行） | C2 v1 維持 |
+| F59 | 遠領域假陽性在模擬中出現：只依契合前 10 名有 4.3%–5.7% 只在量測維度上相關 | ✅ | fd（量級依手設值） | B-C2-8 |
+| F60 | 遠領域假陽性集中在需求屬於遠領域（健康／生命科學）的學生，不是轉換類型 | ✅（原型）／部分（連續） | fd | W-64 優先 |
+| F61 | 分區略為放大遠領域假陽性（原型 +0.018～+0.032，連續 ≈ 0） | ✅（數據）／💭（機制） | fd | 遠領域推薦需附理由 |
+| F62 | 相關率代價仍集中在延續者 | ✅ | fd | 與 F56 一致 |
 
 ## C1 學生側寫
 

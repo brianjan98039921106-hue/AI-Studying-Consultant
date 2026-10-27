@@ -8,6 +8,9 @@
 | `private/` | Student profiles, survey answers, consultant cases | **Never** (gitignored) |
 
 ## Synthetic catalogue
+
+The all-fields simulator (`src/aisc/simulation/fields.py`, W-67) adds six far-field program prototypes (fictional schools; CIP labels are modelling choices to be checked against CIP 2020 before any real use) and hidden-domain values that exist only inside the simulator.
+
 `synthetic/programs.jsonl` — 12 fictional programs. School names are placeholders. CIP codes are used only to exercise label-space novelty and must be checked against the official CIP 2020 list before any real use. Attribute scores and `prestige` values are hand-set for testing, not measurements. The simulator (C5) redraws prestige for its own catalogue; the prototype prestige values are used only by unit tests such as the B-C1-2 probe.
 
 ## Reference tables (W-14, W-15)
