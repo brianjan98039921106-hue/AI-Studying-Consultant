@@ -19,3 +19,4 @@ htmlcov/
 # Notebooks / OS
 .ipynb_checkpoints/
 .DS_Store
+examples/out/
