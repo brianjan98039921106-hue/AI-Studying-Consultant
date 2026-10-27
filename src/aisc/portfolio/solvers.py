@@ -76,8 +76,10 @@ def dp_varied_cost(
     _check(p, u)
     if len(cost) != len(p):
         raise ValueError("cost must have the same length as p")
-    if any(c < 0 or int(c) != c for c in cost) or budget < 0:
+    if any(c < 0 or int(c) != c for c in cost) or budget < 0 or int(budget) != budget:
         raise ValueError("Costs and budget must be non-negative integers")
+    cost = [int(c) for c in cost]  # B-C4-7: whole-number floats (e.g. from a table)
+    budget = int(budget)
 
     order = sorted(range(len(p)), key=lambda j: u[j])
     prev = [0.0] * (budget + 1)

@@ -149,6 +149,8 @@ class LayerBalanced:
 
 def layer_balanced(weights: dict[str, float], base: Scorer | None = None) -> LayerBalanced:
     b = base if base is not None else blend(0.25)
+    if b.intensity_gamma:  # B-C2-16: each layer is scored alone, so no layer index exists
+        raise ValueError("layer_balanced needs a base without an intensity penalty (γ = 0)")
     total = sum(weights.values())
     if total <= 0:
         raise ValueError("weights must have a positive sum")

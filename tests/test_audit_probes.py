@@ -1,10 +1,9 @@
-"""Probes for defects found by the 2026-10-28 code audit (B-C1-25, B-C2-15..17,
-B-C4-7, B-C5-10..12). Each fails today; the fix removes its xfail."""
+"""Regression tests for defects found by the 2026-10-28 code audit (B-C1-25,
+B-C2-15..17, B-C4-7, B-C5-10..12); they started as xfail probes."""
 
 import math
 
 import numpy as np
-import pytest
 
 from aisc.contracts import StudentProfile, to_vector
 from aisc.dimensions import LAYERS, NEED_KEYS
@@ -18,45 +17,21 @@ def _raises(fn, exc=ValueError) -> bool:
     return False
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C2-15: NaN need or attribute values pass the [0, 1] check",
-)
-def test_probe_nan_scores_are_rejected():
+def test_nan_scores_are_rejected():
     assert _raises(lambda: to_vector({"riasec_r": float("nan")}))
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C1-25: an uncertainty of 0 is accepted and later divides by zero",
-)
-def test_probe_non_positive_uncertainty_is_rejected():
+def test_non_positive_uncertainty_is_rejected():
     assert _raises(lambda: StudentProfile("s", {"riasec_r": 0.5}, {"riasec_r": 0.0}))
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C2-16: a layered(γ>0) base inside layer_balanced crashes at scoring",
-)
-def test_probe_layer_balanced_rejects_layered_base_up_front():
+def test_layer_balanced_rejects_layered_base_up_front():
     from aisc.discovery import layer_balanced, layered
 
     assert _raises(lambda: layer_balanced({lay: 1.0 for lay in LAYERS}, base=layered(0.5)))
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C5-10: worst_case/maximin results depend on dict order with NaN",
-)
-def test_probe_worst_case_ignores_nan_regardless_of_order():
+def test_worst_case_ignores_nan_regardless_of_order():
     from aisc.simulation.strata import maximin, worst_case
 
     a = worst_case({"m": {"a": math.nan, "b": 0.1}})["m"]
@@ -65,13 +40,7 @@ def test_probe_worst_case_ignores_nan_regardless_of_order():
     assert maximin({"m1": {"a": math.nan, "b": 0.1}, "m2": {"a": 0.2, "b": 0.3}}) == "m2"
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C4-7: whole-number float costs pass validation then crash",
-)
-def test_probe_dp_accepts_whole_number_float_costs():
+def test_dp_accepts_whole_number_float_costs():
     from aisc.portfolio.solvers import dp_varied_cost
 
     ok = not _raises(lambda: dp_varied_cost([0.5, 0.5], [1, 1], [1.0, 2.0], 3), TypeError)
@@ -80,13 +49,7 @@ def test_probe_dp_accepts_whole_number_float_costs():
     )
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C2-17: the SIMEX-corrected estimate carries the naive betas",
-)
-def test_probe_corrected_estimate_does_not_report_naive_betas():
+def test_corrected_estimate_does_not_report_naive_betas():
     from aisc.discovery.layer_weights import _pair_rows, estimate_layer_weights_simex
 
     rng = np.random.default_rng(0)
@@ -102,13 +65,7 @@ def test_probe_corrected_estimate_does_not_report_naive_betas():
     )
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C5-11: all-fields students are scored without hidden domains silently",
-)
-def test_probe_all_fields_evaluation_requires_hidden():
+def test_all_fields_evaluation_requires_hidden():
     from aisc.simulation.catalog_gen import synthetic_catalog
     from aisc.simulation.evaluate import evaluate_lists_per_student, popular_baseline
     from aisc.simulation.fields import all_fields_catalog
@@ -121,13 +78,7 @@ def test_probe_all_fields_evaluation_requires_hidden():
     assert _raises(lambda: evaluate_lists_per_student(pop, src, {"pop": popular_baseline}))
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C5-12: an 'adjacent' student with no same-group family is mislabelled",
-)
-def test_probe_adjacent_fallback_is_relabelled():
+def test_adjacent_fallback_is_relabelled():
     from aisc.simulation import fields
 
     assert hasattr(fields, "realised_transition")

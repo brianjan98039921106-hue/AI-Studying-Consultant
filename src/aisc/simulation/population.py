@@ -327,6 +327,7 @@ def _generate_all_fields(
         HIDDEN_TO_FAMILY,
         MACRO_GROUPS,
         pick_backgrounds,
+        realised_transition,
     )
 
     grouped = set().union(*MACRO_GROUPS.values())
@@ -370,6 +371,7 @@ def _generate_all_fields(
         # 2. transition type and background degree families
         transition = trans[rng.choice(len(trans), p=tprob)]
         backgrounds = pick_backgrounds(transition, natural, families, rng)
+        transition = realised_transition(transition, natural, backgrounds)
         # 3. familiarity: any of the student's degree families counts as 'same family'
         probs = familiarity_probs(catalog, backgrounds, cfg)
         familiar_idx = np.flatnonzero(rng.random(len(catalog)) < probs)

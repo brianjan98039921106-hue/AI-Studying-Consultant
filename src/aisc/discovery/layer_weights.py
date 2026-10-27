@@ -88,7 +88,7 @@ def fit_layer_weights(F: np.ndarray, y: np.ndarray, max_iter: int = 100) -> np.n
 @dataclass(frozen=True)
 class LayerWeightEstimate:
     shares: dict[str, float]  # pi_l, sums to 1
-    beta: dict[str, float]
+    beta: dict[str, float]  # empty for measurement-error-corrected estimates (B-C2-17)
     ci: dict[str, tuple[float, float]]  # 95% cluster-bootstrap interval of each share
     n_respondents: int
     n_pairs: int
@@ -244,7 +244,7 @@ def estimate_layer_weights_simex(
         lo, hi = np.nanpercentile(np.array(boot), [2.5, 97.5], axis=0)
     corrected = LayerWeightEstimate(
         shares=dict(zip(LAYERS, map(float, ext), strict=True)),
-        beta=naive.beta,
+        beta={},  # B-C2-17: corrected shares have no single beta; see `naive` for it
         ci={lay: (float(a), float(b)) for lay, a, b in zip(LAYERS, lo, hi, strict=True)},
         n_respondents=naive.n_respondents,
         n_pairs=naive.n_pairs,

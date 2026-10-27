@@ -129,6 +129,8 @@
 
 所有發現的狀態：[results/FINDINGS.md](../results/FINDINGS.md)。最新 L3 結果：[領域把關](../results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](../results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](../results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](../results/synthetic-l3-noise-findings.md)、[端到端](../results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
 
+**程式稽核**（2026-10-28，獨立代理人審查 `src/aisc`）：找到 8 個缺陷（B-C1-25、B-C2-15～17、B-C4-7、B-C5-10～12），皆先登錄並寫探針再修正，現由 `tests/test_audit_probes.py` 鎖定；沒有一個影響已報告的結果。
+
 **分層規則**（D12，2026-10-27 起）：L3 與 L5 的主要指標一律依背景分層報告；選擇方法時以最差層作為準則之一。
 
 **L3 判定規則**：結論須在 2 種真相函數 × 2 種生成模型（× 3 種名氣權重）下方向一致才算成立。

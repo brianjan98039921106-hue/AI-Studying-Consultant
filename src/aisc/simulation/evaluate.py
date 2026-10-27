@@ -119,6 +119,11 @@ def _list_rows(
         "best_fit_retained": [],
         "outside_shortlist_rate": [],
     }
+    if hidden is None and any(s.hidden_needs is not None for s in population):
+        raise ValueError(  # B-C5-11
+            "these students have hidden domains (all-fields model); pass `hidden` so that "
+            "relevance uses the full truth"
+        )
     if hidden is not None:
         rows["hidden_mismatch_rate"] = []
     interactive = getattr(rec, "interactive", False)
@@ -174,6 +179,7 @@ def evaluate_lists(
     include_familiar: bool | dict[str, bool] = False,
     familiarity_noise: dict[str, tuple[float, float]] | None = None,
     seed: int = 7,
+    hidden: dict[str, np.ndarray] | None = None,
 ) -> dict[str, dict[str, tuple[float, float]]]:
     """Mean ± SE of list metrics per recommender.
 
@@ -185,6 +191,7 @@ def evaluate_lists(
     (default perfect answers). For them, list metrics are computed on the
     discoveries section, `best_fit_retained` on both sections, and
     `outside_shortlist_rate` reports discoveries that were never asked (B-C2-7).
+    `hidden`: the catalogue's hidden domains for all-fields populations (W-67).
     """
     by_id = {p.program_id: p for p in catalog}
     catalog_prestige = [p.prestige or 0.0 for p in catalog]
@@ -192,7 +199,7 @@ def evaluate_lists(
     for name, rec in recommenders.items():
         fam_flag, miss, false_alarm = _fam_settings(name, include_familiar, familiarity_noise)
         rows, lists = _list_rows(population, catalog, name, rec, k, truth, top_frac,
-                                 fam_flag, miss, false_alarm, seed)  # fmt: skip
+                                 fam_flag, miss, false_alarm, seed, hidden)  # fmt: skip
         summary = {key: M.mean_se(vals) for key, vals in rows.items()}
         summary["coverage"] = (M.catalog_coverage(lists, len(catalog)), float("nan"))
         rec_prestige = [by_id[i].prestige or 0.0 for lst in lists for i in lst]
