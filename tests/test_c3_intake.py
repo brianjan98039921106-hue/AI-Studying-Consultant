@@ -119,15 +119,7 @@ def test_fit_from_files_and_validation_script(tmp_path):
     assert "Brier skill" in text and "校準截距" in text and "| taiwan |" in text
 
 
-# --- independent review of the intake (2026-10-28): B-C3-13..15 --------------------
-
-
-def _probe(reason):
-    def mark(fn):
-        return pytest.mark.probe(pytest.mark.xfail(strict=True, raises=AssertionError,
-                                                   reason=reason)(fn))  # fmt: skip
-
-    return mark
+# --- independent review of the intake (2026-10-28): B-C3-13..15, started as probes --
 
 
 def _refused(fn, *args, match=None):
@@ -144,7 +136,6 @@ ROW = ["R1", "2025", "P1", "52.1301", "", "complete", "admit", "", "80", "100"]
 ROW2 = ["R2", "2025", "P1", "52.1301", "", "complete", "reject", "", "70", "90"]
 
 
-@_probe("B-C3-13: identifier headers and cells in common formats get through")
 def test_probe_common_identifier_formats_are_refused(tmp_path):
     slipped = []
     for h in ["Student Name", "Email Address", "Phone Number", "mobile", "DOB", "LINE ID",
@@ -162,7 +153,6 @@ def test_probe_common_identifier_formats_are_refused(tmp_path):
     assert not slipped, slipped
 
 
-@_probe("B-C3-14: the time split fits a differently anchored, test-year-standardised model")
 def test_probe_time_split_is_disclosed_and_leak_free(tmp_path):
     rec = _synthetic_records(tmp_path)
     rates = _write(tmp_path / "rates.csv",
@@ -187,7 +177,6 @@ def test_probe_time_split_is_disclosed_and_leak_free(tmp_path):
     assert test.report.features == train.report.features
 
 
-@_probe("B-C3-15: ragged rows, blank lines, case and encoding are mishandled")
 def test_probe_loader_robustness(tmp_path):
     p = tmp_path / "ragged.csv"
     p.write_text(",".join(HEAD) + "\n" + ",".join(ROW) + ",extra\n" + ",".join(ROW2) + "\n",
@@ -222,7 +211,6 @@ def test_probe_loader_robustness(tmp_path):
     assert "x_toefl" in data.report.features and data.report.warnings
 
 
-@_probe("B-C3-15: conflicting, percent or undated official rates are accepted or crash")
 def test_probe_rates_validation(tmp_path):
     head = ["program_id", "year", "admit_rate", "source_url", "retrieved_at"]
     ok = ["P1", "2025", "0.3", "https://example.edu", "2026-10-28"]
@@ -234,7 +222,6 @@ def test_probe_rates_validation(tmp_path):
         assert _refused(load_official_rates, p, match=":3"), bad
 
 
-@_probe("B-C3-15: the validation script crashes on a new type or an all-admit test year")
 def test_probe_validation_script_survives_test_year_surprises(tmp_path):
     rec = _synthetic_records(tmp_path)
     lines = rec.read_text(encoding="utf-8").splitlines()
