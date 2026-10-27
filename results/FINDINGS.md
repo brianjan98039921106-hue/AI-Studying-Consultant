@@ -32,6 +32,7 @@
 | lw | [layer-weight-recovery-findings.md](layer-weight-recovery-findings.md) | W-76 |
 | sx | [layer-weight-simex-findings.md](layer-weight-simex-findings.md) | W-76 |
 | sb | [layer-weight-simex-boot-findings.md](layer-weight-simex-boot-findings.md) | W-76 |
+| rc | [layer-weight-rc-findings.md](layer-weight-rc-findings.md) | W-76 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
 
@@ -123,6 +124,9 @@
 | F91 | 自助法包住 SIMEX 後涵蓋率合格（0.85–0.95），但 equal 情境點估計過度校正（領域 −0.083、−0.082），R1 未過 | ✅ | sb | SIMEX 不採用 |
 | F92 | SIMEX 偏誤隨模擬世界大幅變動（同設定：種子 1600 為 −0.012／−0.036，種子 1700 為 −0.083／−0.082） | ✅（數據）；比較未預先登記 | sb | 校正方法不能依賴名目 σ |
 | F93 | 推測：[0, 1] 截斷使多數領域題的實際誤差小於名目 σ，SIMEX 因此過度校正領域層 | 💭 | sb | B-C2-14；下一候選：迴歸校正 |
+| F99 | 迴歸校正未通過預先登記（R1 14／18、R2 13／18，失敗集中在各層等權份量），R3 18／18 | ✅ | rc | 不採用 |
+| F100 | 各層等權時領域份量偏誤隨世界與生成模型改變方向，任何估計器都一樣（未校正 −0.046～+0.042，迴歸校正 −0.126～+0.072） | ✅（數據）／💭（機制） | rc | B-C2-18：配對設計 |
+| F101 | 四次參數還原中區間都能區分兩種模擬假設；精確份量目前估不準 | ✅（數據）／💭（重新定義 W-76 問題） | rc | W-76 改為區分假設，須新預先登記 |
 
 ## C1 學生側寫
 
