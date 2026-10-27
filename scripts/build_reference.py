@@ -24,7 +24,10 @@ from pathlib import Path
 from aisc.catalog.occupation import (
     RIASEC,
     RIASEC_KEYS,
+    basic_interest_key,
+    load_basic_interest_map,
     load_cip_soc_crosswalk,
+    load_onet_basic_interests,
     load_onet_interests,
     occupation_profile,
     soc_profiles,
@@ -66,6 +69,23 @@ def main() -> None:
         ap.add_argument(f"--{a}", type=Path, required=True)
     ap.add_argument("--retrieved-at", required=True, help="ISO date the files were downloaded")
     ap.add_argument("--onet-release", required=True, help="O*NET database release, e.g. 31.0")
+    ap.add_argument(
+        "--basic-interests",
+        type=Path,
+        default=None,
+        help="O*NET specific_interest_areas.csv (W-64)",
+    )
+    ap.add_argument(
+        "--basic-map",
+        type=Path,
+        default=None,
+        help="O*NET specific_interest_areas_to_career_interest_types.csv",
+    )
+    ap.add_argument(
+        "--basic-retrieved-at",
+        default=None,
+        help="download date of the two basic-interest files (default --retrieved-at)",
+    )
     ap.add_argument("--scope", type=Path, default=ROOT / "data" / "reference" / "mvp_scope.json")
     ap.add_argument("--out", type=Path, default=ROOT / "data" / "reference")
     ap.add_argument("--report", type=Path, default=ROOT / "results" / "reference-w14-w15.md")
@@ -108,6 +128,34 @@ def main() -> None:
          "missing_soc": " ".join(p.missing)}
         for c, p in profiles.items()
     ])  # fmt: skip
+    extra_inputs = []
+    if (args.basic_interests is None) != (args.basic_map is None):
+        raise SystemExit("pass both --basic-interests and --basic-map, or neither")
+    if args.basic_interests is not None:
+        bmap = load_basic_interest_map(args.basic_map)
+        areas = tuple(bmap)
+        bkeys = tuple(basic_interest_key(a) for a in areas)
+        bsocs = soc_profiles(load_onet_basic_interests(args.basic_interests, areas), areas)
+        _write_csv(args.out / "basic_interest_map.csv", [
+            {"key": k, "area": a, "riasec": " ".join(bmap[a])}
+            for k, a in zip(bkeys, areas, strict=True)
+        ])  # fmt: skip
+        bused = sorted({s for c in fam for s in xw.get(c, set()) if s in bsocs})
+        _write_csv(args.out / "soc_basic_interests_mvp.csv", [
+            {"soc": s, **{k: f"{bsocs[s][a]:.4f}" for k, a in zip(bkeys, areas, strict=True)}}
+            for s in bused
+        ])  # fmt: skip
+        bprof = {c: occupation_profile(c, xw, bsocs, bkeys, areas) for c in sorted(fam)}
+        _write_csv(args.out / "occupation_basic_interests_mvp.csv", [
+            {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in bkeys},
+             "n_soc": len(p.socs), "n_soc_with_onet": len(p.socs_with_onet)}
+            for c, p in bprof.items()
+        ])  # fmt: skip
+        b_date = args.basic_retrieved_at or args.retrieved_at
+        extra_inputs = [
+            ("onet_specific_interest_areas", args.basic_interests, ONET_URL, b_date),
+            ("onet_specific_interest_areas_map", args.basic_map, ONET_URL, b_date),
+        ]
     sources = {
         "built": date.today().isoformat(),
         "scope_version": scope.version,
@@ -124,6 +172,8 @@ def main() -> None:
             ]
         },
     }
+    for key, path, url, when in extra_inputs:
+        sources["inputs"][key] = file_provenance(path, url, when).to_dict()
     (args.out / "SOURCES.json").write_text(json.dumps(sources, indent=2) + "\n", encoding="utf-8")
 
     # --- report ---------------------------------------------------------------------

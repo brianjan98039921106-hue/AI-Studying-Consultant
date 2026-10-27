@@ -1,0 +1,42 @@
+key,area,riasec
+bi_mechanics_electronics,Mechanics/Electronics,Realistic
+bi_construction_woodwork,Construction/Woodwork,Realistic
+bi_transportation_machine_operation,Transportation/Machine Operation,Realistic
+bi_physical_manual_labor,Physical/Manual Labor,Realistic
+bi_protective_service,Protective Service,Realistic
+bi_agriculture,Agriculture,Realistic
+bi_nature_outdoors,Nature/Outdoors,Realistic
+bi_animal_service,Animal Service,Realistic Social
+bi_athletics,Athletics,Realistic Enterprising
+bi_engineering,Engineering,Realistic
+bi_physical_science,Physical Science,Investigative
+bi_life_science,Life Science,Investigative
+bi_medical_science,Medical Science,Investigative
+bi_social_science,Social Science,Investigative Social
+bi_humanities,Humanities,Investigative Artistic
+bi_mathematics_statistics,Mathematics/Statistics,Investigative Conventional
+bi_information_technology,Information Technology,Conventional
+bi_visual_arts,Visual Arts,Artistic
+bi_applied_arts_and_design,Applied Arts and Design,Artistic
+bi_performing_arts,Performing Arts,Artistic
+bi_music,Music,Artistic
+bi_creative_writing,Creative Writing,Artistic
+bi_media,Media,Artistic
+bi_culinary_art,Culinary Art,Artistic Social
+bi_teaching_education,Teaching/Education,Social
+bi_social_service,Social Service,Social
+bi_health_care_service,Health Care Service,Investigative Social
+bi_religious_activities,Religious Activities,Social Enterprising
+bi_personal_service,Personal Service,Social
+bi_professional_advising,Professional Advising,Social Enterprising
+bi_business_initiatives,Business Initiatives,Enterprising
+bi_sales,Sales,Enterprising
+bi_marketing_advertising,Marketing/Advertising,Artistic Enterprising
+bi_finance,Finance,Enterprising Conventional
+bi_accounting,Accounting,Conventional
+bi_human_resources,Human Resources,Social Conventional
+bi_office_work,Office Work,Conventional
+bi_management_administration,Management/Administration,Enterprising
+bi_public_speaking,Public Speaking,Enterprising
+bi_politics,Politics,Enterprising
+bi_law,Law,Enterprising

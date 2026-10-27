@@ -14,6 +14,7 @@
 | MVP 範圍篩選（W-14） | CIP 2020 代碼前綴清單（`data/reference/mvp_scope.json`），award level 7、第一主修（MAJORNUM=1）、最近一年畢業人數 > 0 | A-C0-4、A-C0-7 |
 | 職業剖面量尺與合成（W-15 v1） | O*NET 職業興趣量尺 OI 為 1–7（Rounds et al., 1999, *Development of Occupational Interest Profiles for O\*NET*），線性轉為 $(v-1)/6 \in [0,1]$；同一 SOC 下多個 O\*NET-SOC 細項取平均，一個 CIP 對應多個 SOC 時等權平均（v1；v2 以就業人數加權） | A-C0-2、A-C0-3、A-C0-6 |
 | 職業剖面 v2：就業加權（W-71） | BLS Occupational Employment and Wage Statistics（OEWS）各 SOC 就業人數作為權重（沒有自由參數）；教職 SOC 另行處理（B-C0-8） | A-C0-2、A-C0-3 |
+| 細分興趣橋接（W-64） | 與 RIASEC 相同的 CIP → SOC → O\*NET 路徑，元素換成 41 個細分興趣領域；OI 1–7 → $(v-1)/6$；等權平均 | A-C0-9、B-C0-14 |
 | 評分準則跨領域外推（W-72） | 留一族群外推（leave-one-family-out）：在部分 CIP 族群開發，在未參與開發的族群檢驗一致性 | A-C0-8 |
 | LLM 屬性擷取 | 擷取式 NLP；幻覺風險見 Ji et al. (2023), *ACM Computing Surveys* | A-C0-5 擷取結果可由原文佐證 |
 | 一致性檢驗 | 心理計量的收斂效度（convergent validity）；評分者一致性 Cohen's κ | — |
@@ -44,7 +45,7 @@
 | 題目差異功能 DIF（W-73） | Mantel–Haenszel 與邏輯斯迴歸 DIF（Holland & Wainer, 1993, *Differential Item Functioning*） | A-C1-19 |
 | 題目參數校準（W-73） | 等級反應模型（Samejima, 1969, *Psychometrika Monograph* 17） | A-C1-12 由校準後的作答模型取代 |
 | 兩階段提問（W-66） | 先粗後細：先測 RIASEC 與大領域群，依結果只深入相關子領域；切換規則以 L3 預先登記選擇 | A-C1-14 |
-| 跨領域領域層（W-64，候選） | O\*NET 自 30.3 版提供每個職業的細分興趣領域資料（release notes：「41 specific interest areas」）；**理論來源與檔案待確認後才能通過 G0** | B-C1-19 |
+| 跨領域領域層（W-64） | O\*NET 41 個細分興趣領域（Specific Interest Areas；研究文獻稱 basic interests），每個連到一或兩個 RIASEC 類型（Rounds, Putka & Lewis, 2022／2023，*Updating Vocational Interests Information for the O\*NET Content Model*）；職業評分以 AI＋專家混合法產生（Liu, Putka, Wu & Lewis, 2026，*Using a Hybrid Artificial Intelligence-Expert Method to Develop Basic Interest Ratings for the O\*NET System*）；O\*NET 31.0 檔案 `specific_interest_areas.csv`（891 個職業 × 41 領域，OI 1–7）與 `specific_interest_areas_to_career_interest_types.csv` | A-C1-20、A-C0-9、B-C0-14、B-C1-19 |
 
 ## C2 探索推薦
 

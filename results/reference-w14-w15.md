@@ -1,6 +1,6 @@
 # 參考資料建置報告（W-14、W-15）
 
-- 產生日期：2026-10-26 · IPEDS 2025 · O*NET unknown (ratings dated up to 02/2026) · 範圍 mvp-v1
+- 產生日期：2026-10-27 · IPEDS 2025 · O*NET 31.0 (identified 2026-10-27: the file name career_interest_types.csv is the official name since release 30.3, and its 8,307 data rows and 9 columns match the O*NET 31.0 CSV data dictionary) · 範圍 mvp-v1
 - 來源與檔案雜湊：`data/reference/SOURCES.json`（下載日期 2026-10-26）
 
 ## W-14：範圍內 CIP 與學校

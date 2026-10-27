@@ -22,6 +22,7 @@
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
+| dl | [domain-layer-findings.md](domain-layer-findings.md)（**真實資料**） | W-64 |
 | nz | [synthetic-l3-noise-findings.md](synthetic-l3-noise-findings.md) | C1.3 v2 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
@@ -34,6 +35,10 @@
 | F51 | 58／73 個 CIP 對照到大學教師職業，把職業剖面推向 Social（平均 −0.10，最大 0.32） | ✅ | ref | B-C0-8 |
 | F52 | Conventional 維度在範圍內幾乎無區辨度（跨 CIP 標準差 0.082） | ✅ | ref | C0.4 融合時 C 以課程向量為主 |
 | F53 | 資訊科學族群（11.01、11.04）比預期寬，多為電腦科學／IT 學位 | 💭 | ref | 保留（2026-10-27 全背景決策：範圍只會擴大） |
+| F63 | 只用 RIASEC 時學程端幾乎分不出領域（全領域 1,101 個 CIP，輪廓係數 0.000；Law 的最近鄰是行銷研究與投資） | ✅ | dl | B-C1-19、B-C2-8 在真實資料成立 |
+| F64 | 加入 O*NET 41 個細分興趣領域後，同族群比例 0.612 → 0.759，輪廓係數 0.000 → 0.169 | ✅ | dl | W-64 採用 41 領域作為領域層的依據 |
+| F65 | 改善不均：自然科學大幅改善，公共行政與社會服務、跨領域研究等混合族群仍低 | ✅ | dl | — |
+| F66 | 領域區分上 41 領域單獨即足，RIASEC 無額外貢獻 | 💭 | dl | 領域層用 41 領域，興趣層保留 RIASEC |
 
 ## C2 探索推薦
 

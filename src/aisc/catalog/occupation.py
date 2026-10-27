@@ -44,27 +44,66 @@ def load_cip_soc_crosswalk(path: str | Path) -> dict[str, set[str]]:
     return dict(out)
 
 
-def load_onet_interests(path: str | Path) -> dict[str, dict[str, float]]:
-    """O*NET-SOC code -> {RIASEC name: OI value (1-7)}; other scales and the
-    newer basic-interest elements are ignored."""
+def load_onet_elements(
+    path: str | Path, elements: tuple[str, ...], what: str = "RIASEC"
+) -> dict[str, dict[str, float]]:
+    """O*NET-SOC code -> {element name: OI value (1-7)} for the given elements.
+    Other scales (IH high points, DS display rank) and other elements are ignored."""
     rows = read_table(path, required=["O*NET-SOC Code", "Element Name", "Scale ID", "Data Value"])
+    wanted = set(elements)
     out: dict[str, dict[str, float]] = defaultdict(dict)
     for r in rows:
-        if r["Scale ID"] != "OI" or r["Element Name"] not in RIASEC:
+        if r["Scale ID"] != "OI" or r["Element Name"] not in wanted:
             continue
         v = float(r["Data Value"])
         if not 1.0 <= v <= 7.0:
             raise ValueError(f"{path}: OI value {v} outside 1-7 for {r['O*NET-SOC Code']}")
         out[r["O*NET-SOC Code"]][r["Element Name"]] = v
-    incomplete = [k for k, d in out.items() if set(d) != set(RIASEC)]
+    incomplete = [k for k, d in out.items() if set(d) != wanted]
     if incomplete:
-        raise ValueError(f"{path}: occupations missing some RIASEC values: {incomplete[:5]}")
+        raise ValueError(f"{path}: occupations missing some {what} values: {incomplete[:5]}")
     if not out:
         raise ValueError(f"{path}: no OI rows found")
     return dict(out)
 
 
-def soc_profiles(interests: dict[str, dict[str, float]]) -> dict[str, dict[str, float]]:
+def load_onet_interests(path: str | Path) -> dict[str, dict[str, float]]:
+    """O*NET-SOC code -> {RIASEC name: OI value (1-7)} (Career Interest Types)."""
+    return load_onet_elements(path, RIASEC, "RIASEC")
+
+
+def basic_interest_key(name: str) -> str:
+    """'Applied Arts and Design' -> 'bi_applied_arts_and_design'."""
+    slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
+    return f"bi_{slug}"
+
+
+def load_basic_interest_map(path: str | Path) -> dict[str, tuple[str, ...]]:
+    """Specific interest area name -> RIASEC type names it links to (O*NET 31.0
+    specific_interest_areas_to_career_interest_types.csv; one or two each)."""
+    rows = read_table(path, required=["Specific Interest Areas Element Name",
+                                      "Career Interest Types Element Name"])  # fmt: skip
+    out: dict[str, list[str]] = defaultdict(list)
+    for r in rows:
+        t = r["Career Interest Types Element Name"]
+        if t not in RIASEC:
+            raise ValueError(f"{path}: unknown RIASEC type {t!r}")
+        out[r["Specific Interest Areas Element Name"]].append(t)
+    if not out:
+        raise ValueError(f"{path}: empty mapping")
+    return {k: tuple(v) for k, v in out.items()}
+
+
+def load_onet_basic_interests(
+    path: str | Path, areas: tuple[str, ...]
+) -> dict[str, dict[str, float]]:
+    """O*NET-SOC code -> {area name: OI value (1-7)} (Specific Interest Areas)."""
+    return load_onet_elements(path, areas, "specific interest area")
+
+
+def soc_profiles(
+    interests: dict[str, dict[str, float]], elements: tuple[str, ...] = RIASEC
+) -> dict[str, dict[str, float]]:
     """SOC detailed code -> mean OI over its O*NET-SOC occupations."""
     groups: dict[str, list[dict[str, float]]] = defaultdict(list)
     for code, prof in interests.items():
@@ -73,7 +112,7 @@ def soc_profiles(interests: dict[str, dict[str, float]]) -> dict[str, dict[str, 
             raise ValueError(f"malformed O*NET-SOC code {code!r}")
         groups[m.group(1)].append(prof)
     return {
-        soc: {k: sum(p[k] for p in profs) / len(profs) for k in RIASEC}
+        soc: {k: sum(p[k] for p in profs) / len(profs) for k in elements}
         for soc, profs in groups.items()
     }
 
@@ -92,8 +131,17 @@ class OccupationProfile:
 
 
 def occupation_profile(
-    cip: str, crosswalk: dict[str, set[str]], socs: dict[str, dict[str, float]]
+    cip: str,
+    crosswalk: dict[str, set[str]],
+    socs: dict[str, dict[str, float]],
+    keys: tuple[str, ...] = RIASEC_KEYS,
+    names: tuple[str, ...] = RIASEC,
 ) -> OccupationProfile:
+    """Equal-weight mean over the CIP's SOC codes with O*NET data, rescaled
+    (v - 1) / 6. `keys`/`names` select the element set (RIASEC by default; the
+    41 specific interest areas for W-64)."""
+    if len(keys) != len(names):
+        raise ValueError("keys and names must have the same length")
     mapped = tuple(sorted(crosswalk.get(cip, set())))
     have = tuple(s for s in mapped if s in socs)
     missing = tuple(s for s in mapped if s not in socs)
@@ -101,6 +149,6 @@ def occupation_profile(
         return OccupationProfile(cip, {}, mapped, have, missing)
     vec = {
         key: (sum(socs[s][name] for s in have) / len(have) - 1.0) / 6.0
-        for key, name in zip(RIASEC_KEYS, RIASEC, strict=True)
+        for key, name in zip(keys, names, strict=True)
     }
     return OccupationProfile(cip, vec, mapped, have, missing)
