@@ -81,6 +81,7 @@
 | C3.2 v0.1 候選：母體積分錨點＋τ 模型平均（F130、B-C3-8、B-C3-9） | (I) 錨點改為官方錄取率的定義本身：r_p = E_母體[σ(a_p + β·x)]，母體以該學程的申請紀錄近似，自陳的錄取紀錄以 e^(−b) 加權還原回報比例（逆機率加權，Horvitz & Thompson, 1952, *JASA* 47；在 A-C3-3 下錄取者被多抽 e^b 倍）；懲罰 (logit r_p − logit m_p(θ))² ／ (2κ²)，以 Gauss–Newton 近似其 Hessian、回溯線搜尋保證目標下降。(M) τ 不再取單一值，而以格點上的 Laplace 邊際概似為權重做模型平均（Hoeting, Madigan, Raftery & Volinsky, 1999, *Statistical Science* 14），線性預測的分佈以加權混合的平均與變異數近似 | A-C3-3、A-C3-4、A-C3-6 |
 | 選擇偏誤 | Heckman (1979), *Econometrica* | A-C3-2 訓練樣本具代表性（GradCafe **不符合**） |
 | 機率校準 | Brier (1950)；Niculescu-Mizil & Caruana (2005), ICML | — |
+| 校準評估工具（C3.3，V-C3-2／3／4） | Brier 分數與相對於「基準錄取率常數預測」的 Brier skill；校準截距與斜率（Cox, 1958, *Biometrika* 45：以 logit(預測) 對實際結果做 logistic 迴歸，理想為截距 0、斜率 1；斜率 < 1 表示預測過度自信）；分組可靠度表（reliability diagram，DeGroot & Fienberg, 1983, *The Statistician* 32）；依群組（例如台灣／國際申請者）分別計算 | A-C3-4 |
 | 不可觀測因素 | Zhao et al. (2023), *PLOS ONE*：推薦信帶有預測訊號 | 說明區間為何必須夠寬（B-C3-5） |
 
 ## C4 申請組合
