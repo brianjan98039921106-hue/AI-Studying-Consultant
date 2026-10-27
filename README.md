@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.15 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.16 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -56,9 +56,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-28 | v0.3.16 | 錄取機率模型可加入學程類型（`types=`、`predict(..., ptype=)`，§4.9） | W-74 |
 | 2026-10-28 | v0.3.15 | v2 新增 `areas_to_ask`：依第一層群分數排出第二層要細問的領域（§4.8；m、q 無預設） | W-66 |
 | 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
-| 2026-10-28 | v0.3.13 | 輸入檢查更嚴格（第五次稽核）：拼錯的維度、超出 0–1 的作答、未知或型別錯誤的硬條件、重複的學程代碼都會報錯；作答預設不確定性改為 0.25（原 0.5 讓問卷重問已答維度）；重複的錨點只算一次；自適應問卷只為可推薦的學程挑題（§4.2、§4.3、§4.5） | B-C1-26～31、B-C2-20～21 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
