@@ -280,10 +280,7 @@ def _conflict_world():
     return fz, data, bad
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="B-C3-10: non-convergence is silent")  # fmt: skip
-def test_probe_fit_reports_non_convergence():
+def test_fit_reports_non_convergence():
     import warnings
 
     fz, data, bad = _conflict_world()
@@ -294,10 +291,7 @@ def test_probe_fit_reports_non_convergence():
     assert m.converged or any(issubclass(w.category, RuntimeWarning) for w in caught)
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="B-C3-11: clipped anchor mean breaks the gradient")  # fmt: skip
-def test_probe_pool_anchor_gradient_is_exact_in_the_tails():
+def test_pool_anchor_gradient_is_exact_in_the_tails():
     import aisc.feasibility.hierarchical as H
 
     rng = np.random.default_rng(0)
@@ -316,10 +310,7 @@ def test_probe_pool_anchor_gradient_is_exact_in_the_tails():
         assert g[j] == pytest.approx(fd, rel=1e-3, abs=1e-3)
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="B-C3-12: official-rate / record conflicts are not reported")  # fmt: skip
-def test_probe_anchor_conflicts_are_flagged():
+def test_anchor_conflicts_are_flagged():
     fz, data, bad = _conflict_world()
     m = fz.fit_admission_model(data, official_rates=bad, tau=0.25)
     assert hasattr(m, "anchor_conflicts") and len(m.anchor_conflicts) >= 1
