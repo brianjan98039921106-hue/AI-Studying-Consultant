@@ -28,6 +28,8 @@
 | C5.3 | 🟡 執行器 + 基準 + 端到端實驗完成，消融介面待擴充 | `simulation/evaluate.py`、`scripts/run_l3_*.py` |
 | C5.4 | ⬜ | — |
 | C5.5 | ✅ v1（logistic-normal，RIASEC 六角形相關） | `SimConfig(needs_model="continuous")` |
+| C5.6 全領域 | ✅ v1：6 個遠領域族群、6 個隱藏領域（真相專用，部件看不到）、四種轉換類型（延續／相鄰／遠距／多學位）；預設 `field_model="v1"` 與舊結果逐字相同 | `simulation/fields.py`、`SimConfig(field_model="all_fields")`、`generate_population(..., hidden=...)` |
+| 分層 | ✅ 所有指標依背景層輸出（D12） | `simulation/strata.py`、`evaluate_lists_per_student` |
 
 ## 驗證
 | 層級 | 內容 |
