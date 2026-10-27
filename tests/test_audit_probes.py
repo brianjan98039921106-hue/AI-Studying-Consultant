@@ -4,7 +4,6 @@ B-C2-15..17, B-C4-7, B-C5-10..12); they started as xfail probes."""
 import math
 
 import numpy as np
-import pytest
 
 from aisc.contracts import StudentProfile, to_vector
 from aisc.dimensions import LAYERS, NEED_KEYS
@@ -89,10 +88,7 @@ def test_adjacent_fallback_is_relabelled():
 # --- third audit (2026-10-28): C4.2 / C2 diversity --------------------------------
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="B-C2-19: cip_family slices unpadded CIP codes wrongly")  # fmt: skip
-def test_probe_cip_family_handles_unpadded_codes():
+def test_cip_family_handles_unpadded_codes():
     from dataclasses import replace
 
     from aisc.discovery.sectioned import cip_family
@@ -103,10 +99,7 @@ def test_probe_cip_family_handles_unpadded_codes():
     assert cip_family(replace(p, cip="52.1301")) == "52.13"
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="B-C4-8: rho is not validated when draws are supplied")  # fmt: skip
-def test_probe_recommend_portfolio_validates_rho_with_draws():
+def test_recommend_portfolio_validates_rho_with_draws():
     import aisc.portfolio as pf
 
     p, u = [0.3, 0.6], [1.0, 0.5]

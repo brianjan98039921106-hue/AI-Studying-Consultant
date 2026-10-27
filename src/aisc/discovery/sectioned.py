@@ -60,8 +60,12 @@ def _ranked(
 
 
 def cip_family(program: Program) -> str:
-    """Diversity unit: the 4-digit CIP series (e.g. "52.13")."""
-    return program.cip[:5]
+    """Diversity unit: the 4-digit CIP series (e.g. "52.13"; "9.0101" -> "09.01",
+    B-C2-19). A code without a dot is returned unchanged."""
+    head, dot, tail = program.cip.strip().partition(".")
+    if not dot:
+        return program.cip
+    return f"{head.zfill(2)}.{tail[:2].ljust(2, '0')}"
 
 
 def _diversified(ranked: list, n: int, diversity: float) -> list:

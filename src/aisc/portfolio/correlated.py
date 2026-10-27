@@ -75,10 +75,14 @@ def recommend_portfolio(
 ) -> list[int]:
     """Portfolio maximising v(S) under correlated admissions.
 
-    rho = 0 returns the exact C4.1 DP solution. Otherwise: exhaustive search over the
-    feasible portfolios when there are at most `exact_limit` schools, else local
-    search (add / drop / swap, first improvement) from the C4.1 solution; all
-    candidates are evaluated on the same draws."""
+    rho = 0 without `draws` returns the exact C4.1 DP solution. Otherwise (including
+    rho = 0 with `draws`, which then gives the Monte Carlo optimum on those draws):
+    exhaustive search over the feasible portfolios when there are at most
+    `exact_limit` schools, else local search (add / drop / swap, first improvement)
+    from the C4.1 solution; all candidates are evaluated on the same draws. `draws`
+    must have been generated with the same rho (B-C4-8: rho is validated either way)."""
+    if not 0 <= rho <= 1:
+        raise ValueError("rho must lie in [0, 1]")
     _check(p, u)
     if len(cost) != len(p):
         raise ValueError("cost must have the same length as p")
