@@ -23,6 +23,7 @@
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
 | dl | [domain-layer-findings.md](domain-layer-findings.md)（**真實資料**） | W-64 |
+| cl | [interest-area-clusters-findings.md](interest-area-clusters-findings.md)（**真實資料**） | W-64 |
 | nz | [synthetic-l3-noise-findings.md](synthetic-l3-noise-findings.md) | C1.3 v2 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
@@ -39,6 +40,9 @@
 | F64 | 加入 O*NET 41 個細分興趣領域後，同族群比例 0.612 → 0.759，輪廓係數 0.000 → 0.169 | ✅ | dl | W-64 採用 41 領域作為領域層的依據 |
 | F65 | 改善不均：自然科學大幅改善，公共行政與社會服務、跨領域研究等混合族群仍低 | ✅ | dl | — |
 | F66 | 領域區分上 41 領域單獨即足，RIASEC 無額外貢獻 | 💭 | dl | 領域層用 41 領域，興趣層保留 RIASEC |
+| F67 | 41 個領域可穩定分成 12 群（輪廓係數 0.331 vs RIASEC 分組 0.145；自助法 ARI 0.806） | ✅ | cl | 兩階段提問第一層 |
+| F68 | 3 個單一領域群（運動、烹飪、宗教）與數個歸屬很弱的領域（人文、政治、行銷、人資） | ✅ | cl | 第二層允許跨群進入 |
+| F69 | 職業結構不一定符合學生認知（法律與保護性服務同群） | 💭 | cl | B-C1-23 |
 
 ## C2 探索推薦
 

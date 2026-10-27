@@ -46,6 +46,7 @@
 | 題目參數校準（W-73） | 等級反應模型（Samejima, 1969, *Psychometrika Monograph* 17） | A-C1-12 由校準後的作答模型取代 |
 | 兩階段提問（W-66） | 先粗後細：先測 RIASEC 與大領域群，依結果只深入相關子領域；切換規則以 L3 預先登記選擇 | A-C1-14 |
 | 跨領域領域層（W-64） | O\*NET 41 個細分興趣領域（Specific Interest Areas；研究文獻稱 basic interests），每個連到一或兩個 RIASEC 類型（Rounds, Putka & Lewis, 2022／2023，*Updating Vocational Interests Information for the O\*NET Content Model*）；職業評分以 AI＋專家混合法產生（Liu, Putka, Wu & Lewis, 2026，*Using a Hybrid Artificial Intelligence-Expert Method to Develop Basic Interest Ratings for the O\*NET System*）；O\*NET 31.0 檔案 `specific_interest_areas.csv`（891 個職業 × 41 領域，OI 1–7）與 `specific_interest_areas_to_career_interest_types.csv` | A-C1-20、A-C0-9、B-C0-14、B-C1-19 |
+| 細分興趣領域分群（W-64 方案 B） | 領域之間以「跨職業評分的 Pearson 相關」為相似度，平均連結階層分群；k 以輪廓係數選擇（Rousseeuw, 1987, *J. Comput. Appl. Math.*）；以自助法的調整 Rand 指數檢驗穩定度（Hubert & Arabie, 1985, *J. Classification*） | A-C1-21、B-C1-23 |
 
 ## C2 探索推薦
 
