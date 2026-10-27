@@ -183,3 +183,36 @@ def test_v01_options_validate_and_behave():
             p = np.array([model.predict(pid, d.features).mean for d in rows])
             gaps[name].append(abs(float((w * p).sum() / w.sum()) - r))
     assert np.mean(gaps["pool"]) < np.mean(gaps["mean"])
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C3-6: one model for all admission processes; programme type cannot enter",
+)
+def test_probe_programme_type_shifts_new_programme_predictions():
+    """Interview-based programmes admit fewer applicants (logit -1.2) in every family.
+    Told the types, the model must predict an unseen interview programme lower than
+    an unseen standard one of the same family, close to the truth."""
+    import inspect
+
+    import aisc.feasibility as fz
+
+    assert "types" in inspect.signature(fz.fit_admission_model).parameters
+    rng = np.random.default_rng(8)
+    recs, types, fams = [], {}, {}
+    for i in range(24):
+        pid, fam = f"p{i}", f"f{i % 3}"
+        t = "interview" if i % 2 else "standard"
+        types[pid], fams[pid] = t, fam
+        a = (-1.0, 0.0, 0.8)[i % 3] + (-1.2 if t == "interview" else 0.0) + rng.normal(0, 0.3)
+        X = rng.normal(0, 1, (80, 2))
+        y = rng.random(80) < 1 / (1 + np.exp(-(a + X @ np.array([0.8, -0.4]))))
+        recs += [fz.AdmissionRecord(pid, fam, tuple(X[j]), int(y[j]), "complete")
+                 for j in range(80)]  # fmt: skip
+    m = fz.fit_admission_model(recs, families=fams, types=types)
+    hi = m.predict("new-std", (0.0, 0.0), family="f1", ptype="standard").mean
+    lo = m.predict("new-int", (0.0, 0.0), family="f1", ptype="interview").mean
+    assert hi - lo > 0.15
+    assert lo == pytest.approx(1 / (1 + np.exp(1.2)), abs=0.1)
