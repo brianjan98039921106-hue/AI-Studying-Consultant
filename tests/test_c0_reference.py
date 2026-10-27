@@ -472,3 +472,11 @@ def test_basic_interest_loaders(tmp_path):
     assert prof.vector == {"a": pytest.approx(0.25), "b": pytest.approx(5 / 6)}
     with pytest.raises(ValueError, match="same length"):
         occupation_profile("27.0501", {}, socs, ("a",), tuple(bmap))
+
+
+def test_interest_area_clusters_cover_all_41_areas_once():
+    spec = json.loads((ROOT / "data" / "reference" / "interest_area_clusters.json").read_text())
+    keys = [a["key"] for c in spec["clusters"] for a in c["areas"]]
+    assert len(keys) == len(set(keys)) == 41
+    assert set(keys) == {r["key"] for r in _ref("basic_interest_map.csv")}
+    assert spec["k"] == len(spec["clusters"]) and spec["bootstrap_mean_ari"] >= 0.60

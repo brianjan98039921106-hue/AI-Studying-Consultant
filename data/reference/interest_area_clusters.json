@@ -1,0 +1,371 @@
+{
+  "version": "clusters-v1",
+  "built": "2026-10-27",
+  "source": "O*NET 31.0 specific_interest_areas.csv (OI), 891 occupations",
+  "rule": "scripts/cluster_interest_areas.py (pre-registered)",
+  "method": "average-linkage clustering on 1 - Pearson r",
+  "k": 12,
+  "mean_silhouette": 0.3305272040650714,
+  "bootstrap_mean_ari": 0.8064873714472669,
+  "clusters": [
+    {
+      "id": 1,
+      "areas": [
+        {
+          "key": "bi_business_initiatives",
+          "name": "Business Initiatives",
+          "riasec": [
+            "Enterprising"
+          ]
+        },
+        {
+          "key": "bi_sales",
+          "name": "Sales",
+          "riasec": [
+            "Enterprising"
+          ]
+        },
+        {
+          "key": "bi_marketing_advertising",
+          "name": "Marketing/Advertising",
+          "riasec": [
+            "Artistic",
+            "Enterprising"
+          ]
+        },
+        {
+          "key": "bi_finance",
+          "name": "Finance",
+          "riasec": [
+            "Enterprising",
+            "Conventional"
+          ]
+        },
+        {
+          "key": "bi_accounting",
+          "name": "Accounting",
+          "riasec": [
+            "Conventional"
+          ]
+        },
+        {
+          "key": "bi_human_resources",
+          "name": "Human Resources",
+          "riasec": [
+            "Social",
+            "Conventional"
+          ]
+        },
+        {
+          "key": "bi_office_work",
+          "name": "Office Work",
+          "riasec": [
+            "Conventional"
+          ]
+        },
+        {
+          "key": "bi_management_administration",
+          "name": "Management/Administration",
+          "riasec": [
+            "Enterprising"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "areas": [
+        {
+          "key": "bi_humanities",
+          "name": "Humanities",
+          "riasec": [
+            "Investigative",
+            "Artistic"
+          ]
+        },
+        {
+          "key": "bi_visual_arts",
+          "name": "Visual Arts",
+          "riasec": [
+            "Artistic"
+          ]
+        },
+        {
+          "key": "bi_applied_arts_and_design",
+          "name": "Applied Arts and Design",
+          "riasec": [
+            "Artistic"
+          ]
+        },
+        {
+          "key": "bi_performing_arts",
+          "name": "Performing Arts",
+          "riasec": [
+            "Artistic"
+          ]
+        },
+        {
+          "key": "bi_music",
+          "name": "Music",
+          "riasec": [
+            "Artistic"
+          ]
+        },
+        {
+          "key": "bi_creative_writing",
+          "name": "Creative Writing",
+          "riasec": [
+            "Artistic"
+          ]
+        },
+        {
+          "key": "bi_media",
+          "name": "Media",
+          "riasec": [
+            "Artistic"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "areas": [
+        {
+          "key": "bi_social_science",
+          "name": "Social Science",
+          "riasec": [
+            "Investigative",
+            "Social"
+          ]
+        },
+        {
+          "key": "bi_teaching_education",
+          "name": "Teaching/Education",
+          "riasec": [
+            "Social"
+          ]
+        },
+        {
+          "key": "bi_social_service",
+          "name": "Social Service",
+          "riasec": [
+            "Social"
+          ]
+        },
+        {
+          "key": "bi_personal_service",
+          "name": "Personal Service",
+          "riasec": [
+            "Social"
+          ]
+        },
+        {
+          "key": "bi_professional_advising",
+          "name": "Professional Advising",
+          "riasec": [
+            "Social",
+            "Enterprising"
+          ]
+        },
+        {
+          "key": "bi_public_speaking",
+          "name": "Public Speaking",
+          "riasec": [
+            "Enterprising"
+          ]
+        },
+        {
+          "key": "bi_politics",
+          "name": "Politics",
+          "riasec": [
+            "Enterprising"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "areas": [
+        {
+          "key": "bi_agriculture",
+          "name": "Agriculture",
+          "riasec": [
+            "Realistic"
+          ]
+        },
+        {
+          "key": "bi_nature_outdoors",
+          "name": "Nature/Outdoors",
+          "riasec": [
+            "Realistic"
+          ]
+        },
+        {
+          "key": "bi_animal_service",
+          "name": "Animal Service",
+          "riasec": [
+            "Realistic",
+            "Social"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "areas": [
+        {
+          "key": "bi_construction_woodwork",
+          "name": "Construction/Woodwork",
+          "riasec": [
+            "Realistic"
+          ]
+        },
+        {
+          "key": "bi_transportation_machine_operation",
+          "name": "Transportation/Machine Operation",
+          "riasec": [
+            "Realistic"
+          ]
+        },
+        {
+          "key": "bi_physical_manual_labor",
+          "name": "Physical/Manual Labor",
+          "riasec": [
+            "Realistic"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "areas": [
+        {
+          "key": "bi_life_science",
+          "name": "Life Science",
+          "riasec": [
+            "Investigative"
+          ]
+        },
+        {
+          "key": "bi_medical_science",
+          "name": "Medical Science",
+          "riasec": [
+            "Investigative"
+          ]
+        },
+        {
+          "key": "bi_health_care_service",
+          "name": "Health Care Service",
+          "riasec": [
+            "Investigative",
+            "Social"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "areas": [
+        {
+          "key": "bi_physical_science",
+          "name": "Physical Science",
+          "riasec": [
+            "Investigative"
+          ]
+        },
+        {
+          "key": "bi_mathematics_statistics",
+          "name": "Mathematics/Statistics",
+          "riasec": [
+            "Investigative",
+            "Conventional"
+          ]
+        },
+        {
+          "key": "bi_information_technology",
+          "name": "Information Technology",
+          "riasec": [
+            "Conventional"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "areas": [
+        {
+          "key": "bi_mechanics_electronics",
+          "name": "Mechanics/Electronics",
+          "riasec": [
+            "Realistic"
+          ]
+        },
+        {
+          "key": "bi_engineering",
+          "name": "Engineering",
+          "riasec": [
+            "Realistic"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "areas": [
+        {
+          "key": "bi_protective_service",
+          "name": "Protective Service",
+          "riasec": [
+            "Realistic"
+          ]
+        },
+        {
+          "key": "bi_law",
+          "name": "Law",
+          "riasec": [
+            "Enterprising"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "areas": [
+        {
+          "key": "bi_athletics",
+          "name": "Athletics",
+          "riasec": [
+            "Realistic",
+            "Enterprising"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "areas": [
+        {
+          "key": "bi_culinary_art",
+          "name": "Culinary Art",
+          "riasec": [
+            "Artistic",
+            "Social"
+          ]
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "areas": [
+        {
+          "key": "bi_religious_activities",
+          "name": "Religious Activities",
+          "riasec": [
+            "Social",
+            "Enterprising"
+          ]
+        }
+      ]
+    }
+  ]
+}
