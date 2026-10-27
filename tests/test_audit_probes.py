@@ -4,6 +4,7 @@ B-C2-15..17, B-C4-7, B-C5-10..12); they started as xfail probes."""
 import math
 
 import numpy as np
+import pytest
 
 from aisc.contracts import StudentProfile, to_vector
 from aisc.dimensions import LAYERS, NEED_KEYS
@@ -105,3 +106,138 @@ def test_recommend_portfolio_validates_rho_with_draws():
     p, u = [0.3, 0.6], [1.0, 0.5]
     d = pf.admission_draws(p, 0.5, 100, np.random.default_rng(0))
     assert _raises(lambda: pf.recommend_portfolio(p, u, [1, 1], 1, rho=-0.5, draws=d))
+
+
+# --- fifth audit (2026-10-28): the default recommendation path ---------------------
+
+
+def _probe(reason):
+    """Probe marker: strict xfail that only accepts an AssertionError."""
+
+    def mark(fn):
+        return pytest.mark.probe(pytest.mark.xfail(strict=True, raises=AssertionError,
+                                                   reason=reason)(fn))  # fmt: skip
+
+    return mark
+
+
+def _synthetic_catalog():
+    from pathlib import Path
+
+    from aisc.catalog import load_programs
+
+    return load_programs(Path(__file__).resolve().parents[1] / "data/synthetic/programs.jsonl")
+
+
+@_probe("B-C1-26: bad keys / values are silently fixed when anchors exist")
+def test_probe_blend_rejects_unknown_keys_and_out_of_range():
+    from aisc.profiling import blend_profile_v1
+
+    by_id = {p.program_id: p for p in _synthetic_catalog()}
+    typo = StudentProfile("s", {"quant_intensty": 0.9}, anchors=["syn-01"])
+    high = StudentProfile("s", {"quant_intensity": 1.7}, anchors=["syn-01"])
+    assert _raises(lambda: blend_profile_v1(typo, by_id))
+    assert _raises(lambda: blend_profile_v1(high, by_id))
+
+
+@_probe("B-C1-27: answered dimensions look less certain than unanswered ones")
+def test_probe_answered_dimensions_are_more_certain_than_unanswered():
+    from aisc.pipeline import prepare_profile
+
+    cat = _synthetic_catalog()
+    answered = {"quant_intensity": 0.8, "domain_finance": 0.7}
+    for anchors in ([], ["syn-01"]):
+        full = prepare_profile(StudentProfile("s", answered, anchors=anchors), cat)
+        sd_ans = max(full.uncertainty.get(k, float("inf")) for k in answered)
+        sd_un = min(v for k, v in full.uncertainty.items() if k not in answered)
+        assert sd_ans < sd_un
+
+
+@_probe("B-C1-28: the questionnaire tracks programmes that can never be shown")
+def test_probe_questionnaire_tracks_only_recommendable_programmes():
+    from aisc.discovery.constraints import passes_constraints
+    from aisc.pipeline import c2_scores, prepare_profile, run_questionnaire
+    from aisc.profiling import AdaptiveSession
+
+    cat = _synthetic_catalog()
+    prof = StudentProfile("s", {}, anchors=["syn-01", "syn-12"],
+                          hard_constraints={"max_tuition_usd": 60000})  # fmt: skip
+
+    def answer(item):
+        return 0.7
+
+    got = run_questionnaire(prof, cat, answer, budget=6, rng=np.random.default_rng(0))
+    pool = [p for p in cat if p.program_id not in prof.anchors
+            and passes_constraints(p, prof.hard_constraints)]  # fmt: skip
+    s = AdaptiveSession(prior=prepare_profile(prof, cat), catalog=pool, score_fn=c2_scores,
+                        rng=np.random.default_rng(0))  # fmt: skip
+    for _ in range(6):
+        item = s.next_item()
+        if item is None:
+            break
+        s.record(item, answer(item))
+    assert got.needs == s.profile().needs
+
+
+@_probe("B-C1-29: a repeated anchor is counted twice")
+def test_probe_duplicate_anchors_count_once():
+    from aisc.profiling import blend_profile_v1
+
+    by_id = {p.program_id: p for p in _synthetic_catalog()}
+    once = blend_profile_v1(StudentProfile("s", {}, anchors=["syn-01"]), by_id)
+    twice = blend_profile_v1(StudentProfile("s", {}, anchors=["syn-01", "syn-01"]), by_id)
+    assert once.needs == twice.needs and once.uncertainty == twice.uncertainty
+
+
+@_probe("B-C1-30: the questionnaire fails deep in numpy on bad catalogues")
+def test_probe_questionnaire_checks_catalogue():
+    from dataclasses import replace
+
+    from aisc.pipeline import run_questionnaire
+
+    cat = _synthetic_catalog()
+    prof = StudentProfile("s", {"quant_intensity": 0.8})
+
+    def message(fn):
+        try:
+            fn()
+        except ValueError as e:
+            return str(e)
+        return ""
+
+    assert "empty" in message(lambda: run_questionnaire(prof, [], lambda i: 0.5, budget=2))
+    v2 = [replace(cat[0], dims="v2", attributes={})]
+    assert "dimension" in message(lambda: run_questionnaire(prof, v2, lambda i: 0.5, budget=2))
+
+
+@_probe("B-C1-31: NaN years since the CEEC test are accepted")
+def test_probe_ceec_rejects_nan():
+    from aisc.profiling.ceec import riasec_prior_from_ceec
+
+    scores = dict.fromkeys("RIASEC", 50)
+    assert _raises(lambda: riasec_prior_from_ceec(scores, float("nan")))
+    assert _raises(lambda: riasec_prior_from_ceec(scores, 1.0, differentiation=float("nan")))
+
+
+@_probe("B-C2-20: unknown constraint keys and wrong types are ignored")
+def test_probe_constraints_reject_unknown_keys_and_types():
+    from aisc.discovery.constraints import passes_constraints
+
+    p = _synthetic_catalog()[0]
+    for bad in ({"max_duration_months": 12}, {"max_tuition_usd": "50000"},
+                {"max_tuition_usd": float("nan")}, {"max_tuition_usd": True},
+                {"stem_opt": "yes"}):  # fmt: skip
+        assert _raises(lambda b=bad: passes_constraints(p, b))
+
+
+@_probe("B-C2-21: duplicate programme ids give duplicate recommendations")
+def test_probe_duplicate_programme_ids_are_rejected():
+    from dataclasses import replace
+
+    from aisc.discovery import shortlist
+    from aisc.profiling import complete_neutral
+
+    cat = _synthetic_catalog()
+    dup = [*cat, replace(cat[2])]
+    prof = complete_neutral(StudentProfile("s", {"quant_intensity": 0.8}))
+    assert _raises(lambda: shortlist(prof, dup, n=30))
