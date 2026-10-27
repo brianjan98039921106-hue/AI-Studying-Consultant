@@ -143,3 +143,26 @@ def test_probe_intervals_cover_when_stronger_applicants_report_more():
     hits = [m.predict(pid, tuple(x)).low <= p <= m.predict(pid, tuple(x)).high
             for pid, (Xt, pt) in tests.items() for x, p in zip(Xt, pt, strict=True)]  # fmt: skip
     assert np.mean(hits) >= 0.8
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C3-9: plug-in tau makes 90% intervals too narrow even when the model is right",
+)
+def test_probe_intervals_cover_nominally_when_well_specified():
+    """Complete records from the model's own family of worlds: 90% intervals for the
+    known programmes should cover the true P(admit) at an average applicant at least
+    0.90 - 3 SE (about 0.87 over 960 checks); plug-in tau gave 0.85."""
+    import aisc.feasibility as fz
+
+    hits = []
+    for r in range(80):
+        rng = np.random.default_rng([7, r])
+        recs, _, a = _world(rng, n_per=40)
+        m = fz.fit_admission_model(_records(recs, "complete"))
+        for pid, ai in a.items():
+            e = m.predict(pid, (0.0, 0.0))
+            hits.append(e.low <= 1 / (1 + np.exp(-ai)) <= e.high)
+    assert np.mean(hits) >= 0.90 - 3 * np.sqrt(0.09 / len(hits))

@@ -65,3 +65,23 @@ def test_estimate_tau_recovers_simulated_spread_and_fusion_beats_either_source()
             err["evidence"] += (e[k] - x[k]) ** 2
             err["fused"] += (f.mean[k] - x[k]) ** 2
     assert err["fused"] < err["evidence"] < err["prior"]
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C0-17: a dimension without a tau estimate crashes fuse_profile with KeyError",
+)
+def test_probe_fusion_reports_missing_tau_clearly():
+    priors = [PRIOR, PRIOR, PRIOR]
+    evid = [{"a": 0.5, "b": 0.6}, {"a": 0.45}, {"a": 0.3}]
+    tau = estimate_tau(priors, evid, 0.05)  # only "a" has >= 2 programmes
+    try:
+        fuse_profile(PRIOR, evid[0], tau, 0.05)
+        ok = False
+    except ValueError as e:
+        ok = "b" in str(e)
+    except KeyError:
+        ok = False
+    assert ok
