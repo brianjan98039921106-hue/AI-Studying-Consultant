@@ -94,6 +94,7 @@ NEED_TO_FAMILY: dict[str, str] = {
 }
 
 NEEDS_MODELS: tuple[str, ...] = ("archetype", "continuous")
+FIELD_MODELS: tuple[str, ...] = ("v1", "all_fields")
 
 
 def riasec_hexagon_corr(adjacent: float = 0.3, alternate: float = 0.0, opposite: float = -0.2):
@@ -156,10 +157,28 @@ class SimConfig:
     needs_model: str = "archetype"
     continuous_mu: float = -0.4  # sigmoid(-0.4 + z): mean need ≈ 0.41
     continuous_scale: float = 1.0
+    # all-fields extension (W-63, W-67); "v1" reproduces earlier results exactly
+    field_model: str = "v1"
+    transition_mix: dict[str, float] = field(
+        default_factory=lambda: {"continuing": 0.4, "adjacent": 0.25, "far": 0.25,
+                                 "multi_degree": 0.10}
+    )  # fmt: skip
+    hidden_mu: float = -1.0  # continuous model: sigmoid(-1 + z), mean hidden need ≈ 0.29
 
     def __post_init__(self) -> None:
         if self.needs_model not in NEEDS_MODELS:
             raise ValueError(f"needs_model must be one of {NEEDS_MODELS}")
+        if self.field_model not in FIELD_MODELS:
+            raise ValueError(f"field_model must be one of {FIELD_MODELS}")
+        from aisc.simulation.fields import TRANSITIONS
+
+        if set(self.transition_mix) - set(TRANSITIONS) or not self.transition_mix:
+            raise ValueError(f"transition_mix keys must be among {TRANSITIONS}")
+        if (
+            any(v < 0 for v in self.transition_mix.values())
+            or sum(self.transition_mix.values()) <= 0
+        ):
+            raise ValueError("transition_mix weights must be non-negative with a positive sum")
         if not 0 <= self.prestige_weight <= 1:
             raise ValueError("prestige_weight must lie in [0, 1]")
         if not 0 <= self.background_match_prob <= 1:
@@ -180,11 +199,17 @@ class SyntheticStudent:
     stated_needs: dict[str, float]
     stated_sigma: float
     natural_family: str = ""  # CIP family the true needs point to (C5 ground truth)
+    # all-fields extension (W-63, W-67); empty / None in the v1 field model
+    transition: str = ""
+    background_families: tuple[str, ...] = ()
+    hidden_needs: np.ndarray | None = None  # truth only; never visible to components
 
     @property
     def background_stratum(self) -> str:
-        """D12 stratum: 'continuing' if the undergraduate background is the family the
-        true needs point to, else 'switching' (W-63 refines switching types)."""
+        """D12 stratum. v1: 'continuing' if the undergraduate background is the family
+        the true needs point to, else 'switching'. all_fields: the transition type."""
+        if self.transition:
+            return self.transition
         return "continuing" if self.background_family == self.natural_family else "switching"
 
     def observed_profile(self, include_familiar: bool = False) -> StudentProfile:
@@ -202,19 +227,31 @@ def _sigmoid(z: np.ndarray) -> np.ndarray:
     return 1.0 / (1.0 + np.exp(-z))
 
 
-def familiarity_probs(catalog: list[Program], background_family: str, cfg: SimConfig) -> np.ndarray:
+def familiarity_probs(
+    catalog: list[Program], background_family: str | tuple[str, ...], cfg: SimConfig
+) -> np.ndarray:
+    fams = {background_family} if isinstance(background_family, str) else set(background_family)
     prestige = np.array([p.prestige if p.prestige is not None else 0.0 for p in catalog])
-    same = np.array([p.cip_family == background_family for p in catalog], dtype=float)
+    same = np.array([p.cip_family in fams for p in catalog], dtype=float)
     tw = np.array([p.cip in TW_COMMON_CIP for p in catalog], dtype=float)
     z = cfg.fam_a0 + cfg.fam_a_prestige * prestige + cfg.fam_a_background * same
     return _sigmoid(z + cfg.fam_a_tw_common * tw)
 
 
 def generate_population(
-    catalog: list[Program], cfg: SimConfig, rng: np.random.Generator
+    catalog: list[Program],
+    cfg: SimConfig,
+    rng: np.random.Generator,
+    hidden: dict[str, np.ndarray] | None = None,
 ) -> list[SyntheticStudent]:
+    """Synthetic students. `hidden` (program_id -> hidden-domain vector) is required
+    for, and only used by, the all-fields model (W-63, W-67)."""
     if not catalog:
         raise ValueError("catalog is empty")
+    if cfg.field_model == "all_fields":
+        if hidden is None:
+            raise ValueError("the all_fields model needs the catalogue's hidden vectors")
+        return _generate_all_fields(catalog, cfg, rng, hidden)
     arche_names = list(ARCHETYPES)
     bg_families = list(TW_BACKGROUND_DIST)
     bg_probs = np.array([TW_BACKGROUND_DIST[f] for f in bg_families])
@@ -273,6 +310,98 @@ def generate_population(
                 stated_needs={k: float(v) for k, v in zip(NEED_KEYS, stated, strict=True)},
                 stated_sigma=cfg.reported_sigma,
                 natural_family=natural,
+            )
+        )
+    return students
+
+
+def _generate_all_fields(
+    catalog: list[Program], cfg: SimConfig, rng: np.random.Generator, hidden: dict[str, np.ndarray]
+) -> list[SyntheticStudent]:
+    """All-fields population (W-63, W-67): business-type and far-field students,
+    hidden-domain needs, and four transition types with multi-degree backgrounds."""
+    from aisc.simulation.fields import (
+        FAR_ARCHETYPES,
+        HIDDEN_BASELINE,
+        HIDDEN_KEYS,
+        HIDDEN_TO_FAMILY,
+        MACRO_GROUPS,
+        pick_backgrounds,
+    )
+
+    grouped = set().union(*MACRO_GROUPS.values())
+    families = sorted({p.cip_family for p in catalog} & grouped)
+    arche: dict[str, tuple[np.ndarray, np.ndarray, str]] = {
+        name: (np.array([vals.get(k, 0.0) for k in NEED_KEYS]),
+               np.full(len(HIDDEN_KEYS), HIDDEN_BASELINE), NATURAL_FAMILY[name])
+        for name, vals in ARCHETYPES.items()
+    }  # fmt: skip
+    for name, (meas, hid, fam) in FAR_ARCHETYPES.items():
+        arche[name] = (
+            np.array([meas.get(k, 0.0) for k in NEED_KEYS]),
+            np.array([hid.get(k, HIDDEN_BASELINE) for k in HIDDEN_KEYS]),
+            fam,
+        )
+    names = list(arche)
+    trans = list(cfg.transition_mix)
+    tprob = np.array([cfg.transition_mix[t] for t in trans], float)
+    tprob = tprob / tprob.sum()
+    desirability = np.array([cfg.desirability.get(k, 0.0) for k in NEED_KEYS])
+    chol = np.linalg.cholesky(_continuous_cov()) if cfg.needs_model == "continuous" else None
+    full_x = {p.program_id: np.concatenate([p.vector, hidden[p.program_id]]) for p in catalog}
+
+    students: list[SyntheticStudent] = []
+    for s in range(cfg.n_students):
+        # 1. true needs: measured + hidden
+        if chol is None:
+            name = names[rng.integers(len(names))]
+            meas, hid, natural = arche[name]
+            w = np.clip(meas + rng.normal(0, cfg.individual_sd, meas.shape), 0, 1)
+            h = np.clip(hid + rng.normal(0, cfg.individual_sd, hid.shape), 0, 1)
+        else:
+            name = "continuous"
+            z = chol @ rng.standard_normal(len(NEED_KEYS))
+            w = 1.0 / (1.0 + np.exp(-(cfg.continuous_mu + cfg.continuous_scale * z)))
+            zh = rng.standard_normal(len(HIDDEN_KEYS))
+            h = 1.0 / (1.0 + np.exp(-(cfg.hidden_mu + cfg.continuous_scale * zh)))
+            cands = [(w[NEED_KEYS.index(k)], f) for k, f in NEED_TO_FAMILY.items()]
+            cands += [(h[i], HIDDEN_TO_FAMILY[k]) for i, k in enumerate(HIDDEN_KEYS)]
+            natural = max(cands, key=lambda vf: vf[0])[1]
+        # 2. transition type and background degree families
+        transition = trans[rng.choice(len(trans), p=tprob)]
+        backgrounds = pick_backgrounds(transition, natural, families, rng)
+        # 3. familiarity: any of the student's degree families counts as 'same family'
+        probs = familiarity_probs(catalog, backgrounds, cfg)
+        familiar_idx = np.flatnonzero(rng.random(len(catalog)) < probs)
+        # 4. anchors: MNL over familiar programs on full-truth fit and prestige
+        anchors: list[str] = []
+        if familiar_idx.size:
+            fw = np.concatenate([w, h])
+            fit = np.array([true_utility(fw, full_x[catalog[i].program_id], cfg.truth)
+                            for i in familiar_idx])  # fmt: skip
+            prest = np.array([catalog[i].prestige or 0.0 for i in familiar_idx])
+            v = (1 - cfg.prestige_weight) * fit + cfg.prestige_weight * prest
+            weights = np.exp(cfg.anchor_temperature * (v - v.max()))
+            n = min(cfg.n_anchors, familiar_idx.size)
+            chosen = rng.choice(familiar_idx.size, size=n, replace=False, p=weights / weights.sum())
+            anchors = [catalog[familiar_idx[i]].program_id for i in chosen]
+        # 5. stated needs: measured dimensions only (hidden domains cannot be stated)
+        noise = rng.normal(0.0, cfg.noise_sd, size=w.shape)
+        stated = np.clip(w + cfg.acquiescence + desirability + noise, 0.0, 1.0)
+        students.append(
+            SyntheticStudent(
+                student_id=f"stu-{s:04d}",
+                archetype=name,
+                background_family=backgrounds[-1],
+                true_needs=w,
+                familiar=frozenset(catalog[i].program_id for i in familiar_idx),
+                anchors=tuple(anchors),
+                stated_needs={k: float(v) for k, v in zip(NEED_KEYS, stated, strict=True)},
+                stated_sigma=cfg.reported_sigma,
+                natural_family=natural,
+                transition=transition,
+                background_families=backgrounds,
+                hidden_needs=h,
             )
         )
     return students

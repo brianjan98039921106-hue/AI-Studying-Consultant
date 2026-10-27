@@ -104,8 +104,14 @@ def _list_rows(
     miss: float,
     false_alarm: float,
     seed: int,
+    hidden: dict[str, np.ndarray] | None = None,
 ) -> tuple[dict[str, list[float]], list[list[str]]]:
-    """Per-student list metrics for one recommender (one value per student, in order)."""
+    """Per-student list metrics for one recommender (one value per student, in order).
+
+    With `hidden` (all-fields model, W-67) relevance and best fit use the full truth
+    including hidden domains, and `hidden_mismatch_rate` reports the share of the
+    list that is relevant on the measured dimensions but not on the full truth
+    (B-C2-8)."""
     rows: dict[str, list[float]] = {
         "relevant_rate": [],
         "novel_relevant_rate": [],
@@ -113,6 +119,8 @@ def _list_rows(
         "best_fit_retained": [],
         "outside_shortlist_rate": [],
     }
+    if hidden is not None:
+        rows["hidden_mismatch_rate"] = []
     interactive = getattr(rec, "interactive", False)
     lists: list[list[str]] = []
     for idx, s in enumerate(population):
@@ -131,11 +139,18 @@ def _list_rows(
             shown = ids
             rows["outside_shortlist_rate"].append(float("nan"))
         lists.append(ids)
-        rel = relevant_ids(s.true_needs, catalog, truth, top_frac)
+        wh = s.hidden_needs if hidden is not None else None
+        rel = relevant_ids(s.true_needs, catalog, truth, top_frac, hidden, wh)
         for key, val in M.list_quality(ids, rel, set(s.familiar)).items():
             rows[key].append(val)
-        best = best_fit_id(s.true_needs, catalog, set(s.anchors), truth)
+        best = best_fit_id(s.true_needs, catalog, set(s.anchors), truth, hidden, wh)
         rows["best_fit_retained"].append(M.best_fit_retained(shown, best))
+        if hidden is not None:
+            rel_measured = relevant_ids(s.true_needs, catalog, truth, top_frac)
+            rows["hidden_mismatch_rate"].append(
+                float("nan") if not ids
+                else sum(i in rel_measured and i not in rel for i in ids) / len(ids)
+            )  # fmt: skip
     return rows, lists
 
 
@@ -196,6 +211,7 @@ def evaluate_lists_per_student(
     include_familiar: bool | dict[str, bool] = False,
     familiarity_noise: dict[str, tuple[float, float]] | None = None,
     seed: int = 7,
+    hidden: dict[str, np.ndarray] | None = None,
 ) -> dict[str, dict[str, list[float]]]:
     """Same metrics as `evaluate_lists`, one value per student (for paired and
     stratified analysis, W-68). Same respondent seeds, so results line up."""
@@ -203,7 +219,7 @@ def evaluate_lists_per_student(
     for name, rec in recommenders.items():
         fam_flag, miss, false_alarm = _fam_settings(name, include_familiar, familiarity_noise)
         out[name], _ = _list_rows(population, catalog, name, rec, k, truth, top_frac,
-                                  fam_flag, miss, false_alarm, seed)  # fmt: skip
+                                  fam_flag, miss, false_alarm, seed, hidden)  # fmt: skip
     return out
 
 

@@ -12,6 +12,7 @@ L3 result must be reported under both and trusted only if they agree.
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 
 import numpy as np
 
@@ -30,30 +31,64 @@ def true_utility(w: np.ndarray, x: np.ndarray, kind: str = "distance") -> float:
     raise ValueError(f"Unknown truth kind {kind!r}; expected one of {TRUTH_KINDS}")
 
 
-def utilities(w: np.ndarray, catalog: list[Program], kind: str = "distance") -> np.ndarray:
-    return np.array([true_utility(w, p.vector, kind) for p in catalog])
+Hidden = Mapping[str, np.ndarray]
+
+
+def _full(p: Program, hidden: Hidden | None) -> np.ndarray:
+    """Program vector, extended with its hidden domains when the simulator has them (W-67)."""
+    return p.vector if hidden is None else np.concatenate([p.vector, hidden[p.program_id]])
+
+
+def _need(w: np.ndarray, w_hidden: np.ndarray | None, hidden: Hidden | None) -> np.ndarray:
+    if (hidden is None) != (w_hidden is None):
+        raise ValueError("pass both `hidden` (programs) and `w_hidden` (student), or neither")
+    return w if w_hidden is None else np.concatenate([w, w_hidden])
+
+
+def utilities(
+    w: np.ndarray,
+    catalog: list[Program],
+    kind: str = "distance",
+    hidden: Hidden | None = None,
+    w_hidden: np.ndarray | None = None,
+) -> np.ndarray:
+    """True utility of every program. With `hidden`/`w_hidden`, the truth also covers
+    the hidden domains that no component can see (W-67, A-C5-10)."""
+    full_w = _need(w, w_hidden, hidden)
+    return np.array([true_utility(full_w, _full(p, hidden), kind) for p in catalog])
 
 
 def relevant_ids(
-    w: np.ndarray, catalog: list[Program], kind: str = "distance", top_frac: float = 0.1
+    w: np.ndarray,
+    catalog: list[Program],
+    kind: str = "distance",
+    top_frac: float = 0.1,
+    hidden: Hidden | None = None,
+    w_hidden: np.ndarray | None = None,
 ) -> set[str]:
     """Programs in the top `top_frac` of the catalog by true utility."""
     if not 0 < top_frac <= 1:
         raise ValueError("top_frac must lie in (0, 1]")
     n = max(1, math.ceil(top_frac * len(catalog)))
-    order = np.argsort(-utilities(w, catalog, kind), kind="stable")
+    order = np.argsort(-utilities(w, catalog, kind, hidden, w_hidden), kind="stable")
     return {catalog[i].program_id for i in order[:n]}
 
 
 def best_fit_id(
-    w: np.ndarray, catalog: list[Program], exclude: set[str], kind: str = "distance"
+    w: np.ndarray,
+    catalog: list[Program],
+    exclude: set[str],
+    kind: str = "distance",
+    hidden: Hidden | None = None,
+    w_hidden: np.ndarray | None = None,
 ) -> str | None:
     """Highest-utility program not in `exclude` (typically the anchors)."""
+    full_w = _need(w, w_hidden, hidden)
     best, best_u = None, -math.inf
     for p in catalog:
         if p.program_id in exclude:
             continue
-        u = true_utility(w, p.vector, kind)
+        u = true_utility(full_w, _full(p, hidden), kind)
         if u > best_u:
             best, best_u = p.program_id, u
     return best
