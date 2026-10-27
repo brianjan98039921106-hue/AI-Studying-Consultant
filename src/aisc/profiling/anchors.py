@@ -74,6 +74,19 @@ def blend_profile(
 
 NEUTRAL_VALUE = 0.5  # A-C1-11
 NEUTRAL_SIGMA = 0.3
+STATED_SIGMA = 0.25  # A-C1-28: one stated answer ~ one item's noise (B-C1-27)
+
+
+def validate_answers(profile: StudentProfile) -> None:
+    """Answered dimensions must be known keys with finite values in [0, 1] (B-C1-26)."""
+    keys = set(dims_keys(profile.dims))
+    unknown = sorted(set(profile.needs) - keys)
+    if unknown:
+        raise ValueError(f"unknown dimension keys for {profile.dims}: {unknown}")
+    bad = {k: v for k, v in profile.needs.items()
+           if not (isinstance(v, (int, float)) and np.isfinite(v) and 0 <= v <= 1)}  # fmt: skip
+    if bad:
+        raise ValueError(f"answers must be finite values in [0, 1]: {bad}")
 
 
 def complete_neutral(
@@ -89,12 +102,15 @@ def complete_neutral(
     the group / base-rate prior of aisc.profiling.hierarchy, or with
     area_model="correlated" the conditional prior learned from O*NET (opt-in).
     """
+    validate_answers(profile)
     needs = dict(profile.needs)
     uncertainty = dict(profile.uncertainty)
     priors = _area_priors(profile, area_model)
     for k in dims_keys(profile.dims):
         if k not in needs:
             needs[k], uncertainty[k] = priors.get(k) or _unanswered_prior(profile, k, value, sigma)
+        else:
+            uncertainty.setdefault(k, STATED_SIGMA)  # B-C1-27
     return _with(profile, needs, uncertainty)
 
 
@@ -147,7 +163,7 @@ def blend_profile_v1(
     sigma0: float = 0.6,
     prestige_beta: float = 3.0,
     answered_scale: float = float("inf"),
-    default_sigma: float = 0.5,
+    default_sigma: float = STATED_SIGMA,
     area_model: str = "hierarchy",
 ) -> StudentProfile:
     """Anchors as a prior for unanswered dimensions.
@@ -156,7 +172,9 @@ def blend_profile_v1(
     - answered:   stated value, blended with the anchor prior only through an sd
                   multiplied by `answered_scale` (inf = anchors ignored there).
     """
-    anchors = [catalog[pid] for pid in profile.anchors if pid in catalog]
+    validate_answers(profile)
+    # each anchor counts once (B-C1-29)
+    anchors = [catalog[pid] for pid in dict.fromkeys(profile.anchors) if pid in catalog]
     if not anchors:
         return complete_neutral(profile, area_model=area_model)
     require_same_dims(profile, anchors)

@@ -129,8 +129,7 @@ def _synthetic_catalog():
     return load_programs(Path(__file__).resolve().parents[1] / "data/synthetic/programs.jsonl")
 
 
-@_probe("B-C1-26: bad keys / values are silently fixed when anchors exist")
-def test_probe_blend_rejects_unknown_keys_and_out_of_range():
+def test_blend_rejects_unknown_keys_and_out_of_range():
     from aisc.profiling import blend_profile_v1
 
     by_id = {p.program_id: p for p in _synthetic_catalog()}
@@ -140,8 +139,7 @@ def test_probe_blend_rejects_unknown_keys_and_out_of_range():
     assert _raises(lambda: blend_profile_v1(high, by_id))
 
 
-@_probe("B-C1-27: answered dimensions look less certain than unanswered ones")
-def test_probe_answered_dimensions_are_more_certain_than_unanswered():
+def test_answered_dimensions_are_more_certain_than_unanswered():
     from aisc.pipeline import prepare_profile
 
     cat = _synthetic_catalog()
@@ -153,8 +151,7 @@ def test_probe_answered_dimensions_are_more_certain_than_unanswered():
         assert sd_ans < sd_un
 
 
-@_probe("B-C1-28: the questionnaire tracks programmes that can never be shown")
-def test_probe_questionnaire_tracks_only_recommendable_programmes():
+def test_questionnaire_tracks_only_recommendable_programmes():
     from aisc.discovery.constraints import passes_constraints
     from aisc.pipeline import c2_scores, prepare_profile, run_questionnaire
     from aisc.profiling import AdaptiveSession
@@ -179,8 +176,7 @@ def test_probe_questionnaire_tracks_only_recommendable_programmes():
     assert got.needs == s.profile().needs
 
 
-@_probe("B-C1-29: a repeated anchor is counted twice")
-def test_probe_duplicate_anchors_count_once():
+def test_duplicate_anchors_count_once():
     from aisc.profiling import blend_profile_v1
 
     by_id = {p.program_id: p for p in _synthetic_catalog()}
@@ -189,8 +185,7 @@ def test_probe_duplicate_anchors_count_once():
     assert once.needs == twice.needs and once.uncertainty == twice.uncertainty
 
 
-@_probe("B-C1-30: the questionnaire fails deep in numpy on bad catalogues")
-def test_probe_questionnaire_checks_catalogue():
+def test_questionnaire_checks_catalogue():
     from dataclasses import replace
 
     from aisc.pipeline import run_questionnaire
@@ -210,8 +205,7 @@ def test_probe_questionnaire_checks_catalogue():
     assert "dimension" in message(lambda: run_questionnaire(prof, v2, lambda i: 0.5, budget=2))
 
 
-@_probe("B-C1-31: NaN years since the CEEC test are accepted")
-def test_probe_ceec_rejects_nan():
+def test_ceec_rejects_nan():
     from aisc.profiling.ceec import riasec_prior_from_ceec
 
     scores = dict.fromkeys("RIASEC", 50)
@@ -219,8 +213,7 @@ def test_probe_ceec_rejects_nan():
     assert _raises(lambda: riasec_prior_from_ceec(scores, 1.0, differentiation=float("nan")))
 
 
-@_probe("B-C2-20: unknown constraint keys and wrong types are ignored")
-def test_probe_constraints_reject_unknown_keys_and_types():
+def test_constraints_reject_unknown_keys_and_types():
     from aisc.discovery.constraints import passes_constraints
 
     p = _synthetic_catalog()[0]
@@ -230,8 +223,7 @@ def test_probe_constraints_reject_unknown_keys_and_types():
         assert _raises(lambda b=bad: passes_constraints(p, b))
 
 
-@_probe("B-C2-21: duplicate programme ids give duplicate recommendations")
-def test_probe_duplicate_programme_ids_are_rejected():
+def test_duplicate_programme_ids_are_rejected():
     from dataclasses import replace
 
     from aisc.discovery import shortlist

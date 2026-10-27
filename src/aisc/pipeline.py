@@ -29,9 +29,11 @@ from aisc.contracts import (
     Program,
     Recommendation,
     StudentProfile,
+    require_same_dims,
 )
 from aisc.discovery import Scorer, discover, shortlist
 from aisc.discovery import scorers as _scorers
+from aisc.discovery.constraints import passes_constraints, validate_constraints
 from aisc.profiling import AdaptiveSession, Item, apply_familiarity, blend_profile_v1
 
 AskFn = Callable[[list[str]], dict[str, str]]
@@ -69,12 +71,25 @@ def run_questionnaire(
     noise_prior_df: float = 4.0,
     noise_prior_center: str = "scale",
 ) -> StudentProfile:
-    """Ask up to `budget` items chosen by C1.3 and return the posterior profile."""
+    """Ask up to `budget` items chosen by C1.3 and return the posterior profile.
+
+    The anchor prior uses the whole catalogue, but C1.3 chooses questions only for
+    programmes that can be recommended: anchors and programmes the hard constraints
+    remove are left out (B-C1-28)."""
     if budget < 0:
         raise ValueError("budget must be non-negative")
+    if not catalog:
+        raise ValueError("the catalogue is empty")  # B-C1-30
+    require_same_dims(profile, catalog)
+    validate_constraints(profile.hard_constraints)
+    anchors = set(profile.anchors)
+    hard = profile.hard_constraints
+    pool = [p for p in catalog if p.program_id not in anchors and passes_constraints(p, hard)]
+    if not pool:
+        raise ValueError("no recommendable programmes left after anchors and hard constraints")
     session = AdaptiveSession(
         prior=prepare_profile(profile, catalog),
-        catalog=catalog,
+        catalog=pool,
         strategy=strategy,
         item_noise_sd=item_noise_sd,
         score_fn=scorer.score_matrix if scorer is not None else c2_scores,

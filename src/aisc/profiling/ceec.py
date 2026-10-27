@@ -16,6 +16,7 @@ All numeric defaults are uncalibrated assumptions (A-C1-8); W-41 re-estimates th
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, replace
 
 from aisc.contracts import StudentProfile
@@ -51,8 +52,10 @@ def riasec_prior_from_ceec(
         )
     if any(not 0 <= scores[t] <= CEEC_MAX_SCORE for t in CEEC_TYPES):
         raise ValueError(f"CEEC scores must lie in [0, {CEEC_MAX_SCORE}]")
-    if years_since_test < 0:
-        raise ValueError("years_since_test must be non-negative")
+    if not (math.isfinite(years_since_test) and years_since_test >= 0):  # B-C1-31
+        raise ValueError("years_since_test must be a finite non-negative number")
+    if differentiation is not None and not math.isfinite(differentiation):
+        raise ValueError("differentiation must be finite")
 
     sigma = min(sigma_max, sigma0 + growth_per_year * years_since_test)
     if differentiation is not None and differentiation < CEEC_UNCLEAR_DIFFERENTIATION:
@@ -67,13 +70,15 @@ def riasec_prior_from_ceec(
 
 
 def apply_prior(
-    profile: StudentProfile, prior: RiasecPrior, default_sigma: float = 0.5
+    profile: StudentProfile, prior: RiasecPrior, default_sigma: float = 0.25
 ) -> StudentProfile:
     """Merge a RIASEC prior into a profile.
 
     A dimension counts as elicited if it is present in `profile.needs`.
     - not elicited  -> take the prior value and sd;
-    - elicited      -> precision-weighted mean of prior and elicited value.
+    - elicited      -> precision-weighted mean of prior and elicited value; an
+                       elicited value without its own sd counts as one answer
+                       (sd 0.25, A-C1-28; was 0.5, B-C1-27).
     Non-RIASEC dimensions are untouched.
     """
     needs = dict(profile.needs)
