@@ -250,3 +250,93 @@ def estimate_layer_weights_simex(
         n_pairs=naive.n_pairs,
     )
     return SimexEstimate(corrected=corrected, naive=naive)
+
+
+# --- regression calibration (W-76, A-C2-13, A-C2-14) -----------------------------------
+
+
+def item_reliability(first: np.ndarray, second: np.ndarray) -> np.ndarray:
+    """Per-item reliability from a retest: cov(first, second) / var(first), on [0, 1]."""
+    first = np.asarray(first, float)
+    second = np.asarray(second, float)
+    if first.shape != second.shape or first.ndim != 2 or len(first) < 3:
+        raise ValueError("first and second must be (n >= 3, d) arrays of the same shape")
+    c = ((first - first.mean(0)) * (second - second.mean(0))).sum(0) / (len(first) - 1)
+    v = first.var(0, ddof=1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        rel = np.where(v > 0, c / v, 1.0)
+    return np.clip(rel, 0.0, 1.0)
+
+
+def calibrate(stated: np.ndarray, reliability: np.ndarray, mean: np.ndarray) -> np.ndarray:
+    """Linear prediction of true needs: mean + reliability * (stated - mean)."""
+    return mean + reliability * (np.asarray(stated, float) - mean)
+
+
+def estimate_layer_weights_rc(
+    stated: np.ndarray,
+    retest_rows: np.ndarray,
+    retest: np.ndarray,
+    X: np.ndarray,
+    pairs: np.ndarray,
+    y: np.ndarray,
+    dims: str,
+    n_boot: int = 200,
+    rng: np.random.Generator | None = None,
+) -> SimexEstimate:
+    """Layer shares with regression calibration (Carroll et al. 2006, ch. 4).
+
+    stated: (n_respondents, d) first answers; retest_rows: indices of respondents who
+    answered again; retest: (len(retest_rows), d) their second answers; X, pairs, y as
+    in estimate_layer_weights_simex. The features are linear in the needs, so they are
+    computed from calibrate(stated, reliability, mean) instead of the raw answers.
+    The interval is a respondent bootstrap that re-estimates the reliabilities (the
+    retest rows are resampled together with everyone else). Returns the calibrated
+    estimate as `corrected` and the uncorrected one as `naive`.
+    """
+    stated = np.asarray(stated, float)
+    retest_rows = np.asarray(retest_rows, int)
+    retest = np.asarray(retest, float)
+    X = np.asarray(X, float)
+    pairs = np.asarray(pairs, int)
+    y = np.asarray(y, float)
+    if pairs.ndim != 2 or pairs.shape[1] != 3 or len(pairs) != len(y):
+        raise ValueError("pairs must be (n_pairs, 3) rows of (respondent, a, b)")
+    if retest.shape != (len(retest_rows), stated.shape[1]):
+        raise ValueError("retest must have one row per retest respondent")
+    rng = rng or np.random.default_rng(0)
+
+    def shares(st, rows, rt, pr, yy):
+        rel = item_reliability(st[rows], rt)
+        w_hat = calibrate(st, rel, st.mean(0))
+        return _shares(fit_layer_weights(_pair_rows(w_hat, X, pr, dims), yy))
+
+    naive_shares = _shares(fit_layer_weights(_pair_rows(stated, X, pairs, dims), y))
+    point = shares(stated, retest_rows, retest, pairs, y)
+    ids = np.unique(pairs[:, 0])
+    by_resp = {r: np.flatnonzero(pairs[:, 0] == r) for r in ids}
+    retest_of = {int(r): i for i, r in enumerate(retest_rows)}
+    boot = []
+    for _ in range(n_boot):
+        draw = rng.choice(ids, len(ids), replace=True)
+        sel = np.concatenate([by_resp[r] for r in draw])
+        new_resp = np.repeat(np.arange(len(draw)), [len(by_resp[r]) for r in draw])
+        pb = np.column_stack([new_resp, pairs[sel, 1], pairs[sel, 2]])
+        rows = [j for j, r in enumerate(draw) if int(r) in retest_of]
+        if len(rows) < 3:
+            continue
+        rt = retest[[retest_of[int(draw[j])] for j in rows]]
+        boot.append(shares(stated[draw], np.array(rows), rt, pb, y[sel]))
+    lo, hi = np.nanpercentile(np.array(boot), [2.5, 97.5], axis=0)
+
+    def pack(sh, lo_, hi_):
+        return LayerWeightEstimate(
+            shares=dict(zip(LAYERS, map(float, sh), strict=True)),
+            beta={},
+            ci={lay: (float(a), float(b)) for lay, a, b in zip(LAYERS, lo_, hi_, strict=True)},
+            n_respondents=len(ids),
+            n_pairs=len(y),
+        )
+
+    nan = np.full(len(LAYERS), np.nan)
+    return SimexEstimate(corrected=pack(point, lo, hi), naive=pack(naive_shares, nan, nan))
