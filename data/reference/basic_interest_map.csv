@@ -1,42 +1,42 @@
-key,area,riasec
-bi_mechanics_electronics,Mechanics/Electronics,Realistic
-bi_construction_woodwork,Construction/Woodwork,Realistic
-bi_transportation_machine_operation,Transportation/Machine Operation,Realistic
-bi_physical_manual_labor,Physical/Manual Labor,Realistic
-bi_protective_service,Protective Service,Realistic
-bi_agriculture,Agriculture,Realistic
-bi_nature_outdoors,Nature/Outdoors,Realistic
-bi_animal_service,Animal Service,Realistic Social
-bi_athletics,Athletics,Realistic Enterprising
-bi_engineering,Engineering,Realistic
-bi_physical_science,Physical Science,Investigative
-bi_life_science,Life Science,Investigative
-bi_medical_science,Medical Science,Investigative
-bi_social_science,Social Science,Investigative Social
-bi_humanities,Humanities,Investigative Artistic
-bi_mathematics_statistics,Mathematics/Statistics,Investigative Conventional
-bi_information_technology,Information Technology,Conventional
-bi_visual_arts,Visual Arts,Artistic
-bi_applied_arts_and_design,Applied Arts and Design,Artistic
-bi_performing_arts,Performing Arts,Artistic
-bi_music,Music,Artistic
-bi_creative_writing,Creative Writing,Artistic
-bi_media,Media,Artistic
-bi_culinary_art,Culinary Art,Artistic Social
-bi_teaching_education,Teaching/Education,Social
-bi_social_service,Social Service,Social
-bi_health_care_service,Health Care Service,Investigative Social
-bi_religious_activities,Religious Activities,Social Enterprising
-bi_personal_service,Personal Service,Social
-bi_professional_advising,Professional Advising,Social Enterprising
-bi_business_initiatives,Business Initiatives,Enterprising
-bi_sales,Sales,Enterprising
-bi_marketing_advertising,Marketing/Advertising,Artistic Enterprising
-bi_finance,Finance,Enterprising Conventional
-bi_accounting,Accounting,Conventional
-bi_human_resources,Human Resources,Social Conventional
-bi_office_work,Office Work,Conventional
-bi_management_administration,Management/Administration,Enterprising
-bi_public_speaking,Public Speaking,Enterprising
-bi_politics,Politics,Enterprising
-bi_law,Law,Enterprising
+key,area,riasec,occupation_mean
+bi_mechanics_electronics,Mechanics/Electronics,Realistic,0.2269
+bi_construction_woodwork,Construction/Woodwork,Realistic,0.0688
+bi_transportation_machine_operation,Transportation/Machine Operation,Realistic,0.1241
+bi_physical_manual_labor,Physical/Manual Labor,Realistic,0.2674
+bi_protective_service,Protective Service,Realistic,0.0726
+bi_agriculture,Agriculture,Realistic,0.0340
+bi_nature_outdoors,Nature/Outdoors,Realistic,0.0573
+bi_animal_service,Animal Service,Realistic Social,0.0162
+bi_athletics,Athletics,Realistic Enterprising,0.0282
+bi_engineering,Engineering,Realistic,0.2119
+bi_physical_science,Physical Science,Investigative,0.1107
+bi_life_science,Life Science,Investigative,0.1127
+bi_medical_science,Medical Science,Investigative,0.1131
+bi_social_science,Social Science,Investigative Social,0.1225
+bi_humanities,Humanities,Investigative Artistic,0.0678
+bi_mathematics_statistics,Mathematics/Statistics,Investigative Conventional,0.1835
+bi_information_technology,Information Technology,Conventional,0.1530
+bi_visual_arts,Visual Arts,Artistic,0.0565
+bi_applied_arts_and_design,Applied Arts and Design,Artistic,0.0708
+bi_performing_arts,Performing Arts,Artistic,0.0303
+bi_music,Music,Artistic,0.0191
+bi_creative_writing,Creative Writing,Artistic,0.0403
+bi_media,Media,Artistic,0.0686
+bi_culinary_art,Culinary Art,Artistic Social,0.0249
+bi_teaching_education,Teaching/Education,Social,0.1861
+bi_social_service,Social Service,Social,0.1484
+bi_health_care_service,Health Care Service,Investigative Social,0.1574
+bi_religious_activities,Religious Activities,Social Enterprising,0.0088
+bi_personal_service,Personal Service,Social,0.1501
+bi_professional_advising,Professional Advising,Social Enterprising,0.1330
+bi_business_initiatives,Business Initiatives,Enterprising,0.0919
+bi_sales,Sales,Enterprising,0.0836
+bi_marketing_advertising,Marketing/Advertising,Artistic Enterprising,0.0659
+bi_finance,Finance,Enterprising Conventional,0.0766
+bi_accounting,Accounting,Conventional,0.1233
+bi_human_resources,Human Resources,Social Conventional,0.1139
+bi_office_work,Office Work,Conventional,0.1788
+bi_management_administration,Management/Administration,Enterprising,0.2239
+bi_public_speaking,Public Speaking,Enterprising,0.1791
+bi_politics,Politics,Enterprising,0.0475
+bi_law,Law,Enterprising,0.0809

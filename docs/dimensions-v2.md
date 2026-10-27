@@ -1,6 +1,6 @@
 # 需求維度 v2 規格（W-16c，W-64 方案 B）
 
-> 狀態：**G0 設計草案（2026-10-27）**，尚未實作。依據：[F63–F66](../results/domain-layer-findings.md)（只用 RIASEC 分不出領域，加入 41 個細分興趣領域後可以）、[F67–F69](../results/interest-area-clusters-findings.md)（41 領域穩定分成 12 群）、[F59–F61](../results/synthetic-l3-fields-findings.md)（遠領域假陽性）。
+> 狀態：G0 ✅；**步驟 1 已實作**（登錄 v2、契約 `dims`、`LayerBalanced`、領域群先驗 `profiling/hierarchy.py`；使用說明 §4.8，可選用）。步驟 2–4 進行中。依據：[F63–F66](../results/domain-layer-findings.md)（只用 RIASEC 分不出領域，加入 41 個細分興趣領域後可以）、[F67–F69](../results/interest-area-clusters-findings.md)（41 領域穩定分成 12 群）、[F59–F61](../results/synthetic-l3-fields-findings.md)（遠領域假陽性）。
 > v1（15 維）保留為參考實作，直到 v2 通過下列 L3 關卡。
 
 ## 1. 維度

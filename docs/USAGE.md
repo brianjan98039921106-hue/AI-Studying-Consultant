@@ -21,6 +21,7 @@
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
 | 申請組合最佳化（選哪幾間申請） | C4.1 | ✅ 精確解 | ⚠️ 錄取機率須自行假設（C3 未完成） |
+| 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ 尚未通過 L3 關卡（W-16c）；計分權重為暫定值 |
 | 錄取機率估計 | C3 | ⬜ 未開始 | — |
 | 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
 
@@ -263,6 +264,32 @@ chosen, value = dp_varied_cost([a.mean for a in assumed], utility, [1] * len(ass
 print([shortlist_[j].program.degree_name for j in chosen], round(value, 1))
 ```
 
+### 4.8（實驗中）需求維度 v2：涵蓋所有領域
+
+v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**尚未通過模擬驗證，預設仍是 v1**；計分器的層權重是暫定值。
+
+```python
+from aisc.contracts import StudentProfile
+from aisc.dimensions import migrate_needs_v1_to_v2
+from aisc.profiling import complete_neutral
+from aisc.profiling.hierarchy import GROUP_LABELS
+
+# 第一層：學生對 12 個領域群的興趣（0–1）；第二層：只細問感興趣的群
+v2 = StudentProfile(
+    "demo-v2",
+    {"riasec_i": 0.8, "bi_medical_science": 0.9},  # 第二層有作答的領域
+    dims="v2",
+    group_scores={6: 0.8, 1: 0.2},  # 6 = 生命科學、醫學與醫療照護
+)
+full = complete_neutral(v2)  # 未作答的領域：依領域群先驗；群也沒答 → 低基準值，不是 0.5
+print(GROUP_LABELS[6][0], round(full.needs["bi_life_science"], 2), round(full.needs["bi_music"], 2))
+
+# 舊的 v1 需求可轉換（僅供相容，不是測量）
+print(sorted(migrate_needs_v1_to_v2({"domain_finance": 0.9}).items()))
+```
+
+v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用會直接報錯。
+
 ---
 
 ## 5. 給顧問：建議的使用流程（目前階段）
@@ -286,7 +313,7 @@ print([shortlist_[j].program.degree_name for j in chosen], round(value, 1))
 | 限制 | 影響 | 何時解決 |
 |---|---|---|
 | 學程目錄是合成資料 | 推薦結果不對應真實學校 | W-20～W-22（C0 真實學程） |
-| 領域只涵蓋商管 × 數據 × 工程管理 | 其他領域的學生推薦品質未知 | W-64、W-65、W-70 |
+| 領域只涵蓋商管 × 數據 × 工程管理 | 其他領域的學生推薦品質未知；v2 維度（§4.8）實驗中 | W-16c、W-65、W-70 |
 | 問卷題目是抽象占位題 | 無法直接拿給學生作答 | W-41 |
 | 錄取機率須自行假設 | 申請組合只是示範計算 | W-44（C3） |
 | 需求維度尚未實證驗證 | 維度可能重疊或遺漏 | W-41、W-73 |
@@ -316,3 +343,4 @@ print([shortlist_[j].program.degree_name for j in chosen], round(value, 1))
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
 | 2026-10-27 | v0.2 | 首版使用說明：安裝、示範、逐步 API、顧問流程、限制；範例納入 CI 執行 | W-05 |
+| 2026-10-27 | v0.3 | 新增實驗中的需求維度 v2（`dims="v2"`、`group_scores`、`migrate_needs_v1_to_v2`），預設仍為 v1（§4.8） | W-16c |
