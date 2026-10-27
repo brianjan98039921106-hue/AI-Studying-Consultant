@@ -6,7 +6,7 @@ MMR: Carbonell & Goldstein (1998). Each step picks the candidate maximising
 
 from __future__ import annotations
 
-from aisc.contracts import Program, Recommendation, StudentProfile
+from aisc.contracts import Program, Recommendation, StudentProfile, require_same_dims
 from aisc.discovery.constraints import passes_constraints
 from aisc.discovery.scoring import contributions, novelty, relevance
 
@@ -32,6 +32,7 @@ def recommend(
     if k < 0:
         raise ValueError("k must be non-negative")
     profile.require_complete("C2 recommend")
+    require_same_dims(profile, catalog)
 
     by_id = {p.program_id: p for p in catalog}
     anchors = [by_id[pid] for pid in profile.anchors if pid in by_id]

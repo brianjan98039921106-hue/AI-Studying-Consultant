@@ -135,9 +135,13 @@ def main() -> None:
         bmap = load_basic_interest_map(args.basic_map)
         areas = tuple(bmap)
         bkeys = tuple(basic_interest_key(a) for a in areas)
-        bsocs = soc_profiles(load_onet_basic_interests(args.basic_interests, areas), areas)
+        b_occ = load_onet_basic_interests(args.basic_interests, areas)
+        bsocs = soc_profiles(b_occ, areas)
+        # base rate per area: mean over all O*NET occupations, on [0, 1] (prior for areas
+        # a student did not answer, dimensions-v2 §3)
+        base = {a: (sum(o[a] for o in b_occ.values()) / len(b_occ) - 1) / 6 for a in areas}
         _write_csv(args.out / "basic_interest_map.csv", [
-            {"key": k, "area": a, "riasec": " ".join(bmap[a])}
+            {"key": k, "area": a, "riasec": " ".join(bmap[a]), "occupation_mean": f"{base[a]:.4f}"}
             for k, a in zip(bkeys, areas, strict=True)
         ])  # fmt: skip
         bused = sorted({s for c in fam for s in xw.get(c, set()) if s in bsocs})

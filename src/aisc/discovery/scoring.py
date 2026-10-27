@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 
 from aisc.contracts import Program
-from aisc.dimensions import NEED_KEYS
+from aisc.dimensions import dims_for_length, dims_keys
 
 
 def relevance(student: np.ndarray, program: np.ndarray) -> float:
@@ -39,10 +39,11 @@ def contributions(student: np.ndarray, program: np.ndarray) -> dict[str, float]:
     the v0 scorer by construction (property-tested).
     """
     products = student * program
+    keys = dims_keys(dims_for_length(len(products)))
     total = float(products.sum())
     if total == 0:
-        return {k: 0.0 for k in NEED_KEYS}
-    return {k: float(v / total) for k, v in zip(NEED_KEYS, products, strict=True)}
+        return {k: 0.0 for k in keys}
+    return {k: float(v / total) for k, v in zip(keys, products, strict=True)}
 
 
 def label_similarity(a: Program, b: Program) -> float:

@@ -12,7 +12,18 @@ Sub-components (docs/components/C2-discovery.md):
 
 from aisc.discovery.constraints import passes_constraints
 from aisc.discovery.rerank import recommend
-from aisc.discovery.scorers import COSINE, DEFAULT_SCORER, SQDIST, Scorer, blend, layered
+from aisc.discovery.scorers import (
+    COSINE,
+    DEFAULT_SCORER,
+    DEFAULT_SCORER_V2,
+    SQDIST,
+    LayerBalanced,
+    Scorer,
+    blend,
+    default_scorer,
+    layer_balanced,
+    layered,
+)
 from aisc.discovery.scoring import (
     contributions,
     label_similarity,
@@ -25,6 +36,10 @@ from aisc.discovery.sectioned import discover, shortlist
 __all__ = [
     "COSINE",
     "DEFAULT_SCORER",
+    "DEFAULT_SCORER_V2",
+    "LayerBalanced",
+    "default_scorer",
+    "layer_balanced",
     "SQDIST",
     "Scorer",
     "blend",

@@ -18,13 +18,19 @@ from __future__ import annotations
 
 import numpy as np
 
-from aisc.contracts import DiscoveryResult, Program, Recommendation, StudentProfile
+from aisc.contracts import (
+    DiscoveryResult,
+    Program,
+    Recommendation,
+    StudentProfile,
+    require_same_dims,
+)
 from aisc.discovery import scorers as _scorers
 from aisc.discovery.constraints import passes_constraints
 
 
-def _resolve(scorer: _scorers.Scorer | None) -> _scorers.Scorer:
-    return scorer if scorer is not None else _scorers.DEFAULT_SCORER
+def _resolve(scorer: _scorers.Scorer | None, n_dims: int = 15) -> _scorers.Scorer:
+    return scorer if scorer is not None else _scorers.default_scorer(n_dims)
 
 
 def _ranked(
@@ -33,6 +39,7 @@ def _ranked(
     min_relevance: float,
     scorer: _scorers.Scorer,
 ):
+    require_same_dims(profile, catalog)
     anchors = set(profile.anchors)
     pool = [
         p
@@ -62,7 +69,7 @@ def shortlist(
     if n < 0:
         raise ValueError("n must be non-negative")
     profile.require_complete("C2 shortlist")
-    ranked = _ranked(profile, catalog, min_relevance, _resolve(scorer))
+    ranked = _ranked(profile, catalog, min_relevance, _resolve(scorer, len(profile.vector)))
     return [p.program_id for _, p in ranked[:n]]
 
 
@@ -79,7 +86,7 @@ def discover(
     if k_new < 0 or k_known < 0:
         raise ValueError("k_new and k_known must be non-negative")
     profile.require_complete("C2 discover")
-    scorer = _resolve(scorer)
+    scorer = _resolve(scorer, len(profile.vector))
     familiar = set(profile.familiar)
     target = profile.vector
     new: list[Recommendation] = []

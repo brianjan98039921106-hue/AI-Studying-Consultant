@@ -29,15 +29,17 @@ from functools import cached_property
 
 import numpy as np
 
-from aisc.dimensions import NEED_KEYS
+from aisc.dimensions import dims_keys
 
 
-def to_vector(values: dict[str, float]) -> np.ndarray:
-    """Convert a {dimension: score} mapping to an ordered vector in [0, 1]."""
-    unknown = set(values) - set(NEED_KEYS)
+def to_vector(values: dict[str, float], dims: str = "v1") -> np.ndarray:
+    """Convert a {dimension: score} mapping to an ordered vector in [0, 1] for a
+    dimension set ('v1' = 15 dims, 'v2' = 51 dims, docs/dimensions-v2.md)."""
+    keys = dims_keys(dims)
+    unknown = set(values) - set(keys)
     if unknown:
-        raise ValueError(f"Unknown need dimensions: {sorted(unknown)}")
-    vec = np.array([float(values.get(k, 0.0)) for k in NEED_KEYS])
+        raise ValueError(f"Unknown need dimensions for {dims}: {sorted(unknown)}")
+    vec = np.array([float(values.get(k, 0.0)) for k in keys])
     if np.any(vec < 0) or np.any(vec > 1):
         raise ValueError("Need scores must lie in [0, 1]")
     return vec
@@ -70,15 +72,17 @@ class Program:
     source_url: str | None = None
     retrieved_at: str | None = None  # ISO date
     prestige: float | None = None  # perceived prestige in [0, 1]; used by C5 and V-C2-4
+    dims: str = "v1"  # dimension set of `attributes` (W-16c)
 
     def __post_init__(self) -> None:
         if self.prestige is not None and not 0 <= self.prestige <= 1:
             raise ValueError("prestige must lie in [0, 1]")
+        dims_keys(self.dims)  # validates the name
 
     @cached_property
     def vector(self) -> np.ndarray:
         """Validated, cached, read-only attribute vector (Program is immutable)."""
-        vec = to_vector(self.attributes)
+        vec = to_vector(self.attributes, self.dims)
         vec.flags.writeable = False
         return vec
 
@@ -112,17 +116,26 @@ class StudentProfile:
     anchors: list[str] = field(default_factory=list)
     familiar: list[str] = field(default_factory=list)
     hard_constraints: dict[str, object] = field(default_factory=dict)
+    dims: str = "v1"  # dimension set of `needs` (W-16c)
+    # v2 only: stage-1 ratings of the 12 interest-area groups (group id -> [0, 1]);
+    # used as the prior for areas not rated individually (docs/dimensions-v2.md §3)
+    group_scores: dict[int, float] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        dims_keys(self.dims)  # validates the name
+        if self.group_scores and self.dims != "v2":
+            raise ValueError("group_scores are defined only for the v2 dimension set")
 
     @property
     def vector(self) -> np.ndarray:
         """Ordered need vector. Unanswered dimensions become 0 here, which means
         "no interest", not "unknown" (B-C1-14). Ranking code must call
         `require_complete` first."""
-        return to_vector(self.needs)
+        return to_vector(self.needs, self.dims)
 
     @property
     def missing_dimensions(self) -> list[str]:
-        return [k for k in NEED_KEYS if k not in self.needs]
+        return [k for k in dims_keys(self.dims) if k not in self.needs]
 
     def require_complete(self, where: str) -> None:
         """Raise if any dimension is unanswered (B-C1-14)."""
@@ -132,6 +145,16 @@ class StudentProfile:
                 f"{where} needs a complete profile; unanswered dimensions {missing}. "
                 "Complete it first (pipeline.prepare_profile or profiling.complete_neutral)."
             )
+
+
+def require_same_dims(profile: StudentProfile, programs: list[Program]) -> None:
+    """Raise if a profile and programs use different dimension sets (W-16c)."""
+    other = {p.dims for p in programs} - {profile.dims}
+    if other:
+        raise ValueError(
+            f"profile uses dimension set {profile.dims!r} but programs use {sorted(other)}; "
+            "migrate one side first (aisc.dimensions.migrate_needs_v1_to_v2)"
+        )
 
 
 # --- C2 output -------------------------------------------------------------

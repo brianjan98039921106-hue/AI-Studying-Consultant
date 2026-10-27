@@ -28,7 +28,7 @@ AnswerFn = Callable[[Item], float]
 
 def c2_scores(w: np.ndarray, X: np.ndarray) -> np.ndarray:
     """Default C2.1 relevance for every catalogue row: what C1.3 optimises for."""
-    return _scorers.DEFAULT_SCORER.score_matrix(w, X)
+    return _scorers.default_scorer(len(w)).score_matrix(w, X)
 
 
 def prepare_profile(profile: StudentProfile, catalog: list[Program]) -> StudentProfile:

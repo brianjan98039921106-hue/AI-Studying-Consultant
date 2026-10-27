@@ -22,9 +22,17 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from aisc.dimensions import NEED_KEYS, keys_in_layer
+from aisc.dimensions import LAYERS, dims_for_length, dims_keys, keys_in_layer
 
-INTENSITY_IDX = np.array([NEED_KEYS.index(k) for k in keys_in_layer("intensity")])
+
+def layer_index(layer: str, n_dims: int) -> np.ndarray:
+    """Column indices of a layer for vectors of length n_dims (v1 = 15, v2 = 51)."""
+    dims = dims_for_length(n_dims)
+    keys = dims_keys(dims)
+    return np.array([keys.index(k) for k in keys_in_layer(layer, dims)])
+
+
+INTENSITY_IDX = layer_index("intensity", 15)  # v1, kept for existing callers
 
 
 def _cos_terms(w: np.ndarray, X: np.ndarray) -> np.ndarray:
@@ -57,8 +65,9 @@ class Scorer:
         if self.sq_weight:
             out = out + self.sq_weight * (1.0 / D - sq / D)
         if self.intensity_gamma:
+            idx = layer_index("intensity", D)
             pen = np.zeros_like(sq)
-            pen[:, INTENSITY_IDX] = sq[:, INTENSITY_IDX] / len(INTENSITY_IDX)
+            pen[:, idx] = sq[:, idx] / len(idx)
             out = out - self.intensity_gamma * pen
         return out
 
@@ -70,7 +79,7 @@ class Scorer:
 
     def explain(self, w: np.ndarray, x: np.ndarray) -> dict[str, float]:
         t = self.terms(w, x[None, :])[0]
-        return {k: float(v) for k, v in zip(NEED_KEYS, t, strict=True)}
+        return {k: float(v) for k, v in zip(dims_keys(dims_for_length(len(t))), t, strict=True)}
 
 
 COSINE = Scorer("cosine")
@@ -89,8 +98,67 @@ def blend(lam: float) -> Scorer:
     return Scorer(f"blend(λ={lam:g})", cos_weight=1.0 - lam, sq_weight=lam)
 
 
+@dataclass(frozen=True)
+class LayerBalanced:
+    """Layer-balanced relevance (W-16c, docs/dimensions-v2.md §4): the base scorer is
+    applied to each layer separately and the layer scores are combined with weights
+    that sum to 1. Keeps the 41-dimension domain layer of v2 from outweighing the
+    interest, intensity and orientation layers. Explanations stay exact: each layer's
+    terms are the base scorer's terms scaled by the layer weight.
+    """
+
+    name: str
+    weights: tuple[tuple[str, float], ...]  # (layer, weight) for every layer
+    base: Scorer
+
+    def __post_init__(self) -> None:
+        layers = [lay for lay, _ in self.weights]
+        if sorted(layers) != sorted(LAYERS):
+            raise ValueError(f"weights must cover exactly the layers {LAYERS}")
+        ws = [w for _, w in self.weights]
+        if any(w < 0 for w in ws) or abs(sum(ws) - 1.0) > 1e-9:
+            raise ValueError("layer weights must be non-negative and sum to 1")
+
+    def terms(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
+        X = np.atleast_2d(X)
+        out = np.zeros_like(X, dtype=float)
+        for layer, weight in self.weights:
+            idx = layer_index(layer, X.shape[1])
+            out[:, idx] = weight * self.base.terms(w[idx], X[:, idx])
+        return out
+
+    def score_matrix(self, w: np.ndarray, X: np.ndarray) -> np.ndarray:
+        return self.terms(w, X).sum(axis=1)
+
+    def score(self, w: np.ndarray, x: np.ndarray) -> float:
+        return float(self.score_matrix(w, x[None, :])[0])
+
+    def explain(self, w: np.ndarray, x: np.ndarray) -> dict[str, float]:
+        t = self.terms(w, x[None, :])[0]
+        return {k: float(v) for k, v in zip(dims_keys(dims_for_length(len(t))), t, strict=True)}
+
+
+def layer_balanced(weights: dict[str, float], base: Scorer | None = None) -> LayerBalanced:
+    b = base if base is not None else blend(0.25)
+    total = sum(weights.values())
+    if total <= 0:
+        raise ValueError("weights must have a positive sum")
+    norm = tuple((lay, weights[lay] / total) for lay in LAYERS)
+    label = ",".join(f"{lay[:3]}={w:.2f}" for lay, w in norm)
+    return LayerBalanced(f"layered-balance({label};{b.name})", norm, b)
+
+
 # W-26: selected by the pre-registered maximin rule on the archetype generator,
 # validated on the continuous generator and re-confirmed (and re-selected) on fresh
 # seeds; never significantly worse than cosine in 16 conditions
 # (results/synthetic-l3-c2-scorer-findings.md).
 DEFAULT_SCORER: Scorer = blend(0.25)
+
+# W-16c: PROVISIONAL default for v2 profiles (equal layer weights) until the
+# pre-registered L3 selection (docs/dimensions-v2.md §4-5) picks the weights.
+DEFAULT_SCORER_V2: LayerBalanced = layer_balanced({layer: 1.0 for layer in LAYERS})
+
+
+def default_scorer(n_dims: int):
+    """DEFAULT_SCORER for v1 vectors, DEFAULT_SCORER_V2 for v2 vectors."""
+    return DEFAULT_SCORER if dims_for_length(n_dims) == "v1" else DEFAULT_SCORER_V2

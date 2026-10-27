@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from aisc.contracts import Program, StudentProfile
-from aisc.dimensions import NEED_KEYS
+from aisc.contracts import Program, StudentProfile, require_same_dims
+from aisc.dimensions import BASIC_INTEREST_KEYS, dims_keys
+from aisc.profiling.hierarchy import area_prior, validate_group_scores
 
 
 def needs_from_anchors(anchors: list[Program]) -> np.ndarray:
@@ -39,23 +40,22 @@ def blend_profile(
     anchors = [catalog[pid] for pid in profile.anchors if pid in catalog]
     if not anchors:
         return profile
+    require_same_dims(profile, anchors)
+    keys = dims_keys(profile.dims)
 
     stated = profile.vector
-    sigma_s = np.array([profile.uncertainty.get(k, default_uncertainty) for k in NEED_KEYS])
+    sigma_s = np.array([profile.uncertainty.get(k, default_uncertainty) for k in keys])
     implied = needs_from_anchors(anchors)
-    sigma_a = np.full(len(NEED_KEYS), default_uncertainty / np.sqrt(len(anchors)))
+    sigma_a = np.full(len(keys), default_uncertainty / np.sqrt(len(anchors)))
 
     w_s, w_a = 1.0 / sigma_s**2, 1.0 / sigma_a**2
     blended = (stated * w_s + implied * w_a) / (w_s + w_a)
     blended_sigma = np.sqrt(1.0 / (w_s + w_a))
 
-    return StudentProfile(
-        student_id=profile.student_id,
-        needs={k: float(np.clip(v, 0, 1)) for k, v in zip(NEED_KEYS, blended, strict=True)},
-        uncertainty={k: float(v) for k, v in zip(NEED_KEYS, blended_sigma, strict=True)},
-        anchors=list(profile.anchors),
-        familiar=list(profile.familiar),
-        hard_constraints=dict(profile.hard_constraints),
+    return _with(
+        profile,
+        {k: float(np.clip(v, 0, 1)) for k, v in zip(keys, blended, strict=True)},
+        {k: float(v) for k, v in zip(keys, blended_sigma, strict=True)},
     )
 
 
@@ -77,13 +77,24 @@ def complete_neutral(
     """Baseline: fill unanswered dimensions with a neutral value.
 
     A dimension counts as answered if its key is present in `profile.needs`.
+    v2 interest areas are never filled with the neutral value (B-C1-24): they get
+    the group / base-rate prior of aisc.profiling.hierarchy.
     """
     needs = dict(profile.needs)
     uncertainty = dict(profile.uncertainty)
-    for k in NEED_KEYS:
+    for k in dims_keys(profile.dims):
         if k not in needs:
-            needs[k], uncertainty[k] = value, sigma
+            needs[k], uncertainty[k] = _unanswered_prior(profile, k, value, sigma)
     return _with(profile, needs, uncertainty)
+
+
+def _unanswered_prior(
+    profile: StudentProfile, key: str, value: float = 0.5, sigma: float = 0.3
+) -> tuple[float, float]:
+    if profile.dims == "v2" and key in BASIC_INTEREST_KEYS:
+        validate_group_scores(profile.group_scores)
+        return area_prior(key, profile.group_scores)
+    return value, sigma
 
 
 def anchor_prior(
@@ -127,16 +138,17 @@ def blend_profile_v1(
     anchors = [catalog[pid] for pid in profile.anchors if pid in catalog]
     if not anchors:
         return complete_neutral(profile)
+    require_same_dims(profile, anchors)
     a_mean, a_sigma = anchor_prior(anchors, list(catalog.values()), sigma0, prestige_beta)
 
     needs: dict[str, float] = {}
     uncertainty: dict[str, float] = {}
-    for i, k in enumerate(NEED_KEYS):
+    for i, k in enumerate(dims_keys(profile.dims)):
         if k in profile.needs:
             s_val, s_sd = profile.needs[k], profile.uncertainty.get(k, default_sigma)
             sd_a = a_sigma * answered_scale
         else:
-            s_val, s_sd = NEUTRAL_VALUE, NEUTRAL_SIGMA
+            s_val, s_sd = _unanswered_prior(profile, k, NEUTRAL_VALUE, NEUTRAL_SIGMA)
             sd_a = a_sigma
         w_s = 1.0 / s_sd**2
         w_a = 0.0 if np.isinf(sd_a) else 1.0 / sd_a**2
@@ -153,4 +165,6 @@ def _with(profile: StudentProfile, needs: dict, uncertainty: dict) -> StudentPro
         anchors=list(profile.anchors),
         familiar=list(profile.familiar),
         hard_constraints=dict(profile.hard_constraints),
+        dims=profile.dims,
+        group_scores=dict(profile.group_scores),
     )
