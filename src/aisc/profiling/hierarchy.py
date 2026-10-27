@@ -18,7 +18,12 @@ weakly fitting areas of F68 and the doubtful pairing of F69 (A-C1-24).
 
 from __future__ import annotations
 
+import json
 from collections.abc import Mapping
+from functools import lru_cache
+from pathlib import Path
+
+import numpy as np
 
 from aisc.dimensions import BASIC_INTEREST_KEYS
 
@@ -134,3 +139,54 @@ def validate_group_scores(group_scores: Mapping[int, float]) -> None:
         raise ValueError(f"unknown area groups {sorted(unknown)}")
     if any(not 0 <= v <= 1 for v in group_scores.values()):
         raise ValueError("group scores must lie in [0, 1]")
+
+
+# --- correlated completion (opt-in; architecture-review §2.1, A-C1-25, A-C1-26) --------
+
+AREA_MODELS = ("hierarchy", "correlated")
+_MODEL_PATH = Path(__file__).with_name("interest_area_model.json")  # package data
+
+
+@lru_cache(maxsize=1)
+def _area_model() -> tuple[tuple[str, ...], np.ndarray, np.ndarray]:
+    spec = json.loads(_MODEL_PATH.read_text(encoding="utf-8"))
+    names = tuple(spec["variables"])
+    expected = (*BASIC_INTEREST_KEYS, *(f"group_{g}" for g in sorted(GROUP_LABELS)))
+    if names != expected:
+        raise RuntimeError("interest_area_model.json is out of sync with the area registry")
+    return names, np.array(spec["mean"]), np.array(spec["covariance"])
+
+
+def correlated_area_priors(
+    rated_areas: Mapping[str, float],
+    group_scores: Mapping[int, float],
+    answer_sd: float = 0.15,
+) -> dict[str, tuple[float, float]]:
+    """(prior mean, prior sd) for every unrated area: conditional mean and sd of a
+    joint normal over the 41 areas and the 12 group maxima, given the rated areas
+    and group answers (observation noise `answer_sd`). Learned from O*NET
+    occupations (data/reference/interest_area_model.json). Means are clipped to
+    [0, 1]; sds are floored at 0.05."""
+    validate_group_scores(group_scores)
+    unknown = set(rated_areas) - set(BASIC_INTEREST_KEYS)
+    if unknown:
+        raise ValueError(f"not interest areas: {sorted(unknown)}")
+    names, mu, S = _area_model()
+    obs = [names.index(k) for k in rated_areas] + [
+        names.index(f"group_{g}") for g in sorted(group_scores)
+    ]
+    y = np.array(list(rated_areas.values()) + [group_scores[g] for g in sorted(group_scores)])
+    un = [i for i, k in enumerate(names) if k in BASIC_INTEREST_KEYS and k not in rated_areas]
+    if not un:
+        return {}
+    if obs:
+        Soo = S[np.ix_(obs, obs)] + np.eye(len(obs)) * max(answer_sd**2, 1e-6)
+        Suo = S[np.ix_(un, obs)]
+        mean = mu[un] + Suo @ np.linalg.solve(Soo, y - mu[obs])
+        cov = S[np.ix_(un, un)] - Suo @ np.linalg.solve(Soo, Suo.T)
+    else:
+        mean, cov = mu[un], S[np.ix_(un, un)]
+    sd = np.sqrt(np.clip(np.diag(cov), 0.05**2, None))
+    return {
+        names[i]: (float(np.clip(m, 0, 1)), float(s)) for i, m, s in zip(un, mean, sd, strict=True)
+    }

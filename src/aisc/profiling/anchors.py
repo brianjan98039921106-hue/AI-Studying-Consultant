@@ -16,7 +16,12 @@ import numpy as np
 
 from aisc.contracts import Program, StudentProfile, require_same_dims
 from aisc.dimensions import BASIC_INTEREST_KEYS, dims_keys
-from aisc.profiling.hierarchy import area_prior, validate_group_scores
+from aisc.profiling.hierarchy import (
+    AREA_MODELS,
+    area_prior,
+    correlated_area_priors,
+    validate_group_scores,
+)
 
 
 def needs_from_anchors(anchors: list[Program]) -> np.ndarray:
@@ -72,20 +77,35 @@ NEUTRAL_SIGMA = 0.3
 
 
 def complete_neutral(
-    profile: StudentProfile, value: float = NEUTRAL_VALUE, sigma: float = NEUTRAL_SIGMA
+    profile: StudentProfile,
+    value: float = NEUTRAL_VALUE,
+    sigma: float = NEUTRAL_SIGMA,
+    area_model: str = "hierarchy",
 ) -> StudentProfile:
     """Baseline: fill unanswered dimensions with a neutral value.
 
     A dimension counts as answered if its key is present in `profile.needs`.
     v2 interest areas are never filled with the neutral value (B-C1-24): they get
-    the group / base-rate prior of aisc.profiling.hierarchy.
+    the group / base-rate prior of aisc.profiling.hierarchy, or with
+    area_model="correlated" the conditional prior learned from O*NET (opt-in).
     """
     needs = dict(profile.needs)
     uncertainty = dict(profile.uncertainty)
+    priors = _area_priors(profile, area_model)
     for k in dims_keys(profile.dims):
         if k not in needs:
-            needs[k], uncertainty[k] = _unanswered_prior(profile, k, value, sigma)
+            needs[k], uncertainty[k] = priors.get(k) or _unanswered_prior(profile, k, value, sigma)
     return _with(profile, needs, uncertainty)
+
+
+def _area_priors(profile: StudentProfile, area_model: str) -> dict[str, tuple[float, float]]:
+    """Joint priors for unrated v2 areas when area_model="correlated", else {}."""
+    if area_model not in AREA_MODELS:
+        raise ValueError(f"area_model must be one of {AREA_MODELS}")
+    if area_model == "hierarchy" or profile.dims != "v2":
+        return {}
+    rated = {k: v for k, v in profile.needs.items() if k in BASIC_INTEREST_KEYS}
+    return correlated_area_priors(rated, profile.group_scores)
 
 
 def _unanswered_prior(
@@ -128,6 +148,7 @@ def blend_profile_v1(
     prestige_beta: float = 3.0,
     answered_scale: float = float("inf"),
     default_sigma: float = 0.5,
+    area_model: str = "hierarchy",
 ) -> StudentProfile:
     """Anchors as a prior for unanswered dimensions.
 
@@ -137,9 +158,10 @@ def blend_profile_v1(
     """
     anchors = [catalog[pid] for pid in profile.anchors if pid in catalog]
     if not anchors:
-        return complete_neutral(profile)
+        return complete_neutral(profile, area_model=area_model)
     require_same_dims(profile, anchors)
     a_mean, a_sigma = anchor_prior(anchors, list(catalog.values()), sigma0, prestige_beta)
+    priors = _area_priors(profile, area_model)
 
     needs: dict[str, float] = {}
     uncertainty: dict[str, float] = {}
@@ -148,7 +170,9 @@ def blend_profile_v1(
             s_val, s_sd = profile.needs[k], profile.uncertainty.get(k, default_sigma)
             sd_a = a_sigma * answered_scale
         else:
-            s_val, s_sd = _unanswered_prior(profile, k, NEUTRAL_VALUE, NEUTRAL_SIGMA)
+            s_val, s_sd = priors.get(k) or _unanswered_prior(
+                profile, k, NEUTRAL_VALUE, NEUTRAL_SIGMA
+            )
             sd_a = a_sigma
         w_s = 1.0 / s_sd**2
         w_a = 0.0 if np.isinf(sd_a) else 1.0 / sd_a**2
