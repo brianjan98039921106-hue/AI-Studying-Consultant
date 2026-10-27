@@ -30,3 +30,4 @@ A recommender that profiles Taiwanese grad-school applicants by *needs* (not pro
 - Docs in Traditional Chinese with English technical terms; code and docstrings in English.
 - Conventional Commits. Tick finished work items in `docs/ROADMAP.md` in the same commit.
 - User guide (W-05): any change to how users run the model (new feature, API/parameter change, output change, a limitation lifted) updates `docs/USAGE.md` — the relevant section, the §1 status table and the §8 changelog — in the same PR. Its python blocks run in CI (`tests/test_usage_doc.py`).
+- README (W-06): the blocks between `<!-- AUTO:... -->` markers are generated — never edit them by hand; edit the source (USAGE §1/§8, ROADMAP 下一步, VALIDATION §5) and run `python scripts/update_readme.py` before committing. The README workflow re-syncs main after each merge. A new USAGE §8 row bumps the version everywhere.

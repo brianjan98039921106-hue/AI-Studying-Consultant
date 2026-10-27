@@ -34,6 +34,7 @@ flowchart LR
 | W-03 | C4.1 精確解 + 暴力法驗證；C2 v0；C1.2 v0 | C1/C2/C4 | L2 | ✅ |
 | W-04 | 盲區探針：B-C1-2、B-C2-2、B-C2-3（皆確認失敗） | C1/C2 | L4 | ✅ |
 | W-05 | 使用說明 [USAGE.md](USAGE.md)（安裝、示範、逐步 API、顧問流程、限制、變更紀錄）；範例由 `tests/test_usage_doc.py` 在 CI 執行。**持續工項**：之後每個改變使用方式的工項都要同步更新（完成定義第 6 條） | 全部 | L2 | ✅ 首版；持續更新 |
+| W-06 | README 自動同步：`scripts/update_readme.py` 從來源檔產生 README 的「目前狀態」（USAGE §1）、「最近更新」（USAGE §8）、「下一步」（本檔）、「最新驗證結論」（VALIDATION §5）與版本號（USAGE §8 → pyproject、`__init__`、USAGE 標頭）；`.github/workflows/readme.yml` 在合併到 main 後自動重產並 commit | 全部 | L2 | ✅ |
 
 ## Phase 1 — 驗證基建 + 測量基礎
 
