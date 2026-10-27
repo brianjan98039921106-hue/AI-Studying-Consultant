@@ -185,16 +185,11 @@ def test_v01_options_validate_and_behave():
     assert np.mean(gaps["pool"]) < np.mean(gaps["mean"])
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C3-6: one model for all admission processes; programme type cannot enter",
-)
-def test_probe_programme_type_shifts_new_programme_predictions():
-    """Interview-based programmes admit fewer applicants (logit -1.2) in every family.
-    Told the types, the model must predict an unseen interview programme lower than
-    an unseen standard one of the same family, close to the truth."""
+def test_programme_type_shifts_new_programme_predictions():
+    """B-C3-6 (was a probe). Interview-based programmes admit fewer applicants
+    (logit -1.2) in every family. Told the types, the model must predict an unseen
+    interview programme lower than an unseen standard one of the same family, close
+    to the truth."""
     import inspect
 
     import aisc.feasibility as fz
@@ -216,3 +211,19 @@ def test_probe_programme_type_shifts_new_programme_predictions():
     lo = m.predict("new-int", (0.0, 0.0), family="f1", ptype="interview").mean
     assert hi - lo > 0.15
     assert lo == pytest.approx(1 / (1 + np.exp(1.2)), abs=0.1)
+
+
+def test_type_level_validation():
+    import aisc.feasibility as fz
+
+    rng = np.random.default_rng(9)
+    recs, _, _ = _world(rng, n_per=20)
+    data = _records(recs, "complete")
+    types = {f"p{i}": ("a" if i % 2 else "b") for i in range(12)}
+    with pytest.raises(ValueError):
+        fz.fit_admission_model(data, types={"p0": "a"})  # programmes without a type
+    m = fz.fit_admission_model(data, types=types)
+    assert m.ptypes == ("a", "b") and m.program_type["p1"] == "a"
+    with pytest.raises(ValueError):
+        m.predict("new", (0.0, 0.0), family="f0")  # unseen programme needs its type
+    assert 0 < m.predict("new", (0.0, 0.0), family="f0", ptype="b").mean < 1

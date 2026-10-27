@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from statistics import NormalDist
 
 import numpy as np
@@ -34,7 +34,7 @@ import numpy as np
 from aisc.contracts import AdmitEstimate
 
 SOURCES = ("self_report", "complete")
-FAMILY_SD, BETA_SD, SHIFT_SD = 2.0, 1.0, 2.0
+FAMILY_SD, BETA_SD, SHIFT_SD, TYPE_SD = 2.0, 1.0, 2.0, 1.0
 TAU_GRID = (0.25, 0.5, 0.75, 1.0, 1.5)
 
 
@@ -61,12 +61,14 @@ class AdmissionModel:
     families: tuple[str, ...]
     program_family: dict[str, str]
     n_features: int
-    theta: np.ndarray  # [beta (k), mu_f (F), a_p (P), b]
+    theta: np.ndarray  # [beta (k), mu_f (F), eta_t (T), a_p (P), b]
     cov: np.ndarray  # Laplace covariance
     tau: float
     shift_estimated: bool
     method: str
     mixture: tuple = ()  # ((weight, theta, cov, tau), ...) when tau is averaged
+    ptypes: tuple[str, ...] = ()  # programme types (W-74); empty = no type level
+    program_type: dict = field(default_factory=dict)
 
     @property
     def shift(self) -> float:
@@ -75,21 +77,25 @@ class AdmissionModel:
             return float(sum(w * th[-1] for w, th, _, _ in self.mixture))
         return float(self.theta[-1])
 
-    def _z(self, program_id: str, features: Sequence[float], family: str | None):
-        k, nf, npg = self.n_features, len(self.families), len(self.programs)
+    def _z(self, program_id: str, features: Sequence[float], family: str | None, ptype: str | None):
+        k, nf, nt = self.n_features, len(self.families), len(self.ptypes)
+        npg = len(self.programs)
         if len(features) != k:
             raise ValueError(f"expected {k} features")
-        z = np.zeros(k + nf + npg + 1)
+        z = np.zeros(k + nf + nt + npg + 1)
         z[:k] = features
         extra = 0.0
         if program_id in self.program_family:
-            z[k + nf + self.programs.index(program_id)] = 1.0
+            z[k + nf + nt + self.programs.index(program_id)] = 1.0
         else:
-            fam = family if family is not None else None
-            if fam not in self.families:
+            if family not in self.families:
                 raise ValueError(f"unknown programme {program_id!r}: pass a known family")
-            z[k + self.families.index(fam)] = 1.0
-            extra = self.tau**2  # a new programme varies around its family mean
+            z[k + self.families.index(family)] = 1.0
+            if self.ptypes:
+                if ptype not in self.ptypes:
+                    raise ValueError(f"unknown programme {program_id!r}: pass a known ptype")
+                z[k + nf + self.ptypes.index(ptype)] = 1.0
+            extra = self.tau**2  # a new programme varies around its family (+ type) mean
         return z, extra
 
     def predict(
@@ -98,12 +104,13 @@ class AdmissionModel:
         features: Sequence[float],
         level: float = 0.9,
         family: str | None = None,
+        ptype: str | None = None,
     ) -> AdmitEstimate:
         """P(admit) for an applicant from the population (b = 0): posterior median and
         a central `level` interval under the Laplace approximation."""
         if not 0 < level < 1:
             raise ValueError("level must lie in (0, 1)")
-        z, extra = self._z(program_id, features, family)
+        z, extra = self._z(program_id, features, family, ptype)
         if self.mixture:  # moment-matched mixture over tau (B-C3-9)
             comps = [(w, float(z @ th), float(z @ cv @ z) + (t**2 if extra else 0.0))
                      for w, th, cv, t in self.mixture]  # fmt: skip
@@ -122,31 +129,36 @@ class AdmissionModel:
                              self.method)  # fmt: skip
 
 
-def _design(records, programs, families, k):
+def _design(records, programs, families, k, nt=0):
     nf, npg = len(families), len(programs)
-    Z = np.zeros((len(records), k + nf + npg + 1))
+    Z = np.zeros((len(records), k + nf + nt + npg + 1))
     y = np.zeros(len(records))
     for i, r in enumerate(records):
         Z[i, :k] = r.features
-        Z[i, k + nf + programs.index(r.program_id)] = 1.0
+        Z[i, k + nf + nt + programs.index(r.program_id)] = 1.0
         Z[i, -1] = 1.0 if r.source == "self_report" else 0.0
         y[i] = r.admitted
     return Z, y
 
 
-def _prior(programs, families, fam_of, k, tau, anchors, kappa, estimate_shift):
-    nf, npg = len(families), len(programs)
-    d = k + nf + npg + 1
+def _prior(programs, families, fam_of, k, tau, anchors, kappa, estimate_shift,
+           ptypes=(), type_of=None):  # fmt: skip
+    nf, npg, nt = len(families), len(programs), len(ptypes)
+    d = k + nf + nt + npg + 1
     Q, c = np.zeros((d, d)), np.zeros(d)
     Q[np.arange(k), np.arange(k)] = 1 / BETA_SD**2
     for j in range(nf):
         Q[k + j, k + j] += 1 / FAMILY_SD**2
+    for j in range(nt):
+        Q[k + nf + j, k + nf + j] += 1 / TYPE_SD**2
     for i, pid in enumerate(programs):
-        a, m = k + nf + i, k + families.index(fam_of[pid])
-        Q[a, a] += 1 / tau**2
-        Q[m, m] += 1 / tau**2
-        Q[a, m] -= 1 / tau**2
-        Q[m, a] -= 1 / tau**2
+        a, m = k + nf + nt + i, k + families.index(fam_of[pid])
+        # (a - mu_f - eta_t)^2 / tau^2 ; eta_t only with a type level (W-74)
+        idx = [a, m] + ([k + nf + ptypes.index(type_of[pid])] if nt else [])
+        sign = [1.0, -1.0] + ([-1.0] if nt else [])
+        for x, sx in zip(idx, sign, strict=True):
+            for y, sy in zip(idx, sign, strict=True):
+                Q[x, y] += sx * sy / tau**2
         if pid in anchors:
             Q[a, a] += 1 / kappa**2
             c[a] += anchors[pid] / kappa**2
@@ -208,13 +220,16 @@ def fit_admission_model(
     kappa: float = 0.3,
     anchor: str = "pool",
     tau_average: bool | None = None,
+    types: Mapping[str, str] | None = None,
 ) -> AdmissionModel:
     """Fit C3.2 v0. `families` maps programme -> CIP family (default: from records);
     `official_rates` anchors programme intercepts (A-C3-5); `tau` None averages over
     TAU_GRID with Laplace marginal-likelihood weights (default since F136; pass
     tau_average=False for the v0 reference, which picks the single best tau).
     `anchor` "pool" (default since F139) anchors official rates over the programme's
-    reweighted records; "mean" is the v0 / v0.1 reference (module docstring)."""
+    reweighted records; "mean" is the v0 / v0.1 reference (module docstring).
+    `types` maps every programme to an admission-process type (W-74, A-C3-7); it adds
+    a type effect shared across families. None = no type level (unchanged model)."""
     if anchor not in ("mean", "pool"):
         raise ValueError('anchor must be "mean" or "pool"')
     if tau_average and tau is not None:
@@ -232,6 +247,13 @@ def fit_admission_model(
             raise ValueError(f"programme {r.program_id} has two families")
     programs = tuple(sorted({r.program_id for r in records}))
     fams = tuple(sorted({fam_of[p] for p in programs}))
+    type_of = dict(types or {})
+    if types is not None:
+        untyped = [p for p in programs if p not in type_of]
+        if untyped:
+            raise ValueError(f"no type for programmes {untyped}")
+    ptypes = tuple(sorted({type_of[p] for p in programs})) if types is not None else ()
+    nt = len(ptypes)
     anchors = {}
     for pid, rate in (official_rates or {}).items():
         if pid in programs:
@@ -241,18 +263,18 @@ def fit_admission_model(
     srcs = {r.source for r in records}
     has_self = "self_report" in srcs
     estimate_shift = has_self and ("complete" in srcs or bool(anchors))
-    Z, y = _design(records, list(programs), list(fams), k)
+    Z, y = _design(records, list(programs), list(fams), k, nt)
     nf = len(fams)
     pool, mean_anchors = [], anchors
     if anchor == "pool":
         mean_anchors = {}
         for pid, lr in anchors.items():
             rows = np.array([i for i, r in enumerate(records) if r.program_id == pid])
-            pool.append((k + nf + programs.index(pid), rows, lr))
+            pool.append((k + nf + nt + programs.index(pid), rows, lr))
 
     def run(t):
         Q, c = _prior(list(programs), list(fams), fam_of, k, t, mean_anchors, kappa,
-                      estimate_shift)  # fmt: skip
+                      estimate_shift, list(ptypes), type_of)  # fmt: skip
         theta, H, f = _fit(Z, y, Q, c, pool, k, kappa, estimate_shift)
         _, logdet = np.linalg.slogdet(H)
         log_ml = -(f + len(programs) * math.log(t)) - 0.5 * logdet
@@ -283,4 +305,5 @@ def fit_admission_model(
     else:
         method = f"hierarchical_{version}_uncorrected"
     return AdmissionModel(programs, fams, {p: fam_of[p] for p in programs}, k, theta, cov,
-                          float(tau), estimate_shift, method, mixture)  # fmt: skip
+                          float(tau), estimate_shift, method, mixture, ptypes,
+                          {p: type_of[p] for p in programs} if nt else {})  # fmt: skip
