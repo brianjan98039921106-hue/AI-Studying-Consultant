@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.17 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.18 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -56,9 +56,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-28 | v0.3.18 | 錄取機率模型新增 `converged` 與 `anchor_conflicts`，未收斂或官方錄取率與紀錄衝突時警告（§4.9） | B-C3-10～12 |
 | 2026-10-28 | v0.3.17 | 錄取紀錄可標申請年度（`AdmissionRecord(..., year=)`），模型估計年度波動、預測針對最新年度（§4.9） | B-C3-3 |
 | 2026-10-28 | v0.3.16 | 錄取機率模型可加入學程類型（`types=`、`predict(..., ptype=)`，§4.9） | W-74 |
-| 2026-10-28 | v0.3.15 | v2 新增 `areas_to_ask`：依第一層群分數排出第二層要細問的領域（§4.8；m、q 無預設） | W-66 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
@@ -90,7 +90,7 @@
 | **所有發現的狀態總表** | [results/FINDINGS.md](results/FINDINGS.md) |
 
 <!-- AUTO:latest-results START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-最新 L3 合成驗證結論（來源：[docs/VALIDATION.md §5](docs/VALIDATION.md)）：[領域把關](results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](results/synthetic-l3-noise-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](results/synthetic-l3-v1-continuous-findings.md)、[v1](results/synthetic-l3-v1-findings.md)、[v0](results/synthetic-l3-v0-findings.md)）
+最新 L3 合成驗證結論（來源：[docs/VALIDATION.md §5](docs/VALIDATION.md)）：[C3 年度效果](results/synthetic-l3-admission-years-findings.md)、[C3 學程類型](results/synthetic-l3-admission-types-findings.md)、[C3 v0.2 確認](results/synthetic-l3-admission-pool-confirm-findings.md)、[V-C3-1 自陳偏誤](results/synthetic-l3-admission-bias-findings.md)、[C3 → C4](results/synthetic-l3-admission-portfolio-findings.md)、[V-C4-3 穩健選擇](results/synthetic-l3-portfolio-robust-findings.md)、[V-C4-2 錄取相關](results/synthetic-l3-portfolio-corr-findings.md)、[族群多樣化](results/synthetic-l3-diversity-findings.md)、[領域把關](results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](results/synthetic-l3-noise-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](results/synthetic-l3-v1-continuous-findings.md)、[v1](results/synthetic-l3-v1-findings.md)、[v0](results/synthetic-l3-v0-findings.md)）
 <!-- AUTO:latest-results END -->
 
 ## 使用方式

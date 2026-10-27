@@ -1,5 +1,7 @@
 """C3.2 v0 hierarchical admission model (L2, L4)."""
 
+import math
+
 import numpy as np
 import pytest
 
@@ -266,3 +268,49 @@ def test_years_all_or_none():
           fz.AdmissionRecord("p", "f", (0.1,), 0, "complete", 2025)]  # fmt: skip
     m = fz.fit_admission_model(ok)
     assert m.reference_year == 2025 and m.years == (2024,)
+
+
+def _conflict_world():
+    import aisc.feasibility as fz
+
+    rng = np.random.default_rng(11)
+    recs, rates, _ = _world(rng, n_per=40, q1=0.8, q0=0.2)
+    data = _records(recs, "self_report")
+    bad = {p: (0.03 if i % 2 else 0.95) for i, p in enumerate(sorted(rates))}
+    return fz, data, bad
+
+
+def test_fit_reports_non_convergence():
+    import warnings
+
+    fz, data, bad = _conflict_world()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        m = fz.fit_admission_model(data, official_rates=bad, tau=0.25)
+    assert hasattr(m, "converged")
+    assert m.converged or any(issubclass(w.category, RuntimeWarning) for w in caught)
+
+
+def test_pool_anchor_gradient_is_exact_in_the_tails():
+    import aisc.feasibility.hierarchical as H
+
+    rng = np.random.default_rng(0)
+    X = rng.normal(0, 1, (30, 2))
+    Z = np.column_stack([X, np.ones(30), np.zeros(30)])  # [beta(2), a_p, b]
+    y = np.zeros(30)
+    Q, c = np.eye(4) * 1e-3, np.zeros(4)
+    pool = [(2, np.arange(30), math.log(0.3 / 0.7))]
+    theta = np.array([0.2, -0.1, -25.0, 0.0])
+    f0, g, _ = H._objective(theta, Z, y, Q, c, pool, 2, 0.3, False)
+    for j in range(3):
+        e = np.zeros(4)
+        e[j] = 1e-4
+        fd = (H._objective(theta + e, Z, y, Q, c, pool, 2, 0.3, False)[0]
+              - H._objective(theta - e, Z, y, Q, c, pool, 2, 0.3, False)[0]) / 2e-4  # fmt: skip
+        assert g[j] == pytest.approx(fd, rel=1e-3, abs=1e-3)
+
+
+def test_anchor_conflicts_are_flagged():
+    fz, data, bad = _conflict_world()
+    m = fz.fit_admission_model(data, official_rates=bad, tau=0.25)
+    assert hasattr(m, "anchor_conflicts") and len(m.anchor_conflicts) >= 1

@@ -25,6 +25,7 @@ v0.1 options (THEORY "C3.2 v0.1 候選"; A-C3-6):
 from __future__ import annotations
 
 import math
+import warnings
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from statistics import NormalDist
@@ -72,6 +73,8 @@ class AdmissionModel:
     program_type: dict = field(default_factory=dict)
     years: tuple[int, ...] = ()  # non-reference years with an effect (B-C3-3)
     reference_year: int | None = None  # predictions are for this (latest) year
+    converged: bool = True  # B-C3-10
+    anchor_conflicts: tuple = ()  # ((programme, logit residual), ...) beyond 3 kappa, B-C3-12
 
     @property
     def shift(self) -> float:
@@ -182,41 +185,62 @@ def _objective(theta, Z, y, Q, c, pool, k, kappa, use_b):
     H = Z.T @ (Z * (p * (1 - p))[:, None]) + Q
     b = theta[-1] if use_b else 0.0
     for ai, rows, lr in pool:  # pool-integrated anchors (v0.1)
-        X, yy, ss = Z[rows, :k], y[rows], Z[rows, -1]
-        w = np.exp(-b * yy * ss)
-        s0 = 1 / (1 + np.exp(-(theta[ai] + X @ theta[:k])))
-        d0 = s0 * (1 - s0)
-        W = w.sum()
-        m = float(np.clip((w * s0).sum() / W, 1e-9, 1 - 1e-9))
-        rho = math.log(m / (1 - m)) - lr
-        dm = np.zeros_like(theta)
-        dm[ai] = (w * d0).sum() / W
-        dm[:k] = (w * d0) @ X / W
-        if use_b:
-            dm[-1] = (-(w * yy * ss * s0).sum() + m * (w * yy * ss).sum()) / W
-        J = dm / (m * (1 - m))
+        rho, J = _anchor_residual(theta, Z, y, ai, rows, lr, k, b, use_b)
         f += rho**2 / (2 * kappa**2)
         g = g + J * rho / kappa**2
         H = H + np.outer(J, J) / kappa**2
     return f, g, H
 
 
+def _anchor_residual(theta, Z, y, ai, rows, lr, k, b, use_b):
+    """logit(m_p) - logit(r_p) and its gradient, computed in log space so that no
+    clipping is needed in the tails (B-C3-11). m_p = sum w sigma(eta) / sum w with
+    eta = a_p + beta.x and w = e^(-b y s) (admitted self-reports down-weighted)."""
+    X, yy, ss = Z[rows, :k], y[rows], Z[rows, -1]
+    eta = theta[ai] + X @ theta[:k]
+    logw = -b * yy * ss
+    ln = logw - np.logaddexp(0.0, -eta)  # log w + log sigma(eta)
+    ld = logw - np.logaddexp(0.0, eta)  # log w + log(1 - sigma(eta))
+    log_n, log_d = np.logaddexp.reduce(ln), np.logaddexp.reduce(ld)
+    rho = float(log_n - log_d) - lr
+    pn, pd = np.exp(ln - log_n), np.exp(ld - log_d)
+    sig = np.exp(-np.logaddexp(0.0, -eta))
+    gw = pn * (1 - sig) + pd * sig  # d logit(m) / d eta_i
+    J = np.zeros_like(theta)
+    J[ai] = gw.sum()
+    J[:k] = gw @ X
+    if use_b:
+        J[-1] = -float(((pn - pd) * yy * ss).sum())
+    return rho, J
+
+
 def _fit(Z, y, Q, c, pool=(), k=0, kappa=1.0, use_b=False, max_iter=200):
+    """Damped Newton (Gauss-Newton for the anchor terms). Returns (theta, H, f,
+    converged); converged is False when the line search fails or max_iter is hit
+    without the step and gradient becoming small (B-C3-10)."""
     theta = np.zeros(Z.shape[1])
     f, g, H = _objective(theta, Z, y, Q, c, pool, k, kappa, use_b)
+    converged = False
     for _ in range(max_iter):
         step = np.linalg.solve(H, g)
         t = 1.0
         while True:
             cand = theta - t * step
             f_new, g_new, H_new = _objective(cand, Z, y, Q, c, pool, k, kappa, use_b)
-            if f_new <= f - 1e-4 * t * float(g @ step) or t < 1e-8:
+            if f_new <= f - 1e-4 * t * float(g @ step):
+                break
+            if t < 1e-8:
+                cand = None
                 break
             t /= 2
+        if cand is None:  # no descent possible along the Newton direction
+            converged = bool(np.max(np.abs(g)) < 1e-4)
+            break
         theta, f, g, H = cand, f_new, g_new, H_new
         if np.max(np.abs(t * step)) < 1e-10:
+            converged = bool(np.max(np.abs(g)) < 1e-4)
             break
-    return theta, H, f
+    return theta, H, f, converged
 
 
 def fit_admission_model(
@@ -289,19 +313,31 @@ def fit_admission_model(
     def run(t):
         Q, c = _prior(list(programs), list(fams), fam_of, k, t, mean_anchors, kappa,
                       estimate_shift, list(ptypes), type_of, len(years))  # fmt: skip
-        theta, H, f = _fit(Z, y, Q, c, pool, k, kappa, estimate_shift)
+        theta, H, f, ok = _fit(Z, y, Q, c, pool, k, kappa, estimate_shift)
         _, logdet = np.linalg.slogdet(H)
         log_ml = -(f + len(programs) * math.log(t)) - 0.5 * logdet
         cov = np.linalg.inv(H)
         if not estimate_shift:
             cov[-1, :] = cov[:, -1] = 0.0
-        return theta, cov, log_ml
+        conflicts = []  # B-C3-12: official rate far from what the records imply
+        for ai, rows, lr in pool:
+            b_hat = theta[-1] if estimate_shift else 0.0
+            rho, _ = _anchor_residual(theta, Z, y, ai, rows, lr, k, b_hat, estimate_shift)
+            if abs(rho) > 3 * kappa:
+                conflicts.append((programs[ai - (k + nf + nt)], round(rho, 3)))
+        if anchor == "mean":
+            for pid, lr in anchors.items():
+                rho = float(theta[k + nf + nt + programs.index(pid)]) - lr
+                if abs(rho) > 3 * kappa:
+                    conflicts.append((pid, round(rho, 3)))
+        return theta, cov, log_ml, ok, tuple(conflicts)
 
     mixture: tuple = ()
     if tau is None:
         fits = {t: run(t) for t in TAU_GRID}
         tau = max(fits, key=lambda t: fits[t][2])
-        theta, cov, _ = fits[tau]
+        theta, cov, _, _, conflicts = fits[tau]
+        converged = all(v[3] for v in fits.values())
         if tau_average:
             top = max(v[2] for v in fits.values())
             raw = {t: math.exp(v[2] - top) for t, v in fits.items()}
@@ -310,7 +346,14 @@ def fit_admission_model(
     else:
         if tau <= 0:
             raise ValueError("tau must be positive")
-        theta, cov, _ = run(tau)
+        theta, cov, _, converged, conflicts = run(tau)
+    if not converged:
+        warnings.warn("C3 admission model did not converge; estimates may be unreliable "
+                      "(B-C3-10)", RuntimeWarning, stacklevel=2)  # fmt: skip
+    if conflicts:
+        names = [c[0] for c in conflicts]
+        warnings.warn(f"official rates conflict with the records for {names}; check the "
+                      "rates or the data (B-C3-12)", RuntimeWarning, stacklevel=2)  # fmt: skip
     version = "v0.2" if anchor == "pool" else ("v0.1" if tau_average else "v0")
     if not has_self:
         method = f"hierarchical_{version}"
@@ -321,4 +364,4 @@ def fit_admission_model(
     return AdmissionModel(programs, fams, {p: fam_of[p] for p in programs}, k, theta, cov,
                           float(tau), estimate_shift, method, mixture, ptypes,
                           {p: type_of[p] for p in programs} if nt else {},
-                          years, ref_year)  # fmt: skip
+                          years, ref_year, converged, conflicts)  # fmt: skip
