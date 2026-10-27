@@ -91,6 +91,7 @@ flowchart LR
 | C2.4 | $c_k = w_k x_{p,k} / (w \cdot x_p)$，$\sum_k c_k = 1$（精確分解） | `discovery/scoring.py` |
 | C2.3 v1 | 短名單 $L = \text{top-}n$ 依 $\text{rel}$（排除錨點）；回報熟悉集合 $\hat F \subseteq L$；發現區 $= \text{top-}k$ of $\{p \notin \hat F\}$，已知區 $= \text{top-}k'$ of $\{p \in \hat F\}$，皆依 $\text{rel}$ | `discovery/sectioned.py`、`pipeline.py` |
 | C4.1 | $v(S) = \sum_i u_{j_i} p_{j_i}\prod_{l<i}(1-p_{j_l})$；DP $V_j(b)=\max\{V_{j-1}(b),\, p_ju_j+(1-p_j)V_{j-1}(b-c_j)\}$ | `portfolio/solvers.py` |
+| C4.2 | 錄取 $\iff Z_j<\Phi^{-1}(p_j)$，$Z_j=\lambda_jF+\sqrt{1-\lambda_j^2}\varepsilon_j$；$v_\rho(S)=E_F[v_{\text{C4.1}}(S;\,p(F))]$，$p_j(F)=\Phi\big((\Phi^{-1}(p_j)-\lambda_jF)/\sqrt{1-\lambda_j^2}\big)$；ρ=1：$v=\int_0^1\max\{u_j: p_j>t\}dt$ | `portfolio/correlation.py` |
 
 v1 的改動（例如 C2.1 改成考慮強度的距離、C2.2 改成未知機率）寫在各部件規格，並以 L4 探針測試鎖定。
 

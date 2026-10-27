@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.6 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.7 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -42,6 +42,7 @@
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
 | 申請組合最佳化（選哪幾間申請） | C4.1 | ✅ 精確解 | ⚠️ 錄取機率須自行假設（C3 未完成） |
+| 錄取相關性修正（各校結果會一起好、一起壞時的期望效用與 P(至少一所錄取)） | C4.2 | 🟡 評估可用（L2 ✅）；L3 未執行 | ⚠️ 相關係數 ρ 無資料可估計，只能看 ρ 掃描範圍（B-C4-8） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⬜ 未開始 | — |
 | 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
@@ -56,9 +57,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-28 | v0.3.7 | 新增 C4.2 錄取相關性評估（`correlation_sweep`、`mc_portfolio_value`、`factor_portfolio_value`）：在各校錄取相關時重新計算組合的期望效用與 P(至少一所錄取)；C4.1 選組合方式不變（§4.7、§6） | W-29 |
 | 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
 | 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
-| 2026-10-28 | v0.3.4 | 新增 v2 題庫中文草案（`data/items/item_bank_v2.json`，取自 O\*NET 31.0 代表活動；[item-bank-v2.md](docs/item-bank-v2.md)），尚未驗證、不可施測（§6） | W-41 |
 <!-- AUTO:changelog END -->
 
 ## 下一步

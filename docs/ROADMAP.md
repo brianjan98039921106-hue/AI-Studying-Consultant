@@ -63,7 +63,7 @@ flowchart LR
 | **W-26** ✅ | 契合度 v1：計分器介面 + 預先登記 maximin 選擇 | C2.1 | `discovery/scorers.py`；`DEFAULT_SCORER` = blend(0.25)；`scripts/run_l3_c2_scorer.py` | L4 無尺度探針通過 ✅；L3：16 條件無顯著較差、新種子重選同一個 ✅；端到端回歸 ✅ | **B-C2-3** ✅（力道小，F38）、B-C5-5（新） | W-12 |
 | W-27 ⏸ | 新穎度 v1（未知機率）：大部分被 W-24／W-28 取代，只剩短名單外學程（B-C2-7 影響 ≤ 1.5%），暫緩 | C2.2 | — | — | B-C2-7 | W-24 |
 | **W-28** ✅ | 重排序 v1：分區呈現（依契合排序＋熟悉度分區）取代加成式新穎度 | C2.3 | `discovery/sectioned.py`、`pipeline.py` | L4 探針 v1 通過 ✅；L3 ✅ 相關且不知道高於純契合 12/12（中度雜訊內） | **B-C2-2** ✅、B-C2-4 | W-12、W-24 |
-| W-29 | 相關性評估器 | C4.2 | copula Monte Carlo | L2（ρ=0 一致）、L3 V-C4-2 | B-C4-1 | W-11 |
+| **W-29** 🟡 | 相關性評估器（Gaussian copula＋單因子申請者強度） | C4.2 | `portfolio/correlation.py`（`mc_portfolio_value`、`factor_portfolio_value`、`comonotone_portfolio_value`、`correlation_sweep`、`brute_force_correlated`）；`scripts/check_c4_correlation.py` | L2 ✅（ρ=0 與 C4.1 在 4 SE 內一致、ρ=1 comonotone、種子可重現、標準誤）；模型計算 F110–F112；**L3 V-C4-2 未執行**：模擬器沒有錄取層（需：已知申請者強度 → 各校錄取的生成模型，兩種生成家族、依背景分層）；L4 B-C4-1 探針 | B-C4-1（🟡）、B-C4-8（新） | W-11 |
 | W-2A | 穩健選擇 | C4.3 | 三種準則比較 | L3 V-C4-3 | B-C4-2 | W-29 |
 | **W-60** ✅ | 條件差距 v0：契約（`RequirementItem`、`StudentRecord`、`RequirementGap`）＋跨領域條件類別 draft-0＋確定性比對；D9 守門測試 | C6.1、C6.2 | `requirements/gap.py`、`data/reference/requirement_taxonomy.json` | G0 ✅、L2 ✅；類別表待使用者審閱 | B-C1-8、B-C6-1/2 | — |
 | W-61 | 學經歷紀錄輸入：多學位、已修課程對應類別（附台灣課名例子）、考試、經驗 | C1、C6.4 | `StudentRecord` 擷取流程 | L2；W-41 認知訪談 | B-C6-2、A-C6-2 | W-60 |

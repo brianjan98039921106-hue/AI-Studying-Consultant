@@ -83,6 +83,7 @@
 | 序列決策對照 | Weitzman (1979), *Econometrica*：Pandora's box | A-C4-3 所有申請同時決定（靜態） |
 | 市場均衡 | Fu (2014), *Journal of Political Economy* | S-5 大量使用會改變錄取率 |
 | 相關性 | Sklar 定理／Gaussian copula | — |
+| C4.2 相關錄取評估（W-29） | Sklar (1959) 定理：任何聯合分布可拆成邊際分布＋copula，因此可**保留** C3 給的邊際 $p_j$、只另外設定相依結構；Gaussian copula：$Z \sim N(0, R)$，錄取 $\iff Z_j < \Phi^{-1}(p_j)$。相關參數化採**單因子申請者強度模型** $Z_j = \lambda_j F + \sqrt{1-\lambda_j^2}\,\varepsilon_j$（$\rho_{ij} = \lambda_i\lambda_j$）；結構同信用風險的單因子 Gaussian copula（Vasicek 2002, *Risk* 15(12) "The distribution of loan portfolio value"；Li 2000, *J. Fixed Income* 9(4) "On default correlation: a copula function approach"），以一個共同的潛在因子（申請者整體強度中 C3 沒觀察到的部分）解釋各校結果的正相關，只需 1 個（或每校 1 個）參數，且 $R$ 必為半正定。估計：(a) 一般 $R$ 的 Monte Carlo（對稱特徵分解取平方根，可處理奇異的 ρ=1），回報標準誤 $\hat s/\sqrt{n}$；(b) 單因子時，給定 $F$ 各校條件獨立，$p_j(F)=\Phi\big((\Phi^{-1}(p_j)-\lambda_jF)/\sqrt{1-\lambda_j^2}\big)$，$v(S)=E_F[v_{\text{C4.1}}(S; p(F))]$ 為一維積分，以 $F\in[-8,8]$ 等距格點梯形法計算（條件化，conditional Monte Carlo／Rao–Blackwell 的確定性版本；Glasserman 2004, *Monte Carlo Methods in Financial Engineering* §9.4），作為 Monte Carlo 的獨立對照。兩個極限：ρ=0 時等於 C4.1 解析值；ρ=1 時為 comonotone，$v(S)=\int_0^1 \max\{u_j : j\in S, p_j>t\}\,dt$ | A-C4-5、A-C4-6、A-C4-7、B-C4-8 |
 | 穩健最佳化 | Bertsimas & Sim (2004), *Operations Research*, "The Price of Robustness" | — |
 | 多屬性效用 | Keeney & Raiffa (1976), *Decisions with Multiple Objectives*；AHP (Saaty) | A-C4-4 效用可由屬性加權組成 |
 

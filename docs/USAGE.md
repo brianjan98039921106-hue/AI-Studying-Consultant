@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.6（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.7（研究原型）
 
 ---
 
@@ -21,6 +21,7 @@
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
 | 申請組合最佳化（選哪幾間申請） | C4.1 | ✅ 精確解 | ⚠️ 錄取機率須自行假設（C3 未完成） |
+| 錄取相關性修正（各校結果會一起好、一起壞時的期望效用與 P(至少一所錄取)） | C4.2 | 🟡 評估可用（L2 ✅）；L3 未執行 | ⚠️ 相關係數 ρ 無資料可估計，只能看 ρ 掃描範圍（B-C4-8） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⬜ 未開始 | — |
 | 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
@@ -264,6 +265,32 @@ chosen, value = dp_varied_cost([a.mean for a in assumed], utility, [1] * len(ass
 print([shortlist_[j].program.degree_name for j in chosen], round(value, 1))
 ```
 
+上面的期望效用假設**各校錄取彼此獨立**。實際上同一位申請者在各校的結果會一起好、一起壞（例如推薦信或面試表現同時影響所有學校），獨立假設會高估申請多所學校的價值與「至少上一所」的機率（B-C4-1）。C4.2 保留每校的錄取機率不變，只加上相關性 ρ（扣除錄取模型已考慮的條件後，剩下的共同因素有多強），重新計算同一個組合：
+
+```python
+from aisc.portfolio import correlation_sweep, mc_portfolio_value
+
+p_admit = [a.mean for a in assumed]
+for row in correlation_sweep(p_admit, utility, chosen, rhos=(0.0, 0.3, 0.6)):
+    print(
+        f"rho={row.rho}: 期望效用 {row.correlated:.1f}（獨立假設 {row.independent:.1f}，"
+        f"高估 {100 * row.overestimate:.0f}%），"
+        f"P(至少一所錄取) {row.p_any_correlated:.2f}（獨立假設 {row.p_any_independent:.2f}）"
+    )
+
+mc = mc_portfolio_value(p_admit, utility, chosen, rho=0.3, n_draws=20_000, seed=0)
+print(f"Monte Carlo：{mc.expected_utility:.1f} ± {mc.expected_utility_se:.1f}（標準誤）")
+```
+
+| 輸出 | 意思 |
+|---|---|
+| `correlated` | 相關性為 ρ 時，這個組合的期望效用（確定性計算） |
+| `overestimate` | 獨立假設高估多少：(獨立值 − 相關值) / 相關值 |
+| `p_any_correlated` | 至少錄取一所的機率；相關越高，「多申請幾所保險」的效果越小 |
+| `expected_utility_se` | Monte Carlo 標準誤；`mc_portfolio_value` 也接受一般相關矩陣（`corr=`） |
+
+**ρ 沒有資料可估計**（C3 尚未完成），所以請看整個掃描範圍，不要只用單一 ρ。目前只**評估**組合，不會因相關性改選組合；模型計算顯示選錯組合的代價通常很小（[F112](../results/FINDINGS.md)），但回報給學生的期望值與「至少上一所」機率應以 ρ 掃描呈現。
+
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
 
 v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
@@ -316,6 +343,7 @@ v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用
 | 推薦用的學程目錄只涵蓋商管 × 數據 × 工程管理（合成） | 其他領域的學生推薦品質未知；全領域的官方參考表（`data/reference/*_all.csv`：1,233 個 CIP，含專業與研究型博士）已建好，但還不是可推薦的學程；v2 維度（§4.8）實驗中 | W-16c、W-20～W-22 |
 | 程式內的自適應問卷仍是抽象占位題；v2 題庫中文草案（`data/items/item_bank_v2.json`，73 題）尚未回譯與認知訪談 | 還不能直接拿給學生作答 | W-41 |
 | 錄取機率須自行假設 | 申請組合只是示範計算 | W-44（C3） |
+| 錄取相關係數 ρ 無法估計；C4.2 只評估、不改選組合；Gaussian copula 不含尾端相依（A-C4-5） | 相關性修正只能以範圍呈現 | C3 完成後估計殘差相關；以 C4.2 重新搜尋見 B-C4-1 |
 | 需求維度尚未實證驗證 | 維度可能重疊或遺漏 | W-41、W-73 |
 
 已知假設與盲區的完整清單見 [REGISTER.md](REGISTER.md)。
@@ -350,3 +378,4 @@ v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用
 | 2026-10-28 | v0.3.4 | 新增 v2 題庫中文草案（`data/items/item_bank_v2.json`，取自 O\*NET 31.0 代表活動；[item-bank-v2.md](item-bank-v2.md)），尚未驗證、不可施測（§6） | W-41 |
 | 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
 | 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
+| 2026-10-28 | v0.3.7 | 新增 C4.2 錄取相關性評估（`correlation_sweep`、`mc_portfolio_value`、`factor_portfolio_value`）：在各校錄取相關時重新計算組合的期望效用與 P(至少一所錄取)；C4.1 選組合方式不變（§4.7、§6） | W-29 |
