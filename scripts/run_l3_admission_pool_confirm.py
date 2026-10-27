@@ -43,7 +43,10 @@ from run_l3_admission_bias import DATA, GENS, QS, evaluate, world  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 SEED = 2031
 N_REP = 30
-CANDS = {"M": {"tau_average": True}, "PM": {"tau_average": True, "anchor": "pool"}}
+CANDS = {
+    "M": {"tau_average": True, "anchor": "mean"},
+    "PM": {"tau_average": True, "anchor": "pool"},
+}
 BAND = (0.85, 0.95)
 
 

@@ -56,7 +56,7 @@ def test_recovers_slopes_and_intervals_without_selection():
     rng = np.random.default_rng(1)
     recs, _, a = _world(rng, n_per=150)
     m = fz.fit_admission_model(_records(recs, "complete"))
-    assert m.method == "hierarchical_v0.1" and not m.shift_estimated
+    assert m.method == "hierarchical_v0.2" and not m.shift_estimated
     assert m.theta[:2] == pytest.approx([1.0, -0.5], abs=0.15)
     covered = 0
     for pid, ai in a.items():
@@ -74,7 +74,7 @@ def test_complete_records_identify_the_self_report_shift():
     rng = np.random.default_rng(3)
     complete, _, _ = _world(rng, n_per=60)
     m = fz.fit_admission_model(_records(biased, "self_report") + _records(complete, "complete"))
-    assert m.method == "hierarchical_v0.1_corrected"
+    assert m.method == "hierarchical_v0.2_corrected"
     assert m.shift == pytest.approx(np.log(4), abs=0.35)
 
 
@@ -109,18 +109,13 @@ def test_record_and_fit_validation():
         fz.fit_admission_model(r)
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C3-8: intervals undercover when reporting also depends on applicant strength",
-)
-def test_probe_intervals_cover_when_stronger_applicants_report_more():
-    """Self-reports from admitted applicants 4x as likely, and stronger applicants
+def test_intervals_cover_when_stronger_applicants_report_more():
+    """B-C3-8 (was a probe; fixed by the pool-integrated anchor, F139).
+    Self-reports from admitted applicants 4x as likely, and stronger applicants
     (feature 1) also report more; the official pool is shifted on feature 1 (A-C3-3
     and A-C3-5 both violated, as in the V-C3-1 stress generator). 90% intervals for
     new applicants should still cover the true probability at least 80% of the time
-    (V-C3-1 stress: 61-66%, F130)."""
+    (v0 in V-C3-1 stress: 61-66%, F130)."""
     import aisc.feasibility as fz
 
     rng = np.random.default_rng(5)
@@ -177,10 +172,11 @@ def test_v01_options_validate_and_behave():
     with pytest.raises(ValueError):
         fz.fit_admission_model(data, tau=0.5, tau_average=True)
     m = fz.fit_admission_model(data, official_rates=rates, anchor="pool", tau_average=True)
-    assert m.method == "hierarchical_v0.1_corrected"
+    assert m.method == "hierarchical_v0.2_corrected"
     assert sum(w for w, *_ in m.mixture) == pytest.approx(1.0)
     gaps = {"pool": [], "mean": []}
-    for name, model in (("pool", m), ("mean", fz.fit_admission_model(data, official_rates=rates))):
+    mean_model = fz.fit_admission_model(data, official_rates=rates, anchor="mean")
+    for name, model in (("pool", m), ("mean", mean_model)):
         for pid, r in rates.items():
             rows = [d for d in data if d.program_id == pid]
             w = np.array([np.exp(-model.shift * d.admitted) for d in rows])

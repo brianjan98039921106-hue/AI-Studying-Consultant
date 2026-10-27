@@ -27,6 +27,7 @@
 | dvs | [synthetic-l3-diversity-findings.md](synthetic-l3-diversity-findings.md) | B-C2-9 |
 | ab | [synthetic-l3-admission-bias-findings.md](synthetic-l3-admission-bias-findings.md) | W-44 |
 | a01 | [synthetic-l3-admission-v01-findings.md](synthetic-l3-admission-v01-findings.md) | W-44 |
+| apc | [synthetic-l3-admission-pool-confirm-findings.md](synthetic-l3-admission-pool-confirm-findings.md) | W-44 |
 | ap | [synthetic-l3-admission-portfolio-findings.md](synthetic-l3-admission-portfolio-findings.md) | W-44 × W-29／W-2A |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | pr | [synthetic-l3-portfolio-robust-findings.md](synthetic-l3-portfolio-robust-findings.md) | W-2A |
@@ -198,8 +199,10 @@
 | F134 | 校正後再做最小化最大遺憾沒有改善 | ✅ | ap | C4 預設維持點估計 |
 | F135 | 組合的選擇對機率誤差穩健，需要準確的是呈現的數字；C3 應以校準評估 | 💭 | ap | V-C3-2／3 |
 | F136 | τ 模型平均依預先登記成為 C3.2 預設；效果小，但修好 B-C3-9 | ✅ | a01 | 預設 v0.1 |
-| F137 | 母體積分錨點消除 F130 的偏誤；stress 下涵蓋率 0.58–0.65 → 0.86–0.89 | ✅ | a01 | 待確認 |
-| F138 | 母體積分錨點只因對稱的涵蓋率準則未通過；以 V-C3-3 範圍準則須新種子確認 | 💭 | a01 | 新預先登記 |
+| F137 | 母體積分錨點消除 F130 的偏誤；stress 下涵蓋率 0.58–0.65 → 0.86–0.89 | ✅ | a01 | F139 確認後採用 |
+| F138 | 母體積分錨點只因對稱的涵蓋率準則未通過；以 V-C3-3 範圍準則須新種子確認 | 💭 → ✅（F139 確認） | a01 | 見 F139 |
+| F139 | 新種子確認：母體積分錨點＋τ 模型平均讓 8 個設定的涵蓋率都在 85–95%（stress 0.61–0.66 → 0.86–0.89） | ✅ | apc | C3.2 預設 v0.2；B-C3-8 🟢 |
+| F140 | 殘差改為 stress 下低估 0.021–0.029；standard 區間略寬（0.93–0.94） | ✅（數據）／💭（原因） | apc | C3.1 稽核回報機制 |
 
 ## C4 申請組合
 

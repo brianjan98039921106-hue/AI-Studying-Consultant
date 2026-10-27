@@ -44,9 +44,9 @@ ROOT = Path(__file__).resolve().parents[1]
 SEED = 2030
 N_REP = 30
 CANDS = {
-    "v0": {"tau_average": False},  # pinned after the default changed (F136)
+    "v0": {"tau_average": False, "anchor": "mean"},  # pinned after defaults changed
     "P": {"anchor": "pool", "tau_average": False},
-    "M": {"tau_average": True},
+    "M": {"tau_average": True, "anchor": "mean"},
     "PM": {"anchor": "pool", "tau_average": True},
 }
 

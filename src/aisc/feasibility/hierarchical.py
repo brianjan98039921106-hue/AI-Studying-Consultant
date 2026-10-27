@@ -18,7 +18,8 @@ v0.1 options (THEORY "C3.2 v0.1 候選"; A-C3-6):
                       pre-registered comparison F136; tau_average=False is v0.
     anchor="pool"     anchor r_p to the mean of sigmoid(a_p + beta.x) over the
                       programme's records, admitted self-reports weighted by e^(-b)
-                      (Gauss-Newton term, backtracking line search); not default
+                      (Gauss-Newton term, backtracking line search). DEFAULT since
+                      the fresh-seed confirmation F139 (v0.2); anchor="mean" is v0.1.
 """
 
 from __future__ import annotations
@@ -205,14 +206,15 @@ def fit_admission_model(
     official_rates: Mapping[str, float] | None = None,
     tau: float | None = None,
     kappa: float = 0.3,
-    anchor: str = "mean",
+    anchor: str = "pool",
     tau_average: bool | None = None,
 ) -> AdmissionModel:
     """Fit C3.2 v0. `families` maps programme -> CIP family (default: from records);
     `official_rates` anchors programme intercepts (A-C3-5); `tau` None averages over
     TAU_GRID with Laplace marginal-likelihood weights (default since F136; pass
     tau_average=False for the v0 reference, which picks the single best tau).
-    `anchor="pool"` is a candidate option (module docstring)."""
+    `anchor` "pool" (default since F139) anchors official rates over the programme's
+    reweighted records; "mean" is the v0 / v0.1 reference (module docstring)."""
     if anchor not in ("mean", "pool"):
         raise ValueError('anchor must be "mean" or "pool"')
     if tau_average and tau is not None:
@@ -273,7 +275,7 @@ def fit_admission_model(
         if tau <= 0:
             raise ValueError("tau must be positive")
         theta, cov, _ = run(tau)
-    version = "v0" if anchor == "mean" and not tau_average else "v0.1"
+    version = "v0.2" if anchor == "pool" else ("v0.1" if tau_average else "v0")
     if not has_self:
         method = f"hierarchical_{version}"
     elif estimate_shift:

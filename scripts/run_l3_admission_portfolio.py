@@ -72,9 +72,10 @@ def main() -> None:
                                          "self_report") for x in u_recs],
                         families=fams,
                         tau_average=False,  # pinned to v0 (default changed later, F136)
+                        anchor="mean",
                     )  # fmt: skip
                     mc = fit_admission_model(
-                        recs, families=fams, official_rates=rates, tau_average=False
+                        recs, families=fams, official_rates=rates, tau_average=False, anchor="mean"
                     )  # v0 pinned
                     # true intercepts are recoverable from the test sets: logit p - x.beta
                     a_true = {pid: float(np.mean(np.log(pt / (1 - pt)) - Xt @ BETA))
