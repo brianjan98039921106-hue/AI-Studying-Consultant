@@ -156,3 +156,32 @@ def test_recommend_rho_zero_is_c41_dp_and_local_search_runs():
     v_dp = pf.portfolio_value_mc(u, draws, dp)
     assert pf.portfolio_value_mc(u, draws, local) >= v_dp - 1e-12
     assert pf.portfolio_value_mc(u, draws, exact) >= pf.portfolio_value_mc(u, draws, local) - 1e-12
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C4-2: the portfolio treats point estimates of P(admit) as the truth",
+)
+def test_probe_robust_choice_over_probability_intervals():
+    """With probability intervals [low, high], a minimax-regret portfolio has a maximum
+    regret over the interval box no larger than the point-estimate portfolio's (on the
+    same scenario set), and the worst-case portfolio is the C4.1 optimum at `low`."""
+    import aisc.portfolio as pf
+
+    assert hasattr(pf, "minimax_regret_portfolio") and hasattr(pf, "worst_case_portfolio")
+    p = [0.3, 0.5, 0.15, 0.7, 0.9, 0.25]
+    u = [0.95, 0.8, 1.0, 0.6, 0.35, 0.9]
+    low = [max(0.0, q - 0.15) for q in p]
+    high = [min(1.0, q + 0.15) for q in p]
+    cost, budget = [1] * 6, 3
+    scen = pf.box_scenarios(low, high, p, 300, np.random.default_rng(0))
+    point, _ = pf.dp_varied_cost(p, u, cost, budget)
+    robust = pf.minimax_regret_portfolio(low, high, p, u, cost, budget, scenarios=scen)
+    assert pf.max_regret(u, cost, budget, scen, robust) <= pf.max_regret(
+        u, cost, budget, scen, point
+    )
+    assert sorted(pf.worst_case_portfolio(low, u, cost, budget)) == sorted(
+        pf.dp_varied_cost(low, u, cost, budget)[0]
+    )

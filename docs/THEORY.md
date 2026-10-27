@@ -87,7 +87,7 @@
 | 序列決策對照 | Weitzman (1979), *Econometrica*：Pandora's box | A-C4-3 所有申請同時決定（靜態） |
 | 市場均衡 | Fu (2014), *Journal of Political Economy* | S-5 大量使用會改變錄取率 |
 | 相關性（C4.2，W-29） | Sklar 定理／Gaussian copula：潛在變數 Z_j = √ρ·F + √(1−ρ)·E_j，Z_j < Φ⁻¹(p_j) 即錄取，邊際機率不變；以共同隨機數的 Monte Carlo 估計 v(S)；組合以 C4.1 解為起點做加入／移除／交換的局部搜尋（小問題以窮舉作參考） | A-C4-5 |
-| 穩健最佳化 | Bertsimas & Sim (2004), *Operations Research*, "The Price of Robustness" | — |
+| 穩健選擇（C4.3，W-2A） | 不確定集合：每校錄取機率落在 C3 區間 [low, high] 內（盒狀集合；Ben-Tal, El Ghaoui & Nemirovski, 2009, *Robust Optimization*；預算式集合見 Bertsimas & Sim, 2004, *Operations Research* 52(1)）。三種準則：(E) 期望值：用點估計（C4.1）；(W) 最壞情況：max_S min_p v(S, p)，因 v 對每個 p_j 不減，最壞情況就是全部取 low，可直接用 C4.1；(R) 最小化最大遺憾（Savage, 1951, *JASA* 46；Kouvelis & Yu, 1997, *Robust Discrete Optimization*）：min_S max_p [v*(p) − v(S, p)]，以盒內抽樣的情境（含全 low、全 high、點估計）近似最大值，學校 ≤ 12 間時窮舉組合 | A-C4-6、A-C4-7 |
 | 多屬性效用 | Keeney & Raiffa (1976), *Decisions with Multiple Objectives*；AHP (Saaty) | A-C4-4 效用可由屬性加權組成 |
 
 ## C5 模擬與系統層
