@@ -179,6 +179,13 @@ class SyntheticStudent:
     anchors: tuple[str, ...]
     stated_needs: dict[str, float]
     stated_sigma: float
+    natural_family: str = ""  # CIP family the true needs point to (C5 ground truth)
+
+    @property
+    def background_stratum(self) -> str:
+        """D12 stratum: 'continuing' if the undergraduate background is the family the
+        true needs point to, else 'switching' (W-63 refines switching types)."""
+        return "continuing" if self.background_family == self.natural_family else "switching"
 
     def observed_profile(self, include_familiar: bool = False) -> StudentProfile:
         """What a component under test is allowed to see."""
@@ -265,6 +272,7 @@ def generate_population(
                 anchors=tuple(anchors),
                 stated_needs={k: float(v) for k, v in zip(NEED_KEYS, stated, strict=True)},
                 stated_sigma=cfg.reported_sigma,
+                natural_family=natural,
             )
         )
     return students

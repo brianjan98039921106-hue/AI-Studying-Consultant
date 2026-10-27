@@ -20,6 +20,7 @@
 | e2e | [synthetic-l3-e2e-findings.md](synthetic-l3-e2e-findings.md) | 檢查整合 |
 | sc | [synthetic-l3-c2-scorer-findings.md](synthetic-l3-c2-scorer-findings.md) | W-26 |
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
+| st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | nz | [synthetic-l3-noise-findings.md](synthetic-l3-noise-findings.md) | C1.3 v2 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
@@ -57,6 +58,15 @@
 | F39 | 此模擬器中 cosine 與考慮強度的計分幾乎可互換；取捨取決於哪種真相較接近真實學生 | ✅（取捨歸屬待 L5） | sc | A-C2-8 待 L5 |
 | F40 | 換成 blend(0.25) 後端到端 H-E1～H-E4 仍成立 | ✅ | sc、e2e 回歸 × 2 組種子 | V-S-3 維持通過 |
 | F41 | F33 的殘差在新計分器下部分縮小 | 💭 | e2e 回歸（單次，未檢定） | — |
+
+## D12 背景分層
+
+| ID | 結論 | 狀態 | 證據 | 對目前設計 |
+|---|---|---|---|---|
+| F54 | 分區的效益在轉換者身上同樣成立（switching 層 +0.046～+0.111，無負值） | ✅ | st（兩次執行 × 8 條件） | C2 v1 通過第一次分層檢查 |
+| F55 | 原型模型下轉換者增益較小但絕對水準較高（只依契合時本來就多半不認識） | ✅ | st | — |
+| F56 | 分區的相關率代價集中在延續者（原型 −0.26～−0.31 vs −0.13～−0.15） | ✅ | st | 報告時兩區一起呈現 |
+| F57 | 目前模擬器的轉換很溫和，尚未檢驗遠領域假陽性 | 💭 | st（依構造） | W-63、W-67 |
 
 ## C1 學生側寫
 

@@ -92,6 +92,63 @@ def c2_v1_pipeline(n_shortlist: int = 25, k_known: int = 5) -> InteractiveRecomm
 # --- evaluation -----------------------------------------------------------------------
 
 
+def _list_rows(
+    population: list[SyntheticStudent],
+    catalog: list[Program],
+    name: str,
+    rec,
+    k: int,
+    truth: str,
+    top_frac: float,
+    fam_flag: bool,
+    miss: float,
+    false_alarm: float,
+    seed: int,
+) -> tuple[dict[str, list[float]], list[list[str]]]:
+    """Per-student list metrics for one recommender (one value per student, in order)."""
+    rows: dict[str, list[float]] = {
+        "relevant_rate": [],
+        "novel_relevant_rate": [],
+        "unfamiliar_rate": [],
+        "best_fit_retained": [],
+        "outside_shortlist_rate": [],
+    }
+    interactive = getattr(rec, "interactive", False)
+    lists: list[list[str]] = []
+    for idx, s in enumerate(population):
+        profile = s.observed_profile(include_familiar=fam_flag)
+        if interactive:
+            ask = make_ask(s, np.random.default_rng([seed, idx]), miss, false_alarm)
+            result = rec(profile, catalog, k, ask)
+            ids = [r.program.program_id for r in result.discoveries]
+            shown = result.all_ids
+            asked = set(result.asked)
+            rows["outside_shortlist_rate"].append(
+                float("nan") if not ids else sum(i not in asked for i in ids) / len(ids)
+            )
+        else:
+            ids = rec(profile, catalog, k)
+            shown = ids
+            rows["outside_shortlist_rate"].append(float("nan"))
+        lists.append(ids)
+        rel = relevant_ids(s.true_needs, catalog, truth, top_frac)
+        for key, val in M.list_quality(ids, rel, set(s.familiar)).items():
+            rows[key].append(val)
+        best = best_fit_id(s.true_needs, catalog, set(s.anchors), truth)
+        rows["best_fit_retained"].append(M.best_fit_retained(shown, best))
+    return rows, lists
+
+
+def _fam_settings(name, include_familiar, familiarity_noise):
+    fam_flag = (
+        include_familiar.get(name, False)
+        if isinstance(include_familiar, dict)
+        else include_familiar
+    )
+    miss, false_alarm = (familiarity_noise or {}).get(name, (0.0, 0.0))
+    return fam_flag, miss, false_alarm
+
+
 def evaluate_lists(
     population: list[SyntheticStudent],
     catalog: list[Program],
@@ -114,52 +171,39 @@ def evaluate_lists(
     discoveries section, `best_fit_retained` on both sections, and
     `outside_shortlist_rate` reports discoveries that were never asked (B-C2-7).
     """
-    noise = familiarity_noise or {}
     by_id = {p.program_id: p for p in catalog}
     catalog_prestige = [p.prestige or 0.0 for p in catalog]
     out: dict[str, dict[str, tuple[float, float]]] = {}
     for name, rec in recommenders.items():
-        fam_flag = (
-            include_familiar.get(name, False)
-            if isinstance(include_familiar, dict)
-            else include_familiar
-        )
-        rows: dict[str, list[float]] = {
-            "relevant_rate": [],
-            "novel_relevant_rate": [],
-            "unfamiliar_rate": [],
-            "best_fit_retained": [],
-            "outside_shortlist_rate": [],
-        }
-        interactive = getattr(rec, "interactive", False)
-        miss, false_alarm = noise.get(name, (0.0, 0.0))
-        lists: list[list[str]] = []
-        for idx, s in enumerate(population):
-            profile = s.observed_profile(include_familiar=fam_flag)
-            if interactive:
-                ask = make_ask(s, np.random.default_rng([seed, idx]), miss, false_alarm)
-                result = rec(profile, catalog, k, ask)
-                ids = [r.program.program_id for r in result.discoveries]
-                shown = result.all_ids
-                asked = set(result.asked)
-                rows["outside_shortlist_rate"].append(
-                    float("nan") if not ids else sum(i not in asked for i in ids) / len(ids)
-                )
-            else:
-                ids = rec(profile, catalog, k)
-                shown = ids
-                rows["outside_shortlist_rate"].append(float("nan"))
-            lists.append(ids)
-            rel = relevant_ids(s.true_needs, catalog, truth, top_frac)
-            for key, val in M.list_quality(ids, rel, set(s.familiar)).items():
-                rows[key].append(val)
-            best = best_fit_id(s.true_needs, catalog, set(s.anchors), truth)
-            rows["best_fit_retained"].append(M.best_fit_retained(shown, best))
+        fam_flag, miss, false_alarm = _fam_settings(name, include_familiar, familiarity_noise)
+        rows, lists = _list_rows(population, catalog, name, rec, k, truth, top_frac,
+                                 fam_flag, miss, false_alarm, seed)  # fmt: skip
         summary = {key: M.mean_se(vals) for key, vals in rows.items()}
         summary["coverage"] = (M.catalog_coverage(lists, len(catalog)), float("nan"))
         rec_prestige = [by_id[i].prestige or 0.0 for lst in lists for i in lst]
         summary["popularity_kl"] = (M.popularity_kl(rec_prestige, catalog_prestige), float("nan"))
         out[name] = summary
+    return out
+
+
+def evaluate_lists_per_student(
+    population: list[SyntheticStudent],
+    catalog: list[Program],
+    recommenders: dict[str, Recommender],
+    k: int = 10,
+    truth: str = "distance",
+    top_frac: float = 0.1,
+    include_familiar: bool | dict[str, bool] = False,
+    familiarity_noise: dict[str, tuple[float, float]] | None = None,
+    seed: int = 7,
+) -> dict[str, dict[str, list[float]]]:
+    """Same metrics as `evaluate_lists`, one value per student (for paired and
+    stratified analysis, W-68). Same respondent seeds, so results line up."""
+    out = {}
+    for name, rec in recommenders.items():
+        fam_flag, miss, false_alarm = _fam_settings(name, include_familiar, familiarity_noise)
+        out[name], _ = _list_rows(population, catalog, name, rec, k, truth, top_frac,
+                                  fam_flag, miss, false_alarm, seed)  # fmt: skip
     return out
 
 
