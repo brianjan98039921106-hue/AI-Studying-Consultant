@@ -107,3 +107,39 @@ def test_record_and_fit_validation():
     r = [fz.AdmissionRecord("p", "f", (0.0,), 1), fz.AdmissionRecord("p", "g", (0.0,), 0)]
     with pytest.raises(ValueError):
         fz.fit_admission_model(r)
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C3-8: intervals undercover when reporting also depends on applicant strength",
+)
+def test_probe_intervals_cover_when_stronger_applicants_report_more():
+    """Self-reports from admitted applicants 4x as likely, and stronger applicants
+    (feature 1) also report more; the official pool is shifted on feature 1 (A-C3-3
+    and A-C3-5 both violated, as in the V-C3-1 stress generator). 90% intervals for
+    new applicants should still cover the true probability at least 80% of the time
+    (V-C3-1 stress: 61-66%, F130)."""
+    import aisc.feasibility as fz
+
+    rng = np.random.default_rng(5)
+    beta = np.array([0.8, -0.4])
+    recs, rates, tests, fams = [], {}, {}, {}
+    for i in range(24):
+        pid, fam = f"p{i}", f"f{i % 3}"
+        fams[pid] = fam
+        a = (-2.0, -1.0, 0.0)[i % 3] + rng.normal(0, 0.6)
+        pool = rng.normal(0, 1, (4000, 2)) + np.array([0.3, 0.0])
+        y = rng.random(4000) < 1 / (1 + np.exp(-(a + pool @ beta)))
+        rates[pid] = float(y.mean())
+        rep = np.minimum(1.0, np.where(y, 0.8, 0.2) * 2 / (1 + np.exp(-0.7 * pool[:, 0])))
+        idx = np.flatnonzero(rng.random(4000) < rep)[:60]
+        recs += [fz.AdmissionRecord(pid, fam, tuple(pool[j]), int(y[j]), "self_report")
+                 for j in idx]  # fmt: skip
+        Xt = rng.normal(0, 1, (100, 2)) + np.array([0.3, 0.0])
+        tests[pid] = (Xt, 1 / (1 + np.exp(-(a + Xt @ beta))))
+    m = fz.fit_admission_model(recs, families=fams, official_rates=rates)
+    hits = [m.predict(pid, tuple(x)).low <= p <= m.predict(pid, tuple(x)).high
+            for pid, (Xt, pt) in tests.items() for x, p in zip(Xt, pt, strict=True)]  # fmt: skip
+    assert np.mean(hits) >= 0.8

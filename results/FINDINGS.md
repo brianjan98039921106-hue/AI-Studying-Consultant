@@ -25,6 +25,7 @@
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
 | dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
 | dvs | [synthetic-l3-diversity-findings.md](synthetic-l3-diversity-findings.md) | B-C2-9 |
+| ab | [synthetic-l3-admission-bias-findings.md](synthetic-l3-admission-bias-findings.md) | W-44 |
 | pc | [synthetic-l3-portfolio-corr-findings.md](synthetic-l3-portfolio-corr-findings.md) | W-29 |
 | pr | [synthetic-l3-portfolio-robust-findings.md](synthetic-l3-portfolio-robust-findings.md) | W-2A |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
@@ -181,6 +182,15 @@
 | F45 | 只用重複題學雜訊消除大部分前期損失，但 Q=45、雜訊 0.40 時仍略差（−0.015） | ✅ | nz（第二次，單次） | 仍未通過守門 |
 | F46 | 校準與排序有結構性衝突：v1 低估雜訊反而少靠有偏誤的錨點先驗 | 💭 | nz（三種模型方向一致） | 先驗品質（B-C1-17）是下一個槓桿 |
 | F47 | 作答偏誤會破壞截斷模型在低雜訊時的校準（0.837） | ✅（只報告） | nz | — |
+
+## C3 錄取可行性
+
+| ID | 結論 | 狀態 | 證據 | 對目前設計 |
+|---|---|---|---|---|
+| F128 | 自陳偏誤讓未校正模型高估錄取機率 0.106–0.238，90% 區間只涵蓋 4–42% | ✅ | ab | 必須校正 |
+| F129 | 官方錄取率錨點＋自陳平移把 RMSE 降到 0.038–0.068，兩種生成都成立（V-C3-1） | ✅ | ab | B-C3-1 🟢 |
+| F130 | 校正後仍高估 0.015–0.053；自陳依強度而變時 90% 區間只涵蓋 61–66% | ✅（數據）／💭（原因） | ab | B-C3-8 |
+| F131 | 少量顧問完整紀錄幾乎沒有幫助，校正靠官方錄取率 | ✅ | ab | C3.1 優先取得官方錄取率 |
 
 ## C4 申請組合
 
