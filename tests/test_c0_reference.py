@@ -464,6 +464,22 @@ def test_nonacademic_profiles_leave_out_teachers():
     assert checked > 700
 
 
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C0-15: the CIP loader keeps obsolete 'Moved from' codes and drops their "
+    "current 'Moved to' codes",
+)
+def test_probe_moved_cip_codes_are_current_codes():
+    """In CIPCode2020, 'Moved to' rows are the live destination codes (e.g. 01.8001
+    Veterinary Medicine) and 'Moved from' rows the obsolete ones (51.2401). Both
+    01.8001 and 51.1202 (Osteopathic Medicine) award graduate degrees in IPEDS 2025."""
+    cips = {r["cip"] for r in _ref("cip2020_all.csv")}
+    assert {"01.8001", "51.1202"} <= cips
+    assert "51.2401" not in cips
+
+
 def test_committed_reference_tables_are_consistent():
     """L2 on the committed tables: provenance present, joins closed, ranges valid."""
     src = json.loads((ROOT / "data" / "reference" / "SOURCES.json").read_text())
