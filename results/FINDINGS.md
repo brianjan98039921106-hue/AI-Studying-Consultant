@@ -29,6 +29,7 @@
 | vs | [synthetic-l3-v2-scorer-findings.md](synthetic-l3-v2-scorer-findings.md) | W-16c |
 | dg | [synthetic-l3-domain-gate-findings.md](synthetic-l3-domain-gate-findings.md) | W-16c |
 | lw | [layer-weight-recovery-findings.md](layer-weight-recovery-findings.md) | W-76 |
+| sx | [layer-weight-simex-findings.md](layer-weight-simex-findings.md) | W-76 |
 
 ## C0 參考資料（真實資料：IPEDS 2025、CIP 2020、O*NET）
 
@@ -109,6 +110,9 @@
 | F85 | 層權重研究設計（200 人 × 20 組）足以區分兩種模擬真相（區間 100% 排除另一假設） | ✅ | lw | W-76 規模可行 |
 | F86 | 作答雜訊使領域份量被高估（+0.003～+0.059；雜訊 0.30 時至 +0.187），偏向支持 v2 | ✅ | lw | B-C2-12：須加 SIMEX |
 | F87 | 偏誤使區間涵蓋率不足（0.60–0.95），人數越多越差 | ✅ | lw | 同上；W-41 須含重測 |
+| F88 | SIMEX 通過偏誤（R1）與區分力（R3），但平移區間在 1 格涵蓋不足（0.82） | ✅ | sx | 區間改為自助法包住整個 SIMEX，重驗 |
+| F89 | 雜訊 0.15 時 SIMEX 幾乎消除偏誤（領域 −0.036～+0.010）；雜訊 0.30 只部分校正（+0.004～+0.042） | ✅ | sx | W-41 題目雜訊要低 |
+| F90 | σ 高估 30% 會過度校正（−0.087），低估 30% 在高雜訊時校正不足（+0.110） | ✅ | sx | W-41 重測須把 σ 估到 ±30% 內 |
 
 ## C1 學生側寫
 
