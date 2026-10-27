@@ -169,12 +169,26 @@ def load_cip2020(path: str | Path) -> dict[str, CipEntry]:
 
 @dataclass(frozen=True)
 class Scope:
+    """Data rollout scope (D10). `families` maps a family name to CIP prefixes; with
+    `by_series` every 2-digit CIP series is its own family (rollout v3, W-70).
+    `graduate_only`: keep only codes with at least one award at `award_levels`."""
+
     version: str
-    award_level: int
+    award_level: int  # first entry of award_levels (kept for v1 callers)
     majornum: int
     families: dict[str, list[str]]  # family -> prefixes
+    award_levels: tuple[int, ...] = ()
+    by_series: bool = False
+    graduate_only: bool = False
+    output_suffix: str = "mvp"
+
+    def __post_init__(self) -> None:
+        if not self.award_levels:
+            object.__setattr__(self, "award_levels", (self.award_level,))
 
     def family_of(self, cip6: str) -> str | None:
+        if self.by_series:
+            return cip6[:2]
         best, best_len = None, -1
         for fam, prefixes in self.families.items():
             for p in prefixes:
@@ -185,13 +199,19 @@ class Scope:
 
 def load_scope(path: str | Path) -> Scope:
     spec = json.loads(Path(path).read_text(encoding="utf-8"))
+    levels = tuple(int(v) for v in spec.get("award_levels", [spec.get("award_level", 7)]))
+    by_series = spec.get("families") == "cip_series"
     fams: dict[str, list[str]] = {}
-    for f in spec["families"]:
-        for p in f["prefixes"]:
-            if not _PREFIX.match(p):
-                raise ValueError(f"bad CIP prefix {p!r} in family {f['name']}")
-        fams[f["name"]] = list(f["prefixes"])
-    return Scope(spec["version"], int(spec["award_level"]), int(spec["majornum"]), fams)
+    if not by_series:
+        for f in spec["families"]:
+            for p in f["prefixes"]:
+                if not _PREFIX.match(p):
+                    raise ValueError(f"bad CIP prefix {p!r} in family {f['name']}")
+            fams[f["name"]] = list(f["prefixes"])
+    return Scope(
+        spec["version"], levels[0], int(spec["majornum"]), fams, levels, by_series,
+        bool(spec.get("graduate_only", False)), spec.get("output_suffix", "mvp"),
+    )  # fmt: skip
 
 
 def select_cips(cip: dict[str, CipEntry], scope: Scope) -> dict[str, str]:
@@ -220,18 +240,24 @@ class Completion:
     unitid: str
     cip: str
     awards: int
+    level: int = 7  # IPEDS award level
 
 
 def load_ipeds_completions(
-    path: str | Path, codes: Iterable[str], award_level: int = 7, majornum: int = 1
+    path: str | Path,
+    codes: Iterable[str],
+    award_level: int | Iterable[int] = 7,
+    majornum: int = 1,
 ) -> list[Completion]:
-    """Rows of an IPEDS C<year>_A file for the given 6-digit codes, award level and
+    """Rows of an IPEDS C<year>_A file for the given 6-digit codes, award level(s) and
     first/second major, with at least one award (CTOTALT > 0)."""
     wanted = set(codes)
+    levels = {award_level} if isinstance(award_level, int) else set(award_level)
     rows = read_table(path, required=["UNITID", "CIPCODE", "AWLEVEL", "CTOTALT"], prefer="_rv")
     out = []
     for r in rows:
-        if int(r["AWLEVEL"]) != award_level:
+        level = int(r["AWLEVEL"])
+        if level not in levels:
             continue
         if "MAJORNUM" in r and r["MAJORNUM"] and int(r["MAJORNUM"]) != majornum:
             continue
@@ -243,10 +269,10 @@ def load_ipeds_completions(
             continue
         n = int(float(r["CTOTALT"] or 0))
         if n > 0:
-            out.append(Completion(r["UNITID"], code, n))
-    keys = [(c.unitid, c.cip) for c in out]
+            out.append(Completion(r["UNITID"], code, n, level))
+    keys = [(c.unitid, c.cip, c.level) for c in out]
     if len(keys) != len(set(keys)):
-        raise ValueError(f"{path}: duplicate (UNITID, CIPCODE) rows after filtering")
+        raise ValueError(f"{path}: duplicate (UNITID, CIPCODE, AWLEVEL) rows after filtering")
     return out
 
 
@@ -287,5 +313,28 @@ def school_cip_rows(
             "unitid": c.unitid, "institution": inst.name, "city": inst.city,
             "state": inst.state, "web": inst.web, "cip": c.cip, "cip_title": cip[c.cip].title,
             "family": families[c.cip], "masters_awards": c.awards, "completions_year": year,
+        })  # fmt: skip
+    return out
+
+
+def school_cip_level_rows(
+    completions: list[Completion],
+    directory: dict[str, Institution],
+    families: dict[str, str],
+    year: str,
+) -> list[dict[str, str | int]]:
+    """'School x CIP x award level' rows for multi-level scopes (rollout v3)."""
+    missing = sorted({c.unitid for c in completions} - set(directory))
+    if missing:
+        raise ValueError(f"UNITIDs missing from the directory file: {missing[:5]}...")
+    out = []
+    for c in sorted(completions, key=lambda c: (c.cip, c.level, directory[c.unitid].name)):
+        if c.cip not in families:
+            continue
+        inst = directory[c.unitid]
+        out.append({
+            "unitid": c.unitid, "institution": inst.name, "state": inst.state, "cip": c.cip,
+            "family": families[c.cip], "award_level": c.level, "awards": c.awards,
+            "completions_year": year,
         })  # fmt: skip
     return out

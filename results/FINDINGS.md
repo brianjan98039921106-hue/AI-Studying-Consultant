@@ -20,6 +20,7 @@
 | e2e | [synthetic-l3-e2e-findings.md](synthetic-l3-e2e-findings.md) | 檢查整合 |
 | sc | [synthetic-l3-c2-scorer-findings.md](synthetic-l3-c2-scorer-findings.md) | W-26 |
 | ref | [reference-w14-w15-findings.md](reference-w14-w15-findings.md)（**真實資料**） | W-14、W-15 |
+| r3 | [reference-all-v3-findings.md](reference-all-v3-findings.md)（**真實資料**） | W-65、W-70 |
 | st | [synthetic-l3-strata-findings.md](synthetic-l3-strata-findings.md) | W-68 |
 | fd | [synthetic-l3-fields-findings.md](synthetic-l3-fields-findings.md) | W-63、W-67 |
 | dl | [domain-layer-findings.md](domain-layer-findings.md)（**真實資料**） | W-64 |
@@ -49,6 +50,9 @@
 | F67 | 41 個領域可穩定分成 12 群（輪廓係數 0.331 vs RIASEC 分組 0.145；自助法 ARI 0.806） | ✅ | cl | 兩階段提問第一層 |
 | F68 | 3 個單一領域群（運動、烹飪、宗教）與數個歸屬很弱的領域（人文、政治、行銷、人資） | ✅ | cl | 第二層允許跨群進入 |
 | F69 | 職業結構不一定符合學生認知（法律與保護性服務同群） | 💭 | cl | B-C1-23 |
+| F94 | 全領域參考表：1,209 個 CIP、38 個系列、1,971 所學校，含專業與研究型博士、研究所證書 | ✅ | r3（獨立重算） | B-C0-10 修正 |
+| F95 | 職業剖面涵蓋 1,134 / 1,209 個 CIP；無剖面佔研究所學位 4.7% | ✅ | r3 | B-C0-9 擴及全領域 |
+| F96 | 教職稀釋擴及全領域（「教學與教育」進入物理科學、心理、健康專業的前 3 名） | ✅ | r3 | B-C0-8；W-76 刺激物須避開 |
 
 ## C2 探索推薦
 

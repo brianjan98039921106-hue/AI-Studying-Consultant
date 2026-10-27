@@ -1,0 +1,18 @@
+{
+  "version": "all-v3",
+  "decided": "2026-10-28",
+  "description": "Data rollout v3 (D10, W-65 + W-70): every 6-digit CIP 2020 code with at least one graduate-level award in IPEDS (first major). Families are the official 2-digit CIP series. No hand-picked prefixes: inclusion is decided by the official completions file only.",
+  "award_levels": [6, 7, 8, 17, 18, 19],
+  "award_level_names": {
+    "6": "postbaccalaureate certificate",
+    "7": "master's degree",
+    "8": "post-master's certificate",
+    "17": "doctor's degree - research/scholarship",
+    "18": "doctor's degree - professional practice",
+    "19": "doctor's degree - other"
+  },
+  "majornum": 1,
+  "families": "cip_series",
+  "graduate_only": true,
+  "output_suffix": "all"
+}

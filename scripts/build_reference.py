@@ -38,6 +38,7 @@ from aisc.catalog.reference import (
     load_ipeds_completions,
     load_ipeds_directory,
     load_scope,
+    school_cip_level_rows,
     school_cip_rows,
     select_cips,
 )
@@ -96,11 +97,19 @@ def main() -> None:
         raise SystemExit("completions and directory files must be from the same IPEDS year")
 
     scope = load_scope(args.scope)
+    sfx = scope.output_suffix
+    multi = len(scope.award_levels) > 1
     cip = load_cip2020(args.cip)
     fam = select_cips(cip, scope)
-    comps = load_ipeds_completions(args.completions, fam, scope.award_level, scope.majornum)
+    comps = load_ipeds_completions(args.completions, fam, scope.award_levels, scope.majornum)
+    if scope.graduate_only:
+        with_awards = {c.cip for c in comps}
+        fam = {c: f for c, f in fam.items() if c in with_awards}
     directory = load_ipeds_directory(args.directory)
-    school_rows = school_cip_rows(comps, directory, cip, fam, year)
+    if multi:
+        school_rows = school_cip_level_rows(comps, directory, fam, year)
+    else:
+        school_rows = school_cip_rows(comps, directory, cip, fam, year)
 
     xw = load_cip_soc_crosswalk(args.crosswalk)
     socs = soc_profiles(load_onet_interests(args.interests))
@@ -108,21 +117,36 @@ def main() -> None:
     profiles = {c: occupation_profile(c, xw, socs) for c in sorted(fam)}
 
     args.out.mkdir(parents=True, exist_ok=True)
-    _write_csv(args.out / "cip2020_mvp.csv", [
-        {"cip": c, "title": cip[c].title, "family": f, "offered_masters": c in offered,
-         "definition": cip[c].definition}
-        for c, f in fam.items()
-    ])  # fmt: skip
-    _write_csv(args.out / "ipeds_masters_mvp.csv", school_rows)
-    _write_csv(args.out / "cip_soc_mvp.csv", [
+    if multi:
+        by_level = defaultdict(Counter)
+        schools = defaultdict(set)
+        for c in comps:
+            by_level[c.cip][c.level] += c.awards
+            schools[c.cip].add(c.unitid)
+        _write_csv(args.out / f"cip2020_{sfx}.csv", [
+            {"cip": c, "title": cip[c].title, "family": f,
+             "family_title": cip[f].title if f in cip else "",
+             **{f"awards_level_{lv}": by_level[c][lv] for lv in scope.award_levels},
+             "n_schools": len(schools[c]), "definition": cip[c].definition}
+            for c, f in fam.items()
+        ])  # fmt: skip
+        _write_csv(args.out / f"ipeds_graduate_{sfx}.csv", school_rows)
+    else:
+        _write_csv(args.out / f"cip2020_{sfx}.csv", [
+            {"cip": c, "title": cip[c].title, "family": f, "offered_masters": c in offered,
+             "definition": cip[c].definition}
+            for c, f in fam.items()
+        ])  # fmt: skip
+        _write_csv(args.out / f"ipeds_masters_{sfx}.csv", school_rows)
+    _write_csv(args.out / f"cip_soc_{sfx}.csv", [
         {"cip": c, "soc": s, "soc_has_onet": s in socs}
         for c in sorted(fam) for s in sorted(xw.get(c, set()))
     ])  # fmt: skip
     used = sorted({s for c in fam for s in xw.get(c, set()) if s in socs})
-    _write_csv(args.out / "soc_profiles_mvp.csv", [
+    _write_csv(args.out / f"soc_profiles_{sfx}.csv", [
         {"soc": s, **{n.lower(): f"{socs[s][n]:.4f}" for n in RIASEC}} for s in used
     ])  # fmt: skip
-    _write_csv(args.out / "occupation_profiles_mvp.csv", [
+    _write_csv(args.out / f"occupation_profiles_{sfx}.csv", [
         {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in RIASEC_KEYS},
          "n_soc": len(p.socs), "n_soc_with_onet": len(p.socs_with_onet),
          "missing_soc": " ".join(p.missing)}
@@ -145,12 +169,12 @@ def main() -> None:
             for k, a in zip(bkeys, areas, strict=True)
         ])  # fmt: skip
         bused = sorted({s for c in fam for s in xw.get(c, set()) if s in bsocs})
-        _write_csv(args.out / "soc_basic_interests_mvp.csv", [
+        _write_csv(args.out / f"soc_basic_interests_{sfx}.csv", [
             {"soc": s, **{k: f"{bsocs[s][a]:.4f}" for k, a in zip(bkeys, areas, strict=True)}}
             for s in bused
         ])  # fmt: skip
         bprof = {c: occupation_profile(c, xw, bsocs, bkeys, areas) for c in sorted(fam)}
-        _write_csv(args.out / "occupation_basic_interests_mvp.csv", [
+        _write_csv(args.out / f"occupation_basic_interests_{sfx}.csv", [
             {"cip": c, **{k: f"{p.vector[k]:.4f}" if p.vector else "" for k in bkeys},
              "n_soc": len(p.socs), "n_soc_with_onet": len(p.socs_with_onet)}
             for c, p in bprof.items()
@@ -178,15 +202,20 @@ def main() -> None:
     }
     for key, path, url, when in extra_inputs:
         sources["inputs"][key] = file_provenance(path, url, when).to_dict()
-    (args.out / "SOURCES.json").write_text(json.dumps(sources, indent=2) + "\n", encoding="utf-8")
+    src_name = "SOURCES.json" if sfx == "mvp" else f"SOURCES_{sfx}.json"
+    (args.out / src_name).write_text(json.dumps(sources, indent=2) + "\n", encoding="utf-8")
 
     # --- report ---------------------------------------------------------------------
+    if multi:
+        _report_all(args, scope, cip, fam, comps, profiles, year)
+        print(f"{len(fam)} CIPs in scope, {len(comps)} school x CIP x level rows")
+        return
     by_fam_cips, by_fam_schools, by_fam_awards = Counter(), defaultdict(set), Counter()
     for f in fam.values():
         by_fam_cips[f] += 1
     for r in school_rows:
         by_fam_schools[r["family"]].add(r["unitid"])
-        by_fam_awards[r["family"]] += r["masters_awards"]
+        by_fam_awards[r["family"]] += r["masters_awards"] if "masters_awards" in r else r["awards"]
     n_schools = len({r["unitid"] for r in school_rows})
     with_vec = [p for c, p in profiles.items() if p.vector and c in offered]
     no_vec = [c for c in offered if not profiles[c].vector]
@@ -230,6 +259,64 @@ def main() -> None:
     L.append("")
     args.report.write_text("\n".join(L) + "\n", encoding="utf-8")
     print(f"{len(fam)} CIPs in scope, {len(offered)} offered, {len(school_rows)} school x CIP rows")
+
+
+LEVEL_NAMES = {6: "學士後證書", 7: "碩士", 8: "碩士後證書", 17: "研究型博士", 18: "專業博士",
+               19: "其他博士"}  # fmt: skip
+
+
+def _report_all(args, scope, cip, fam, comps, profiles, year) -> None:
+    """Report for a multi-level, all-series scope (rollout v3, W-65 + W-70)."""
+    lv = scope.award_levels
+    awards = defaultdict(Counter)
+    schools = defaultdict(set)
+    level_cips = defaultdict(set)
+    for c in comps:
+        awards[fam[c.cip]][c.level] += c.awards
+        schools[fam[c.cip]].add(c.unitid)
+        level_cips[c.level].add(c.cip)
+    cips_by_fam = Counter(fam.values())
+    have = {c for c, p in profiles.items() if p.vector}
+    L = [
+        "# 參考資料建置報告：全領域（W-65、W-70，範圍 v3）",
+        "",
+        f"- 產生日期：{date.today().isoformat()} · IPEDS {year} · O*NET {args.onet_release} · "
+        f"範圍 {scope.version}",
+        f"- 來源與檔案雜湊：`data/reference/SOURCES_{scope.output_suffix}.json`"
+        f"（下載日期 {args.retrieved_at}）",
+        "- 納入規則：IPEDS 中第一主修至少有 1 個研究所層級學位或證書的 6 碼 CIP；"
+        "族群 = 官方 2 碼系列",
+        "",
+        "## 總覽",
+        "",
+        f"- 範圍內 6 碼 CIP：{len(fam)}；2 碼族群：{len(cips_by_fam)}",
+        f"- 「學校 × CIP × 學位層級」列數：{len(comps):,}；不同學校："
+        f"{len({c.unitid for c in comps}):,}",
+        f"- 有職業剖面（RIASEC）的 CIP：{len(have)} / {len(fam)}",
+        "",
+        "| 學位層級 | CIP 數 | 學位／證書數 |",
+        "|---|---|---|",
+    ]
+    for v in lv:
+        n = sum(awards[f][v] for f in awards)
+        L.append(f"| {v} {LEVEL_NAMES.get(v, '')} | {len(level_cips[v])} | {n:,} |")
+    L += [
+        "",
+        "## 依 2 碼族群",
+        "",
+        "| 族群 | 名稱 | CIP 數 | 學校數 | 碩士 | 研究型博士 | 專業博士 | 證書（6、8） "
+        "| 有職業剖面 |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for f in sorted(cips_by_fam):
+        a = awards[f]
+        title = cip[f].title if f in cip else ""
+        n_prof = sum(1 for c, g in fam.items() if g == f and c in have)
+        L.append(f"| {f} | {title} | {cips_by_fam[f]} | {len(schools[f])} | {a[7]:,} | "
+                 f"{a[17]:,} | {a[18]:,} | {a[6] + a[8]:,} | "
+                 f"{n_prof} / {cips_by_fam[f]} |")  # fmt: skip
+    L.append("")
+    args.report.write_text("\n".join(L) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -359,6 +359,43 @@ def test_build_reference_script_end_to_end(tmp_path, cip_file):
     assert "30.7102" in text and "52.0205" in text  # CIPs without a profile are listed
 
 
+def test_build_reference_all_fields_scope(tmp_path, cip_file):
+    """Rollout v3 path: several award levels, families = 2-digit series, graduate-only."""
+    import os
+    import subprocess
+    import sys
+
+    scope = tmp_path / "all.json"
+    scope.write_text(json.dumps({"version": "fx-v3", "award_levels": [7, 17, 18], "majornum": 1,
+                                 "families": "cip_series", "graduate_only": True,
+                                 "output_suffix": "all"}))  # fmt: skip
+    xw = _xlsx(tmp_path / "xw.xlsx", XW_HEADER, [["52.0201", "t", "11-1021", "t"]])
+    onet = _csv(tmp_path / "Interests.txt", ONET_HEADER,
+                _interest_rows("11-1021.00", [1, 2, 1, 2, 7, 4]), delimiter="\t")  # fmt: skip
+    comp = _csv(tmp_path / "c2024_a.csv", ["UNITID", "CIPCODE", "MAJORNUM", "AWLEVEL", "CTOTALT"],
+                [["100", "52.0201", "1", "7", "40"], ["100", "52.0201", "1", "17", "3"],
+                 ["200", "30.7102", "1", "5", "9"], ["100", "52.0205", "2", "7", "4"]])  # fmt: skip
+    hd = _csv(tmp_path / "hd2024.csv", ["UNITID", "INSTNM", "CITY", "STABBR", "WEBADDR"],
+              [["100", "Fixture U", "A", "NY", "a"],
+               ["200", "Fixture State", "B", "TX", "b"]])  # fmt: skip
+    out = tmp_path / "ref"
+    cmd = [sys.executable, str(ROOT / "scripts" / "build_reference.py"),
+           "--cip", str(cip_file), "--crosswalk", str(xw), "--interests", str(onet),
+           "--completions", str(comp), "--directory", str(hd), "--retrieved-at", "2026-10-26",
+           "--onet-release", "fixture", "--scope", str(scope), "--out", str(out),
+           "--report", str(tmp_path / "r.md")]  # fmt: skip
+    env = {**os.environ, "PYTHONPATH": str(ROOT / "src")}
+    res = subprocess.run(cmd, capture_output=True, text=True, check=False, env=env)
+    assert res.returncode == 0, res.stderr
+    # 30.7102 has only a level-5 award and 52.0205 only a second major: both out
+    assert "1 CIPs in scope, 2 school x CIP x level rows" in res.stdout
+    with open(out / "cip2020_all.csv", encoding="utf-8") as fh:
+        row = next(csv.DictReader(fh))
+    assert (row["cip"], row["family"], row["awards_level_7"], row["awards_level_17"],
+            row["awards_level_18"]) == ("52.0201", "52", "40", "3", "0")  # fmt: skip
+    assert (out / "SOURCES_all.json").exists() and not (out / "SOURCES.json").exists()
+
+
 # --- probes on the committed real reference tables -----------------------------------
 
 
@@ -413,18 +450,45 @@ def test_committed_reference_tables_are_consistent():
         assert all(v == "" for v in vals) or all(0 <= float(v) <= 1 for v in vals)
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C0-10: data rollout v1 covers only master's degrees (award level 7)",
-)
-def test_probe_scope_covers_other_graduate_award_levels():
-    """All-backgrounds scope (D10) needs professional and research doctorates and
-    post-baccalaureate certificates, not only master's degrees."""
-    spec = json.loads((ROOT / "data" / "reference" / "mvp_scope.json").read_text())
-    levels = spec.get("award_levels", [spec["award_level"]])
-    assert len(levels) > 1
+def test_scope_covers_other_graduate_award_levels():
+    """B-C0-10 (fixed by rollout v3, W-65/W-70): the all-fields scope includes
+    professional and research doctorates and post-baccalaureate certificates."""
+    spec = json.loads((ROOT / "data" / "reference" / "all_scope.json").read_text())
+    levels = spec.get("award_levels", [spec.get("award_level")])
+    assert {6, 7, 8, 17, 18} <= set(levels)
+
+
+def test_committed_all_field_tables_are_consistent():
+    """L2 on rollout v3 (W-70): provenance, joins, ranges, and agreement with v1."""
+    src_all = json.loads((ROOT / "data" / "reference" / "SOURCES_all.json").read_text())
+    src_mvp = json.loads((ROOT / "data" / "reference" / "SOURCES.json").read_text())
+    for key, v in src_mvp["inputs"].items():  # same official files as rollout v1
+        assert src_all["inputs"][key]["sha256"] == v["sha256"]
+    spec = json.loads((ROOT / "data" / "reference" / "all_scope.json").read_text())
+    cips = {r["cip"]: r for r in _ref("cip2020_all.csv")}
+    level_cols = [f"awards_level_{lv}" for lv in spec["award_levels"]]
+    assert all(sum(int(r[c]) for c in level_cols) > 0 for r in cips.values())
+    assert all(r["family"] == r["cip"][:2] for r in cips.values())
+    rows = _ref("ipeds_graduate_all.csv")
+    assert {r["cip"] for r in rows} == set(cips)
+    assert {int(r["award_level"]) for r in rows} <= set(spec["award_levels"])
+    assert len({(r["unitid"], r["cip"], r["award_level"]) for r in rows}) == len(rows)
+    # rollout v1 is a subset: same master's rows, same occupation profiles
+    v1 = {(r["unitid"], r["cip"], int(r["masters_awards"])) for r in _ref("ipeds_masters_mvp.csv")}
+    v3 = {(r["unitid"], r["cip"], int(r["awards"])) for r in rows
+          if r["award_level"] == "7" and r["cip"] in {c for _, c, _ in v1}}  # fmt: skip
+    assert v1 == v3
+    occ_all = {r["cip"]: r for r in _ref("occupation_profiles_all.csv")}
+    for r in _ref("occupation_profiles_mvp.csv"):
+        if r["cip"] in occ_all:
+            assert {k: r[k] for k in r if k.startswith("riasec")} == {
+                k: occ_all[r["cip"]][k] for k in r if k.startswith("riasec")
+            }
+    keys = [r["key"] for r in _ref("basic_interest_map.csv")]
+    for r in _ref("occupation_basic_interests_all.csv"):
+        assert r["cip"] in cips
+        vals = [r[k] for k in keys]
+        assert all(v == "" for v in vals) or all(0 <= float(v) <= 1 for v in vals)
 
 
 def test_committed_basic_interest_tables():
