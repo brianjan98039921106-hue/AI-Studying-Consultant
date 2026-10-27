@@ -59,7 +59,7 @@ from statistics import NormalDist
 
 import numpy as np
 
-from aisc.contracts import Program, StudentProfile
+from aisc.contracts import Program, StudentProfile, require_same_dims
 from aisc.dimensions import NEED_KEYS
 
 STRATEGIES: tuple[str, ...] = ("random", "variance", "discriminative", "voi")
@@ -145,6 +145,9 @@ class AdaptiveSession:
                 "the adaptive questionnaire supports v1 profiles only; the v2 two-stage "
                 "questionnaire is W-66"
             )
+        if not self.catalog:
+            raise ValueError("the catalogue is empty")  # B-C1-30
+        require_same_dims(self.prior, self.catalog)
         missing = set(NEED_KEYS) - set(self.prior.needs)
         if missing:
             raise ValueError(

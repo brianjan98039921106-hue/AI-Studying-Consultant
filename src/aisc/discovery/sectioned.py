@@ -45,6 +45,10 @@ def _ranked(
     scorer: _scorers.Scorer,
 ):
     require_same_dims(profile, catalog)
+    ids = [p.program_id for p in catalog]
+    if len(set(ids)) != len(ids):  # B-C2-21
+        dup = sorted({i for i in ids if ids.count(i) > 1})
+        raise ValueError(f"duplicate programme ids in the catalogue: {dup}")
     anchors = set(profile.anchors)
     pool = [
         p

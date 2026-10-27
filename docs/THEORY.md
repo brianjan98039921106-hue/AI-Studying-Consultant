@@ -81,6 +81,7 @@
 | C3.2 v0.1 候選：母體積分錨點＋τ 模型平均（F130、B-C3-8、B-C3-9） | (I) 錨點改為官方錄取率的定義本身：r_p = E_母體[σ(a_p + β·x)]，母體以該學程的申請紀錄近似，自陳的錄取紀錄以 e^(−b) 加權還原回報比例（逆機率加權，Horvitz & Thompson, 1952, *JASA* 47；在 A-C3-3 下錄取者被多抽 e^b 倍）；懲罰 (logit r_p − logit m_p(θ))² ／ (2κ²)，以 Gauss–Newton 近似其 Hessian、回溯線搜尋保證目標下降。(M) τ 不再取單一值，而以格點上的 Laplace 邊際概似為權重做模型平均（Hoeting, Madigan, Raftery & Volinsky, 1999, *Statistical Science* 14），線性預測的分佈以加權混合的平均與變異數近似 | A-C3-3、A-C3-4、A-C3-6 |
 | 選擇偏誤 | Heckman (1979), *Econometrica* | A-C3-2 訓練樣本具代表性（GradCafe **不符合**） |
 | 機率校準 | Brier (1950)；Niculescu-Mizil & Caruana (2005), ICML | — |
+| 校準評估工具（C3.3，V-C3-2／3／4） | Brier 分數與相對於「基準錄取率常數預測」的 Brier skill；校準截距與斜率（Cox, 1958, *Biometrika* 45：以 logit(預測) 對實際結果做 logistic 迴歸，理想為截距 0、斜率 1；斜率 < 1 表示預測過度自信）；分組可靠度表（reliability diagram，DeGroot & Fienberg, 1983, *The Statistician* 32）；依群組（例如台灣／國際申請者）分別計算 | A-C3-4 |
 | 不可觀測因素 | Zhao et al. (2023), *PLOS ONE*：推薦信帶有預測訊號 | 說明區間為何必須夠寬（B-C3-5） |
 
 ## C4 申請組合
@@ -92,7 +93,7 @@
 | 市場均衡 | Fu (2014), *Journal of Political Economy* | S-5 大量使用會改變錄取率 |
 | 相關性（C4.2，W-29） | Sklar 定理／Gaussian copula：潛在變數 Z_j = √ρ·F + √(1−ρ)·E_j，Z_j < Φ⁻¹(p_j) 即錄取，邊際機率不變；以共同隨機數的 Monte Carlo 估計 v(S)；組合以 C4.1 解為起點做加入／移除／交換的局部搜尋（小問題以窮舉作參考） | A-C4-5 |
 | 穩健選擇（C4.3，W-2A） | 不確定集合：每校錄取機率落在 C3 區間 [low, high] 內（盒狀集合；Ben-Tal, El Ghaoui & Nemirovski, 2009, *Robust Optimization*；預算式集合見 Bertsimas & Sim, 2004, *Operations Research* 52(1)）。三種準則：(E) 期望值：用點估計（C4.1）；(W) 最壞情況：max_S min_p v(S, p)，因 v 對每個 p_j 不減，最壞情況就是全部取 low，可直接用 C4.1；(R) 最小化最大遺憾（Savage, 1951, *JASA* 46；Kouvelis & Yu, 1997, *Robust Discrete Optimization*）：min_S max_p [v*(p) − v(S, p)]，以盒內抽樣的情境（含全 low、全 high、點估計）近似最大值，學校 ≤ 12 間時窮舉組合 | A-C4-6、A-C4-7 |
-| 多屬性效用 | Keeney & Raiffa (1976), *Decisions with Multiple Objectives*；AHP (Saaty) | A-C4-4 效用可由屬性加權組成 |
+| 多屬性效用（C4.4 v0，W-45） | Keeney & Raiffa (1976), *Decisions with Multiple Objectives*：加法效用 U = 100 · Σ w_k v_k(x_k)，各屬性的價值函數 v_k 線性縮放到 [0, 1]（最差 → 0、最好 → 1）；權重以 AHP 成對比較取得（Saaty, 1980, *The Analytic Hierarchy Process*）：比較矩陣的主特徵向量，一致性比率 CR = ((λ_max − n)/(n − 1)) ／ RI_n，CR ≥ 0.1 時請學生重新比較 | A-C4-4、A-C4-8 |
 
 ## C5 模擬與系統層
 

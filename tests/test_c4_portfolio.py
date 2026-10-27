@@ -216,3 +216,43 @@ def test_minimax_regret_is_exact_on_its_scenarios_and_validates():
     # degenerate box: every criterion is the C4.1 optimum
     same = pf.minimax_regret_portfolio(p, p, p, u, cost, budget, n_scenarios=5)
     assert pf.portfolio_value(p, u, same) == pytest.approx(pf.dp_varied_cost(p, u, cost, budget)[1])
+
+
+def test_multi_attribute_utility_with_elicited_weights():
+    """B-C4-3 (was a probe). Weights from a consistent pairwise-comparison matrix
+    are recovered exactly, an inconsistent matrix is flagged, and a cheaper programme
+    can outrank a slightly better-fitting one when the student weighs cost."""
+    import aisc.portfolio as pf
+
+    assert hasattr(pf, "ahp_weights") and hasattr(pf, "multi_attribute_utility")
+    w_true = np.array([0.6, 0.3, 0.1])
+    M = w_true[:, None] / w_true[None, :]  # perfectly consistent
+    w, cr = pf.ahp_weights(M)
+    assert w == pytest.approx(w_true) and cr == pytest.approx(0.0, abs=1e-9)
+    bad = np.array([[1, 9, 1 / 9], [1 / 9, 1, 9], [9, 1 / 9, 1]])
+    assert pf.ahp_weights(bad)[1] > 0.1
+    u = pf.multi_attribute_utility(
+        {"a": {"fit": 0.90, "cost": 0.2}, "b": {"fit": 0.85, "cost": 0.9}},
+        {"fit": 0.5, "cost": 0.5},
+    )
+    assert u["b"] > u["a"]
+
+
+def test_utility_helpers_validate():
+    import aisc.portfolio as pf
+
+    assert pf.scale_linear(30_000, worst=80_000, best=20_000) == pytest.approx(5 / 6)
+    assert pf.scale_linear(10, 0, 5) == 1.0
+    with pytest.raises(ValueError):
+        pf.scale_linear(1, 2, 2)
+    with pytest.raises(ValueError):
+        pf.ahp_weights([[1, 2], [2, 1]])  # not reciprocal
+    with pytest.raises(ValueError):
+        pf.ahp_weights([[1, -1], [-1, 1]])
+    assert pf.ahp_weights([[1.0]])[0] == pytest.approx([1.0])
+    with pytest.raises(ValueError):
+        pf.multi_attribute_utility({"a": {"fit": 0.5}}, {"fit": 1, "cost": 1})
+    with pytest.raises(ValueError):
+        pf.multi_attribute_utility({"a": {"fit": 1.5}}, {"fit": 1})
+    with pytest.raises(ValueError):
+        pf.multi_attribute_utility({"a": {"fit": 0.5}}, {"fit": 0})

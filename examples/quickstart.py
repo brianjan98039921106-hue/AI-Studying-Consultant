@@ -1,5 +1,6 @@
 """End-to-end demo on synthetic data:
-stated needs -> shortlist -> familiarity check -> two-section discovery -> portfolio.
+stated needs -> shortlist -> familiarity check -> two-section discovery -> portfolio
+-> profile report (written to examples/out/demo_report.md, not committed).
 
 Run:  python examples/quickstart.py
 """
@@ -9,8 +10,9 @@ from pathlib import Path
 from aisc.catalog import load_programs
 from aisc.contracts import AdmitEstimate, StudentProfile
 from aisc.discovery import recommend
-from aisc.pipeline import interactive_discovery, prepare_profile
+from aisc.pipeline import interactive_discovery, plan_applications, prepare_profile
 from aisc.portfolio import dp_varied_cost
+from aisc.report import render_profile_report
 
 ROOT = Path(__file__).resolve().parents[1]
 catalog = load_programs(ROOT / "data" / "synthetic" / "programs.jsonl")
@@ -71,3 +73,19 @@ print("\n== Portfolio for 3 applications (assumed admission probabilities) ==")
 for j in chosen:
     print(f"  apply: {shortlist_for_portfolio[j].program.degree_name}  (P(admit) assumed)")
 print(f"  expected utility of best admission: {value:.1f}")
+
+# The same, through the application-mode planner (W-62), with the correlated-admission
+# sensitivity (C4.2), and the consultant's profile report (W-50).
+plan = plan_applications(
+    shortlist_for_portfolio[: len(assumed)],
+    {a.program_id: a for a in assumed},
+    budget=3,
+    utility={a.program_id: u for a, u in zip(assumed, utility, strict=True)},
+)
+print("  if admissions are correlated:",
+      {rho: round(v, 1) for rho, v in plan.value_if_correlated.items()})  # fmt: skip
+out = ROOT / "examples" / "out"
+out.mkdir(exist_ok=True)
+report = render_profile_report(student, prepare_profile(student, catalog), result, plan=plan)
+(out / "demo_report.md").write_text(report, encoding="utf-8")
+print(f"\nProfile report written to {out / 'demo_report.md'}")

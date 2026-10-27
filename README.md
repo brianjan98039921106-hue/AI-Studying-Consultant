@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.3.11 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.3.14 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -44,7 +44,7 @@
 | 申請組合最佳化（選哪幾間申請） | C4.1–C4.3 | ✅ 精確解；相關錄取（C4.2）與機率區間的穩健選擇（C4.3）可選用 | ⚠️ 錄取機率與相關係數都須自行假設（C3 未完成） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | 🧪 v0 模型可用（§4.9）：階層 logistic、區間、自陳偏誤校正；只在合成資料驗證 | ❌ 尚無真實申請結果資料（只在合成資料驗證，F128–F140） |
-| 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
+| 顧問介面／側寫報告 | Phase 5 | 🟡 報告 v0 可用（Markdown，§4.10）；介面未開始 | ⚠️ 會自動標示合成資料、假設的錄取機率與補全的維度 |
 
 **一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 申請組合」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。
 <!-- AUTO:status END -->
@@ -56,9 +56,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
-| 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
-| 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
-| 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |
+| 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
+| 2026-10-28 | v0.3.13 | 輸入檢查更嚴格（第五次稽核）：拼錯的維度、超出 0–1 的作答、未知或型別錯誤的硬條件、重複的學程代碼都會報錯；作答預設不確定性改為 0.25（原 0.5 讓問卷重問已答維度）；重複的錨點只算一次；自適應問卷只為可推薦的學程挑題（§4.2、§4.3、§4.5） | B-C1-26～31、B-C2-20～21 |
+| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
@@ -72,6 +72,7 @@
 | 2 | **W-41** 題庫 v2：回譯、認知訪談（官方原文已核對；[item-bank-v2.md](docs/item-bank-v2.md)） | 實測前置（[study-protocol.md](docs/study-protocol.md) §8） |
 | 3 | **W-76** 配對設計＋「區分兩種假設」的預先登記參數還原 | 精確份量估不準，區分假設可行（F101） |
 | 4 | **W-40／W-41／W-76** 實測（待 study-protocol §7 決策） | 只有真實資料能決定 v2 是否值得（B-C5-8） |
+| 5 | **W-44 C3.1** 歷年申請結果（含被拒，去識別化，放 `data/private/`）＋各學程官方錄取率 | C3.2 v0.2 只在合成資料驗證（F128–F140）；校準（V-C3-2～4）只能用真實結果檢驗，工具已備 |
 <!-- AUTO:next-steps END -->
 
 ## 文件導覽

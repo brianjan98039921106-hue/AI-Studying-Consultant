@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.11（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.14（研究原型）
 
 ---
 
@@ -23,7 +23,7 @@
 | 申請組合最佳化（選哪幾間申請） | C4.1–C4.3 | ✅ 精確解；相關錄取（C4.2）與機率區間的穩健選擇（C4.3）可選用 | ⚠️ 錄取機率與相關係數都須自行假設（C3 未完成） |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | 🧪 v0 模型可用（§4.9）：階層 logistic、區間、自陳偏誤校正；只在合成資料驗證 | ❌ 尚無真實申請結果資料（只在合成資料驗證，F128–F140） |
-| 顧問介面／側寫報告 | Phase 5 | ⬜ 未開始 | — |
+| 顧問介面／側寫報告 | Phase 5 | 🟡 報告 v0 可用（Markdown，§4.10）；介面未開始 | ⚠️ 會自動標示合成資料、假設的錄取機率與補全的維度 |
 
 **一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 申請組合」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。
 
@@ -87,7 +87,7 @@ print(len(catalog), "programs; synthetic =", all(p.synthetic for p in catalog))
 
 ### 4.2 描述學生需求
 
-需求是「想做什麼、想學什麼」，**不是**能力，也不是學程名稱。每個維度填 0–1；**不確定的維度不要填**，系統會依錨點補全，而不是當成 0（沒興趣）。
+需求是「想做什麼、想學什麼」，**不是**能力，也不是學程名稱。每個維度填 0–1；**不確定的維度不要填**，系統會依錨點補全，而不是當成 0（沒興趣）。維度名稱拼錯或數值不在 0–1 會直接報錯（不會被默默改掉）；每個作答預設的不確定性是 0.25（相當於一題的作答雜訊，未校準）。
 
 | 層 | 維度 key | 中文 | 0 代表 | 1 代表 |
 |---|---|---|---|---|
@@ -126,7 +126,7 @@ print("unanswered:", student.missing_dimensions)
 
 ### 4.3（選用）加入大考中心興趣量表分數
 
-高中做過大考中心興趣量表的話，六型分數（0–99）可以當作 RIASEC 的先驗。時間越久、區分值越低，先驗越不確定；之後的作答會蓋過它。
+高中做過大考中心興趣量表的話，六型分數（0–99）可以當作 RIASEC 的先驗。時間越久、區分值越低，先驗越不確定。學生之後的作答會與它**依不確定性加權合併**：剛做完的量表（標準差 0.15）比單一作答（0.25）更有份量；量表做得越久，作答的比重越大（例如 6 年前的量表標準差 0.45）。
 
 ```python
 from aisc.profiling import apply_prior, riasec_prior_from_ceec
@@ -185,6 +185,8 @@ for r in result.known_good:
 | `diversity` | 同一 CIP 族群（前 4 碼）每多一個就扣這麼多分，讓推薦分散到不同族群；模擬中會降低推薦的相關性，**不建議使用**（[F124–F127](../results/synthetic-l3-diversity-findings.md)） | 0.0 |
 
 心中的錨點學程不會出現在任一區。
+
+硬條件（`StudentProfile(..., hard_constraints={...})`）目前只支援三個鍵：`spring_intake`（True／False，要春季入學）、`stem_opt`（True／False，要 STEM OPT）、`max_tuition_usd`（學費上限，美元）。其他鍵或錯誤型別會直接報錯；學程沒有該資訊時不會被排除（避免偏向資料齊全的學程）。自適應問卷只為「可推薦的學程」挑題：錨點與被硬條件排除的學程不納入。
 
 ### 4.6 先修與申請條件差距
 
@@ -300,6 +302,25 @@ print(plan.chosen_ids, round(plan.result.expected_utility, 1), plan.result.metho
 print({rho: round(v, 1) for rho, v in plan.value_if_correlated.items()})  # ρ 越高越低
 ```
 
+契合度不是唯一考量（學費、地點、學制長度……，B-C4-3）。可以用成對比較請學生給屬性權重（AHP；一致性比率 ≥ 0.1 時請學生重新比較），再組成效用交給 `plan_applications(..., utility=...)`。這個工具尚未經使用者研究驗證（W-42）：
+
+```python
+from aisc.portfolio import ahp_weights, multi_attribute_utility, scale_linear
+
+# 契合度比學費重要 3 倍
+w, cr = ahp_weights([[1, 3], [1 / 3, 1]])
+values = {
+    r.program.program_id: {
+        "fit": r.relevance,
+        "cost": scale_linear(r.program.tuition_usd or 60_000, worst=90_000, best=20_000),
+    }
+    for r in shortlist_
+}
+utility_mau = multi_attribute_utility(values, {"fit": w[0], "cost": w[1]})
+plan_mau = plan_applications(shortlist_, admit, budget=3, utility=utility_mau)
+print(round(cr, 3), plan_mau.chosen_ids)
+```
+
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
 
 v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
@@ -347,6 +368,27 @@ print(model.method)  # hierarchical_v0.2_corrected
 print(round(est.low, 2), round(est.mean, 2), round(est.high, 2))
 new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學程：用族群平均，區間較寬
 ```
+
+有了留出的真實結果後，可用 `aisc.feasibility` 的 `brier_skill`（是否勝過「官方錄取率」常數預測）、`calibration_slope`（理想為截距 0、斜率 1；斜率小於 1 表示過度自信）、`reliability_table` 與 `by_group`（例如台灣／國際申請者分開）檢查校準（V-C3-2～4）。
+
+### 4.10 側寫報告（Markdown）
+
+把需求剖面、兩區推薦（附理由與條件差距）、申請組合整理成一份給顧問與學生一起看的報告。報告只負責呈現，不改變任何結果；合成資料、假設的錄取機率、系統補全的維度都會自動標示。
+
+```python
+from aisc.pipeline import prepare_profile
+from aisc.report import render_profile_report
+
+md = render_profile_report(
+    student,  # 學生實際作答的剖面
+    prepare_profile(student, catalog),  # 排序時實際使用的完整剖面
+    result,  # interactive_discovery 的結果
+    plan=plan,  # 選用：plan_applications 的結果（申請模式）
+)
+print(md.splitlines()[0])
+```
+
+`gaps`（選用）是 `{program_id: RequirementGap}`，會在每個學程旁顯示還缺哪些條件，但不影響排序（D9）。
 
 ---
 
@@ -413,3 +455,6 @@ new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學�
 | 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |
 | 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
 | 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
+| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
+| 2026-10-28 | v0.3.13 | 輸入檢查更嚴格（第五次稽核）：拼錯的維度、超出 0–1 的作答、未知或型別錯誤的硬條件、重複的學程代碼都會報錯；作答預設不確定性改為 0.25（原 0.5 讓問卷重問已答維度）；重複的錨點只算一次；自適應問卷只為可推薦的學程挑題（§4.2、§4.3、§4.5） | B-C1-26～31、B-C2-20～21 |
+| 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
