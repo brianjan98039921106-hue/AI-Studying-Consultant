@@ -283,3 +283,25 @@ def test_complete_neutral_correlated_option():
     assert corr.needs["bi_life_science"] != hier.needs["bi_life_science"]
     with pytest.raises(ValueError):
         complete_neutral(p, area_model="knn")
+
+
+def test_areas_to_ask_two_stage_order():
+    from aisc.profiling.hierarchy import GROUP_LABELS, areas_in_group, areas_to_ask
+
+    scores = {g: 0.1 for g in GROUP_LABELS}
+    scores[6], scores[1] = 0.9, 0.7
+    top1 = areas_to_ask(scores, m=1)
+    assert top1 == list(dict.fromkeys(areas_in_group(6)))
+    top2 = areas_to_ask(scores, m=2)
+    assert top2[: len(top1)] == top1 and len(top2) == len(set(top2))
+    assert set(top2) == set(areas_in_group(6)) | set(areas_in_group(1))
+    assert areas_to_ask(scores, q=4) == top2[:4]  # top2 starts with top1
+    assert len(areas_to_ask(scores, m=12)) == len(
+        {a for g in GROUP_LABELS for a in areas_in_group(g)}
+    )
+    with pytest.raises(ValueError):
+        areas_to_ask(scores)
+    with pytest.raises(ValueError):
+        areas_to_ask(scores, m=0)
+    with pytest.raises(ValueError):
+        areas_to_ask({99: 0.5}, m=1)

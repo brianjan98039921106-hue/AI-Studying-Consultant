@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.14（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.15（研究原型）
 
 ---
 
@@ -347,6 +347,8 @@ print(sorted(migrate_needs_v1_to_v2({"domain_finance": 0.9}).items()))
 
 v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用會直接報錯。
 
+第二層要細問哪些領域：`aisc.profiling.hierarchy.areas_to_ask(group_scores, m=2)`（前 m 個群的所有領域）或 `q=8`（依同樣順序取前 q 個）。m、q 沒有預設值：職業資料顯示「相關補全＋細問 4–8 個領域」可能就夠（[F115](../results/interest-area-adaptive-findings.md)），但要等 W-41 學生資料預先登記後才定。
+
 可選用：`complete_neutral(v2, area_model="correlated")`（`pipeline.prepare_profile` 同名參數）以 O\*NET 學到的領域相關結構補全未作答領域。用職業資料檢驗時誤差大幅下降，答得越少越明顯，但未通過全部預先登記條件，所以不是預設（[F105–F107](../results/interest-area-imputation-findings.md)）。
 
 ### 4.9（實驗中）錄取機率模型 C3.2 v0.2
@@ -458,3 +460,4 @@ print(md.splitlines()[0])
 | 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
 | 2026-10-28 | v0.3.13 | 輸入檢查更嚴格（第五次稽核）：拼錯的維度、超出 0–1 的作答、未知或型別錯誤的硬條件、重複的學程代碼都會報錯；作答預設不確定性改為 0.25（原 0.5 讓問卷重問已答維度）；重複的錨點只算一次；自適應問卷只為可推薦的學程挑題（§4.2、§4.3、§4.5） | B-C1-26～31、B-C2-20～21 |
 | 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
+| 2026-10-28 | v0.3.15 | v2 新增 `areas_to_ask`：依第一層群分數排出第二層要細問的領域（§4.8；m、q 無預設） | W-66 |
