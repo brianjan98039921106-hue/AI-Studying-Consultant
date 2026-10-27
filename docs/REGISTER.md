@@ -41,7 +41,7 @@
 | B-C0-14 | 盲區 | **O\*NET 興趣評分由模型產生**：RIASEC 剖面為「Machine Learning/Expert」（Putka et al., 2023），41 領域為「AI/Expert」（Liu et al., 2026）；官方頁面未列出與專家評分的一致性統計，誤差可能帶有語言模型的系統性偏誤 | W-64 G0（2026-10-27） | 職業剖面的誤差在不同領域間不均，且與文字描述相關 | 與 C0.3 課程向量交叉比對；抽查報告 PDF 的驗證數據 | 把 O\*NET 評分當作一個有誤差的來源，不當成標準答案（D2 雙重測量） | M | 🟡 |
 | B-C0-15 | 盲區 | **CIP 代碼表的「Moved to／Moved from」讀反**：官方檔中 Moved from 是舊代碼（定義寫「Moved from X to Y」），Moved to 是現行代碼；載入器丟掉了 149 個現行代碼、保留了舊代碼 | 程式稽核（2026-10-28，第二位獨立代理人） | 全領域參考表漏掉 24 個有研究所學位的現行代碼（DO、DVM、足科、護理教育等；21,557 個學位）；MVP 範圍不受影響 | 探針 `test_probe_moved_cip_codes_are_current_codes` | 改為丟掉 Moved from 與 Deleted，重建全領域參考表並更新 F94、F95、F97 | H |🟢（只丟 Moved from 與 Deleted；全領域表重建並重新獨立重算，F94、F95、F97 已更正；`test_moved_cip_codes_are_current_codes`） |
 | B-C0-16 | 盲區 | **就業加權讓單一職業主導、並放大教職稀釋**：28% 的多 SOC CIP 有單一 SOC 佔 ≥ 0.8；獸醫 DVM 的剖面被大學教師主導（F102–F103） | W-71 建置（2026-10-28） | 若當預設，學程端領域剖面會偏向大型或教職職業 | `occupation_*_all_empw*.csv` 的 `max_weight` 欄 | 預設維持非學術等權；就業加權只作參考 | M | 🟢（未採用為預設，F104） |
-| B-C0-17 | 盲區 | **`estimate_tau` 略過證據太少的維度，直接交給 `fuse_profile` 會以 KeyError 崩潰** | 程式稽核（2026-10-28，第四次獨立代理人） | 部分維度沒有課程證據時融合中斷 | 探針 `test_probe_fusion_reports_missing_tau_clearly` | 缺 τ 時以 ValueError 指出維度；文件說明需提供後備值 | L | 🔴 |
+| B-C0-17 | 盲區 | **`estimate_tau` 略過證據太少的維度，直接交給 `fuse_profile` 會以 KeyError 崩潰** | 程式稽核（2026-10-28，第四次獨立代理人） | 部分維度沒有課程證據時融合中斷 | `test_fusion_reports_missing_tau_clearly` | 缺 τ 時以 ValueError 指出維度；文件說明需提供後備值 | L | 🟢 |
 
 ## C1 學生側寫
 

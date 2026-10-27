@@ -26,8 +26,11 @@ class FusedProfile:
     flags: tuple[str, ...]  # dimensions whose evidence disagrees with the prior
 
 
-def _as_map(v: float | Mapping[str, float], keys) -> dict[str, float]:
+def _as_map(v: float | Mapping[str, float], keys, name: str) -> dict[str, float]:
     if isinstance(v, Mapping):
+        missing = [k for k in keys if k not in v]
+        if missing:  # B-C0-17
+            raise ValueError(f"{name} has no value for dimensions {missing}; supply a fallback")
         return {k: float(v[k]) for k in keys}
     return {k: float(v) for k in keys}
 
@@ -46,8 +49,8 @@ def fuse_profile(
     if extra:
         raise ValueError(f"evidence for dimensions without a prior: {sorted(extra)}")
     keys = list(prior)
-    t = _as_map(tau, keys)
-    s = _as_map(sigma, [k for k in keys if k in evidence])
+    t = _as_map(tau, keys, "tau")
+    s = _as_map(sigma, [k for k in keys if k in evidence], "sigma")
     if any(v < 0 or math.isnan(v) for v in [*t.values(), *s.values()]):
         raise ValueError("tau and sigma must be non-negative")
     mean, sd, flags = {}, {}, []
@@ -78,7 +81,8 @@ def estimate_tau(
 ) -> dict[str, float]:
     """Method-of-moments tau_d over programmes: tau^2 = max(0, mean (e - m)^2 - sigma^2),
     using the programmes that have evidence on d. sigma is one value per dimension
-    (or one for all). Dimensions with fewer than 2 programmes are omitted."""
+    (or one for all). Dimensions with fewer than 2 programmes are omitted, so the
+    caller must add a fallback tau for them before calling fuse_profile (B-C0-17)."""
     if len(priors) != len(evidences):
         raise ValueError("priors and evidences must be paired")
     sq: dict[str, list[float]] = {}
@@ -87,6 +91,6 @@ def estimate_tau(
             if k not in m:
                 raise ValueError(f"evidence for a dimension without a prior: {k}")
             sq.setdefault(k, []).append((float(v) - float(m[k])) ** 2)
-    sig = _as_map(sigma, list(sq))
+    sig = _as_map(sigma, list(sq), "sigma")
     return {k: math.sqrt(max(0.0, sum(v) / len(v) - sig[k] ** 2)) for k, v in sq.items()
             if len(v) >= 2}  # fmt: skip
