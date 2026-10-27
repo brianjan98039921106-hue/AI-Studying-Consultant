@@ -6,7 +6,9 @@
    "url": "https://www.onetcenter.org/dl_files/database/db_31_0_json/interests_illustrative_activities.json",
    "release": "O*NET 31.0",
    "retrieved_at": "2026-10-28",
-   "method": "transcribed from the official JSON via web fetch; verify against the downloaded official file before fielding"
+   "method": "transcribed via web fetch, then verified row by row against the official CSV (188 rows, identical text and order)",
+   "verified_file": "interests_illustrative_activities.csv (O*NET 31.0 CSV release, provided by the owner 2026-10-28)",
+   "verified_sha256": "f2602bb57b1dff64fa91b198685ddf66b6dfdbaa3e83d3c3c606e7a5615ff82c"
   },
   "core_items": "data/items/core_items_zh.json (docs/rubric.md §3)"
  },

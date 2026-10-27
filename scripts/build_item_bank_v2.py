@@ -38,6 +38,8 @@ RIASEC = {"Realistic": "riasec_r", "Investigative": "riasec_i", "Artistic": "ria
 LIKERT = {"type": "likert5", "labels_zh": ["完全不想", "不太想", "普通", "有點想", "非常想"],
           "to_unit": "(answer - 1) / 4"}  # fmt: skip
 MIN_GROUP_EXAMPLES = 3
+# official O*NET 31.0 interests_illustrative_activities.csv the activities were checked against
+VERIFIED_SHA256 = "f2602bb57b1dff64fa91b198685ddf66b6dfdbaa3e83d3c3c606e7a5615ff82c"
 
 
 def main() -> None:
@@ -96,8 +98,11 @@ def main() -> None:
         "sources": {
             "onet_illustrative_activities": {
                 "url": SOURCE_URL, "release": "O*NET 31.0", "retrieved_at": "2026-10-28",
-                "method": "transcribed from the official JSON via web fetch; verify against "
-                          "the downloaded official file before fielding",
+                "method": "transcribed via web fetch, then verified row by row against the "
+                          "official CSV (188 rows, identical text and order)",
+                "verified_file": "interests_illustrative_activities.csv (O*NET 31.0 CSV "
+                                 "release, provided by the owner 2026-10-28)",
+                "verified_sha256": VERIFIED_SHA256,
             },
             "core_items": "data/items/core_items_zh.json (docs/rubric.md §3)",
         },
