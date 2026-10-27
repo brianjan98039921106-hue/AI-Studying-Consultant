@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.18（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.19（研究原型）
 
 ---
 
@@ -373,7 +373,7 @@ new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學�
 
 紀錄來自不同申請年度時，在 `AdmissionRecord(..., year=2024)` 標上年度（要嘛全部標、要嘛都不標）：每個較舊的年度有自己的整體難度，預測一律針對最新年度（官方錄取率也請用最新年度的；[F148–F150](../results/synthetic-l3-admission-years-findings.md)）。知道各學程的申請流程類型（一般、面試制、作品集審查、專業學位）時，傳入 `types={program_id: 類型}`；預測新學程時再給 `ptype=`。模擬中這能讓新學程的錄取機率更準，類型沒有效果時也不會變差（[F145–F147](../results/synthetic-l3-admission-types-findings.md)）。
 
-模型沒有收斂（`model.converged` 為 False）或官方錄取率與紀錄嚴重衝突（`model.anchor_conflicts` 列出學程與 logit 差距）時會發出警告：請先檢查資料，再使用這些估計。有了留出的真實結果後，可用 `aisc.feasibility` 的 `brier_skill`（是否勝過「官方錄取率」常數預測）、`calibration_slope`（理想為截距 0、斜率 1；斜率小於 1 表示過度自信）、`reliability_table` 與 `by_group`（例如台灣／國際申請者分開）檢查校準（V-C3-2～4）。
+模型沒有收斂（`model.converged` 為 False）或官方錄取率與紀錄嚴重衝突（`model.anchor_conflicts` 列出學程與 logit 差距）時會發出警告：請先檢查資料，再使用這些估計。用自己的歷年申請結果時，照 [data-intake.md](data-intake.md) 準備兩個 CSV（範本在 `data/templates/`），再執行 `python scripts/validate_admission_model.py --records … --rates …`：會檢查隱私欄位、擬合模型，並用時間切分檢查校準；程式介面是 `aisc.feasibility.intake.fit_from_files`。有了留出的真實結果後，可用 `aisc.feasibility` 的 `brier_skill`（是否勝過「官方錄取率」常數預測）、`calibration_slope`（理想為截距 0、斜率 1；斜率小於 1 表示過度自信）、`reliability_table` 與 `by_group`（例如台灣／國際申請者分開）檢查校準（V-C3-2～4）。
 
 ### 4.10 側寫報告（Markdown）
 
@@ -466,3 +466,4 @@ print(md.splitlines()[0])
 | 2026-10-28 | v0.3.16 | 錄取機率模型可加入學程類型（`types=`、`predict(..., ptype=)`，§4.9） | W-74 |
 | 2026-10-28 | v0.3.17 | 錄取紀錄可標申請年度（`AdmissionRecord(..., year=)`），模型估計年度波動、預測針對最新年度（§4.9） | B-C3-3 |
 | 2026-10-28 | v0.3.18 | 錄取機率模型新增 `converged` 與 `anchor_conflicts`，未收斂或官方錄取率與紀錄衝突時警告（§4.9） | B-C3-10～12 |
+| 2026-10-28 | v0.3.19 | 申請結果資料的範本、載入器（隱私欄位檢查、標準化、缺漏處理）與時間切分校準檢查腳本（§4.9、[data-intake.md](data-intake.md)） | W-44 C3.1 |

@@ -82,6 +82,7 @@
 | C3.2 v0.1 候選：母體積分錨點＋τ 模型平均（F130、B-C3-8、B-C3-9） | (I) 錨點改為官方錄取率的定義本身：r_p = E_母體[σ(a_p + β·x)]，母體以該學程的申請紀錄近似，自陳的錄取紀錄以 e^(−b) 加權還原回報比例（逆機率加權，Horvitz & Thompson, 1952, *JASA* 47；在 A-C3-3 下錄取者被多抽 e^b 倍）；懲罰 (logit r_p − logit m_p(θ))² ／ (2κ²)，以 Gauss–Newton 近似其 Hessian、回溯線搜尋保證目標下降。(M) τ 不再取單一值，而以格點上的 Laplace 邊際概似為權重做模型平均（Hoeting, Madigan, Raftery & Volinsky, 1999, *Statistical Science* 14），線性預測的分佈以加權混合的平均與變異數近似 | A-C3-3、A-C3-4、A-C3-6 |
 | 學程類型層（W-74，B-C3-6） | 交叉分類的階層模型（cross-classified random effects；Gelman & Hill, 2007, *Data Analysis Using Regression and Multilevel/Hierarchical Models*, ch. 13）：a_p ~ N(μ_f + η_t, τ²)，t 為學程類型（例如一般申請、面試制、作品集審查、專業學位），η_t ~ N(0, 1)；類型效果跨 CIP 族群共用，所以資料少的類型 × 族群組合可以借用其他族群的資訊 | A-C3-7 |
 | 年度效果（B-C3-3） | 每個申請年度一個共同的 logit 平移 δ_y ~ N(0, 1)，最新年度為參照（δ = 0）；舊年度的結果用來估計學生特徵與學程差異，但整體水準以最新年度（與最新年度的官方錄取率）為準；預測一律針對最新年度。屬於階層模型中的交叉分類隨機效果（Gelman & Hill, 2007, ch. 13） | A-C3-8 |
+| 申請結果資料載入與時間切分驗證（C3.1、V-C3-2／3） | 特徵標準化（優先用完整紀錄的平均與標準差）、缺漏值以平均加缺漏指標（missing-indicator；Groenwold et al., 2012, *CMAJ* 184 討論其限制）；驗證採時間切分（以較早年度擬合、最新年度的完整紀錄評估，避免同年資料洩漏），指標用 C3.3 的 Brier skill 與 Cox 校準斜率 | A-C3-5、A-C3-9 |
 | 選擇偏誤 | Heckman (1979), *Econometrica* | A-C3-2 訓練樣本具代表性（GradCafe **不符合**） |
 | 機率校準 | Brier (1950)；Niculescu-Mizil & Caruana (2005), ICML | — |
 | 校準評估工具（C3.3，V-C3-2／3／4） | Brier 分數與相對於「基準錄取率常數預測」的 Brier skill；校準截距與斜率（Cox, 1958, *Biometrika* 45：以 logit(預測) 對實際結果做 logistic 迴歸，理想為截距 0、斜率 1；斜率 < 1 表示預測過度自信）；分組可靠度表（reliability diagram，DeGroot & Fienberg, 1983, *The Statistician* 32）；依群組（例如台灣／國際申請者）分別計算 | A-C3-4 |
