@@ -20,6 +20,7 @@ Each change targets one component (C0–C5) and one work item (W-xx in `docs/ROA
 3. Run the validation ladder (`docs/VALIDATION.md`); record results in the PR template.
 4. New weakness found → register a B item → add a probe test (`@pytest.mark.probe`, `xfail(strict=True, raises=AssertionError)`).
 5. Weakness fixed → probe passes → remove `xfail` and update the register in the same commit.
+6. User-facing change → update `docs/USAGE.md` (section, §1 status table, §8 changelog). Its examples run in CI.
 
 Test files are named per component: `tests/test_c<N>_<name>.py`.
 
@@ -32,6 +33,7 @@ Each kind of status lives in exactly one file; other files link to it instead of
 | Findings (F-numbers) | `results/FINDINGS.md` |
 | Work items | `docs/ROADMAP.md` |
 | Component gates | `docs/VALIDATION.md` §5 |
+| How to use it (users) | `docs/USAGE.md` |
 
 `tests/test_docs_consistency.py` fails CI if a document cites an undefined ID, a link is broken, or a still-failing probe is marked fixed in the register.
 

@@ -30,6 +30,7 @@
 
 | 想知道 | 看這裡 |
 |---|---|
+| **怎麼使用（學生、顧問、開發者）** | [docs/USAGE.md](docs/USAGE.md) |
 | 整體架構、設計原則、部件圖 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | 每個部件的規格 | [docs/components/](docs/components/) |
 | 每個方法的理論來源與假設 | [docs/THEORY.md](docs/THEORY.md) |
@@ -40,17 +41,38 @@
 | **所有發現的狀態總表** | [results/FINDINGS.md](results/FINDINGS.md) |
 | 最新 L3 合成驗證結論 | [C2 計分器](results/synthetic-l3-c2-scorer-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C2 分區呈現](results/synthetic-l3-v2-findings.md)、[C1 錨點拆解 v1](results/synthetic-l3-c1-v1-findings.md)、[C1 自適應問卷](results/synthetic-l3-adaptive-findings.md) |
 
-## Quickstart
+## 使用方式
+
+**完整使用說明：[docs/USAGE.md](docs/USAGE.md)**（給學生、顧問與開發者；隨開發更新，範例由 CI 實際執行）。
+
+| 你是 | 從這裡開始 |
+|---|---|
+| 想先看看效果 | 安裝後執行 `python examples/quickstart.py`（[USAGE §3](docs/USAGE.md#3-最快上手跑示範不用寫程式)） |
+| 留學顧問 | [USAGE §5 建議的使用流程](docs/USAGE.md#5-給顧問建議的使用流程目前階段) |
+| 要把模型接進自己的工具 | [USAGE §4 逐步 API](docs/USAGE.md#4-以-python-使用逐步) |
+| 想知道現在能不能用在真實學生 | [USAGE §1 現在能用什麼](docs/USAGE.md#1-現在能用什麼)：**還不行**，學程資料目前是合成的 |
+
+### 安裝與示範
 
 ```bash
 pip install -e ".[dev]"
-pytest -rx                   # xfail = 已知盲區探針（預期中的失敗）
 python examples/quickstart.py
+```
+
+示範輸出分兩區：**「你可能沒想過」**（契合但學生沒聽過的學程）與**「你已經知道、而且確實適合」**；接著是條件差距與申請組合（錄取機率目前為假設值）。
+
+### 開發者指令
+
+```bash
+pytest -rx                   # xfail = 已知盲區探針（預期中的失敗）
+ruff check . && ruff format --check .
 python scripts/run_l3_baseline.py --tag v2 --needs-model archetype    # L3，約 6 分鐘
 python scripts/run_l3_baseline.py --tag v2-continuous --needs-model continuous
 python scripts/compare_l3.py results/synthetic-l3-v2.md results/synthetic-l3-v2-continuous.md
 python scripts/run_l3_e2e.py           # 端到端：問卷 → 補全 → 熟悉度 → 分區，約 6 分鐘
 ```
+
+貢獻流程見 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 驗證方式一覽
 
