@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.10（研究原型）
+最後更新：2026-10-28 · 對應版本 v0.3.11（研究原型）
 
 ---
 
@@ -289,6 +289,17 @@ cautious = worst_case_portfolio(low, utility, [1] * len(p), budget=3)  # 全部�
 balanced = minimax_regret_portfolio(low, high, p, utility, [1] * len(p), budget=3)
 ```
 
+一般使用時可以直接用 `plan_applications`，它把推薦清單、每個學程的 `AdmitEstimate` 與預算組合起來（效用預設為契合度 × 100、每間申請成本 1），並附上錄取相關時同一組合的期望效用。它只在申請模式使用，不會改變推薦結果（D9）：
+
+```python
+from aisc.pipeline import plan_applications
+
+admit = {r.program.program_id: a for r, a in zip(shortlist_, assumed, strict=True)}
+plan = plan_applications(shortlist_, admit, budget=3)  # criterion="point"（預設）
+print(plan.chosen_ids, round(plan.result.expected_utility, 1), plan.result.method)
+print({rho: round(v, 1) for rho, v in plan.value_if_correlated.items()})  # ρ 越高越低
+```
+
 ### 4.8（實驗中）需求維度 v2：涵蓋所有領域
 
 v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
@@ -317,7 +328,7 @@ v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用
 
 可選用：`complete_neutral(v2, area_model="correlated")`（`pipeline.prepare_profile` 同名參數）以 O\*NET 學到的領域相關結構補全未作答領域。用職業資料檢驗時誤差大幅下降，答得越少越明顯，但未通過全部預先登記條件，所以不是預設（[F105–F107](../results/interest-area-imputation-findings.md)）。
 
-### 4.9（實驗中）錄取機率模型 C3.2 v0
+### 4.9（實驗中）錄取機率模型 C3.2 v0.1
 
 有歷年申請結果時，可以用階層 logistic 模型估計錄取機率與區間。學生特徵要先以該學程的申請者母體標準化（平均約 0）；自陳資料（如網路上的申請結果分享）標為 `"self_report"`，顧問的完整紀錄標為 `"complete"`。提供官方錄取率時，模型會校正「錄取者較常自陳」的偏誤（合成資料中 RMSE 從 0.13–0.26 降到 0.04–0.07，[F128–F131](../results/synthetic-l3-admission-bias-findings.md)）。**目前沒有真實申請結果資料**，而且當較強的申請者也較常自陳時，區間會過窄（B-C3-8），所以結果仍要當作假設值使用。
 
@@ -332,7 +343,8 @@ records = [
 ]
 model = fit_admission_model(records, official_rates={"prog-a": 0.3, "prog-b": 0.4})
 est = model.predict("prog-a", (0.5, 0.0))  # AdmitEstimate：mean、low、high（90%）
-print(model.method, round(est.low, 2), round(est.mean, 2), round(est.high, 2))
+print(model.method,  # hierarchical_v0.1_corrected
+      round(est.low, 2), round(est.mean, 2), round(est.high, 2))
 new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學程：用族群平均，區間較寬
 ```
 
@@ -400,3 +412,4 @@ new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學�
 | 2026-10-28 | v0.3.8 | 申請組合新增 C4.2（錄取相關：`admission_draws`、`portfolio_value_mc`、`recommend_portfolio`）與 C4.3（機率區間的穩健選擇：`worst_case_portfolio`、`minimax_regret_portfolio`）；預設選擇不變（§4.7） | W-29、W-2A |
 | 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |
 | 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
+| 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.1（τ 模型平均，區間涵蓋率較準；`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
