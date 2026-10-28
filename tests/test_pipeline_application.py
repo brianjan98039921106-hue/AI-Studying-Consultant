@@ -5,8 +5,9 @@ import copy
 import pytest
 
 from aisc import portfolio as pf
+from aisc.application import plan_applications
 from aisc.contracts import AdmitEstimate, StudentProfile
-from aisc.pipeline import interactive_discovery, plan_applications
+from aisc.pipeline import interactive_discovery
 
 NEEDS = {"quant_intensity": 0.8, "domain_finance": 0.9, "riasec_e": 0.6}
 

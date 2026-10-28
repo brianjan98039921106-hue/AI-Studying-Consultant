@@ -7,10 +7,11 @@ Run:  python examples/quickstart.py
 
 from pathlib import Path
 
+from aisc.application import plan_applications
 from aisc.catalog import load_programs
 from aisc.contracts import AdmitEstimate, StudentProfile
 from aisc.discovery import recommend
-from aisc.pipeline import interactive_discovery, plan_applications, prepare_profile
+from aisc.pipeline import interactive_discovery, prepare_profile
 from aisc.portfolio import dp_varied_cost
 from aisc.report import render_profile_report
 

@@ -78,7 +78,7 @@ def render_profile_report(
 ) -> str:
     """Markdown report. `profile` is what the student answered, `completed` the
     profile actually used for ranking (pipeline.prepare_profile or the C1.3
-    posterior); `plan` is an optional pipeline.ApplicationPlan (application mode)."""
+    posterior); `plan` is an optional application.ApplicationPlan (module B, application mode)."""
     if profile.student_id != completed.student_id or profile.dims != completed.dims:
         raise ValueError("profile and completed profile must be the same student and dims")
     completed.require_complete("report")

@@ -6,7 +6,7 @@
     CR >= 0.1 means the comparisons should be revisited.
 
 Fit (C2 relevance) is one attribute among others (tuition, location, duration, ...).
-Utilities feed C4 through `pipeline.plan_applications(..., utility=...)`; nothing here
+Utilities feed C4 through `application.plan_applications(..., utility=...)`; nothing here
 touches the recommendations (D9). Not validated with students yet (W-42).
 """
 

@@ -19,6 +19,7 @@
 | D10 | **結構與領域無關；產品目標是全領域、全背景** | 使用者不限就學背景（例如材料 → 牙醫 → 設計）；領域寫死在結構裡，日後擴充代價很高 | RIASEC、條件類別、學經歷紀錄都跨領域；`mvp_scope.json` 只是上線階段（v1 → v2 → v3 全領域），見 [expansion.md](expansion.md) |
 | D11 | **測量對所有背景等值** | 題目情境若只對某些背景具體，分數就不可比（B-C1-20） | 測量恆等性與 DIF 檢驗（V-C1-9）；不通過的題目改寫或移除 |
 | D12 | **評估看最差的群體，不只看平均** | 平均指標會掩蓋少數背景的失敗（S-8） | 所有 L3／L5 指標依背景分層；選方法時以最差層為準則之一（延伸 F37 的 maximin） |
+| D13 | **探索推薦不依賴申請規劃** | 核心價值是讓學生找到沒想過的學程；錄取機率需要真實申請結果才能校準，不能讓它卡住或影響推薦（延伸 D9） | 模組 A（C0、C1、C2、C6、`pipeline`、`report`）不 import 模組 B（C3、C4、`application`）；`tests/test_module_boundary.py` 在 CI 檢查 |
 
 ## 2. 部件圖
 
@@ -62,6 +63,16 @@ flowchart LR
     C5[C5 模擬與評估框架<br/>已知真相的合成學生] -. 驗證 .-> C0 & C1 & C2 & C3 & C4 & C6
 ```
 
+### 2.1 兩個模組
+
+| 模組 | 部件 | 程式入口 | 狀態 |
+|---|---|---|---|
+| **A 探索推薦** | C0 Program 知識庫、C1 學生側寫、C2 探索推薦、C6 條件差距 | `aisc.pipeline`、`aisc.report` | 開發中（[ROADMAP.md](ROADMAP.md) 下一步） |
+| **B 申請規劃** | C3 錄取可行性、C4 申請組合 | `aisc.application` | ⏸ 暫緩（2026-10-28）：程式與測試保留、CI 照跑，不新增工項；恢復條件見 ROADMAP「模組 B」 |
+| 共用 | C5 模擬與評估、`contracts.py` | — | C5 驗證兩個模組 |
+
+資料只從 A 流向 B：B 讀 A 輸出的 `Recommendation`，B 的結果不回饋推薦（D9、D13）。報告的申請段落是選用的（`render_profile_report(..., plan=None)`）。
+
 ## 3. 部件總表
 
 > 各部件的目前狀態只記在 [VALIDATION.md §5](VALIDATION.md)，此表只描述設計。
@@ -99,7 +110,9 @@ v1 的改動（例如 C2.1 改成考慮強度的距離、C2.2 改成未知機率
 ```
 src/aisc/
   contracts.py      # 部件之間唯一的共用型別
-  pipeline.py       # 系統層：只透過各部件公開 API 串接（C2 短名單 → C1.4 熟悉度 → C2.3 v1）
+  pipeline.py       # 模組 A 系統層：只透過各部件公開 API 串接（C2 短名單 → C1.4 熟悉度 → C2.3 v1）
+  application.py    # 模組 B 系統層：推薦 + AdmitEstimate → C4 申請組合（暫緩）
+  report.py         # 模組 A 報告；申請段落選用
   dimensions.py     # 需求維度登錄 v1：4 層 15 維（docs/rubric.md）
   catalog/          # C0
   profiling/        # C1

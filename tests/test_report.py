@@ -5,8 +5,9 @@ from datetime import date
 
 import pytest
 
+from aisc.application import plan_applications
 from aisc.contracts import AdmitEstimate, StudentProfile
-from aisc.pipeline import interactive_discovery, plan_applications, prepare_profile
+from aisc.pipeline import interactive_discovery, prepare_profile
 from aisc.report import render_profile_report
 
 NEEDS = {"quant_intensity": 0.8, "domain_finance": 0.9, "riasec_e": 0.6}
