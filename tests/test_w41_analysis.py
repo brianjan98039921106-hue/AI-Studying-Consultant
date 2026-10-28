@@ -65,3 +65,19 @@ def test_dry_run_on_synthetic_files(tmp_path):
     assert "含合成資料" in text and "不具約束力" in text
     for head in ("## 1.", "## 2.", "## 3.", "## 4.", "## 5.", "## 6.", "## 7.", "F115"):
         assert head in text, head
+
+
+def test_ledoit_wolf_matches_the_reference_formula():
+    rng = np.random.default_rng(0)
+    Z = rng.normal(size=(40, 6)) @ rng.normal(size=(6, 6))
+    C = mod.ledoit_wolf(Z)
+    emp = np.cov(Z.T, ddof=0)
+    mu = np.trace(emp) / 6
+    off = ~np.eye(6, dtype=bool)
+    s = 1 - C[off][0] / emp[off][0]  # off-diagonals are shrunk by (1 - s)
+    assert 0 <= s <= 1 and np.allclose(C, (1 - s) * emp + s * mu * np.eye(6))
+    try:
+        from sklearn.covariance import LedoitWolf
+    except ImportError:
+        return
+    assert np.allclose(C, LedoitWolf().fit(Z).covariance_, atol=1e-12)

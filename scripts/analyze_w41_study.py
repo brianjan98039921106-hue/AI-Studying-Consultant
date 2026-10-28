@@ -97,7 +97,6 @@ from datetime import date
 from pathlib import Path
 
 import numpy as np
-from sklearn.covariance import LedoitWolf
 
 from aisc.dimensions import BASIC_INTEREST_KEYS
 from aisc.profiling.hierarchy import (
@@ -238,6 +237,23 @@ def cond_mean(mu, S, obs, y, s2):
     return mu + S[:, obs] @ np.linalg.solve(Soo, y - mu[obs])
 
 
+def ledoit_wolf(Z: np.ndarray) -> np.ndarray:
+    """Ledoit-Wolf shrunk covariance (Ledoit & Wolf, 2004), as sklearn's LedoitWolf with
+    assume_centered=False; numpy only, so the script needs no extra dependency."""
+    n, p = Z.shape
+    X = Z - Z.mean(axis=0)
+    emp = X.T @ X / n
+    X2 = X**2
+    tr = X2.sum(axis=0) / n
+    mu = tr.sum() / p
+    delta_ = float(np.sum(emp**2))
+    beta = (float(np.sum(X2.T @ X2)) / n - delta_) / (p * n)
+    delta = (delta_ - 2 * mu * tr.sum() + p * mu**2) / p
+    beta = min(beta, delta)
+    s = 0.0 if beta == 0 else beta / delta
+    return (1 - s) * emp + s * mu * np.eye(p)
+
+
 def binding(rids, s1: dict, session: str) -> bool:
     total, per = MIN[session]
     rids = list(rids)
@@ -281,7 +297,7 @@ def completion(s1: dict, dims) -> dict:
         if len(tr) < 3:
             continue
         Z = np.array([np.concatenate([V[r][0], [V[r][1][g] for g in GROUPS]]) for r in tr])
-        mu, S = Z.mean(0), LedoitWolf().fit(Z).covariance_
+        mu, S = Z.mean(0), ledoit_wolf(Z)
         for i in np.flatnonzero(fold == f):
             rid = ids[i]
             y, gs = V[rid]
