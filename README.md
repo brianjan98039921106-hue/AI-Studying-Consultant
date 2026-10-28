@@ -134,3 +134,5 @@ python scripts/run_l3_e2e.py           # 端到端：問卷 → 補全 → 熟�
 ## License
 
 MIT © Po-An (Brian) Chan
+
+程式碼與文件採 MIT 授權。`data/reference/` 中以 O\*NET 31.0 Database（USDOL/ETA，[CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)）資料修改產生的檔案，仍依其原授權條款使用；USDOL/ETA 未審核、背書或測試這些修改。O\*NET® 為 USDOL/ETA 的商標。詳細來源與修改說明見 [`data/README.md`](data/README.md#third-party-data-and-attribution)。
