@@ -35,9 +35,13 @@ def test_top5_recall_breaks_ties_in_expectation():
     assert abs(mod.top5_recall(v, tie) - (4 + 0.25) / 5) < 1e-12
 
 
-def test_wilson_interval_contains_the_rate():
-    lo, hi = mod.wilson(30, 40)
-    assert lo < 0.75 < hi and lo > 0.55 and hi < 0.9
+def test_binding_needs_total_and_strata_minimums():
+    s1 = {f"R{i}": {"stratum": mod.STRATA[i % 4]} for i in range(200)}
+    assert mod.binding(s1, s1, "s1")
+    lopsided = {f"R{i}": {"stratum": "same_field" if i < 170 else mod.STRATA[i % 4]}
+                for i in range(200)}  # fmt: skip
+    assert not mod.binding(lopsided, lopsided, "s1")
+    assert not mod.binding(list(s1)[:59], s1, "s2") and mod.binding(list(s1)[:60], s1, "s2")
 
 
 def test_templates_match_the_item_bank():
