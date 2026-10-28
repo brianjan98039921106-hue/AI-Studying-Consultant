@@ -6,7 +6,7 @@
 | `reference/` | Public reference tables (NCES CIP 2020, IPEDS Completions extracts) | Yes, with source + date below |
 | `programs/` | Real program attributes; each record has `source_url`, `retrieved_at` | Yes |
 | `private/` | Student profiles, survey answers, consultant cases | **Never** (gitignored) |
-| `templates/` | Empty CSV templates for consultant data (admission outcomes, official rates); copy to `private/` before filling — see [docs/data-intake.md](../docs/data-intake.md) | Yes (headers only) |
+| `templates/` | Empty CSV templates: admission outcomes and official rates ([docs/data-intake.md](../docs/data-intake.md)); W-41 study answers `study_*.csv` ([docs/study-protocol.md](../docs/study-protocol.md) §4). Copy to `private/` before filling | Yes (headers only) |
 
 ## Synthetic catalogue
 
