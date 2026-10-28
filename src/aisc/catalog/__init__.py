@@ -5,6 +5,7 @@ Sub-components (docs/components/C0-catalog.md):
     C0.2 occupation bridge (CIP -> SOC -> O*NET interests)        — planned
     C0.3 curriculum extraction (program pages, with provenance)   — planned
     C0.4 fusion & QA (agreement between C0.2 and C0.3)            — fusion.py, awaits C0.3
+    real catalogue v0 (IPEDS x C0.2 profiles, W-77)              — real.py
     loader: JSON Lines I/O and integrity checks                   — done
 """
 

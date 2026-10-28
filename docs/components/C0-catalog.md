@@ -34,6 +34,8 @@ B-C0-1 CIP 太粗 · B-C0-2 對照表是規範性的 · B-C0-3 幻覺與誇大 �
 |---|---|---|
 | C0.1 | `catalog/reference.py`、`scripts/build_reference.py`；範圍 `data/reference/mvp_scope.json` | 程式與 L2 ✅；官方檔案到位後產生 `data/reference/` |
 | C0.2 v1 | `catalog/occupation.py`（等權、OI 1–7 → [0, 1]） | 程式與 L2 ✅；B-C0-1 探針（同 CIP 無法區分） |
+| C0.3 前導 | [w21-pilot.md](../w21-pilot.md)、`data/curriculum/w21_pilot_v0.jsonl` | 30 筆 LLM 擷取，未驗證（等 W-20） |
+| 真實目錄 v0（W-77） | `catalog/real.py`、`scripts/build_real_catalog.py` | L2 ✅；強度與取向未測量（`Program.unmeasured`，B-C0-18） |
 
 ## 全背景擴充（D10–D12）
 範圍三階段擴充（v1 → v2 相鄰領域與其他學位層級 → v3 全領域）；評分準則改為活動導向錨點並以留一族群外推檢驗（V-C0-6）；研究型博士另需指導教授層；黃金標準依 CIP 族群分層；職業橋接 v2 以就業人數加權。盲區 B-C0-6、B-C0-8、B-C0-10～13。詳見 [expansion.md](../expansion.md)。
