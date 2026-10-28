@@ -10,16 +10,16 @@
 | D1 | **需求空間與標籤空間分離** | 學生不知道 program 名稱，但知道自己想做什麼。「契合」看內容，「新穎」看名稱 | C2 的 relevance 只用屬性向量，novelty 只用 CIP／熟悉度 |
 | D2 | **Program 屬性雙重測量** | 單一資料來源（官網文案或分類代碼）都有系統性偏誤，兩個獨立來源互相檢驗 | C0.2 職業橋接 vs C0.3 課程擷取，C0.4 比對一致性 |
 | D3 | **需求維度錨定在已驗證的構念** | 自訂維度沒有信效度保證 | C1.1 以 Holland RIASEC（O*NET 使用的興趣模型）為骨架，再加通過因素分析的領域維度 |
-| D4 | **不確定性端到端傳遞** | 點估計會讓下游過度自信 | C1 輸出後驗標準差、C3 輸出區間、C4 用區間做穩健選擇 |
+| D4 | **不確定性端到端傳遞** | 點估計會讓下游過度自信 | C1 輸出後驗標準差並顯示在報告；（未來擴充）C3 輸出區間、C4 用區間做穩健選擇 |
 | D5 | **部件只透過資料契約溝通** | 單獨開發、單獨驗證、可替換 | `src/aisc/contracts.py`；部件之間不互相 import 內部函式 |
 | D6 | **先模擬驗證，再真人驗證** | 真人資料少且昂貴，演算法錯誤要先在已知真相的環境抓出來 | C5 模擬器提供已知的真實需求，每個部件都要先過 L3 |
 | D7 | **新穎 = 學生不知道，而非分類距離遠** | 分類距離只是代理變數 | C1.4 熟悉度擷取，C2.2 v1 改用「未知機率」 |
 | D8 | **每個版本保留參考實作** | 新版本必須能和舊版本、暴力法比對 | 例如 C4.1 精確解永遠保留，C4.2 只是評估它的誤差 |
-| D9 | **可補的門檻不是過濾條件** | 先修、作品集、考試都能在一段時間內補上；不能假設學生今年就申請。把「現在還沒有」當成「不適合」，會重演學生只在既有範圍打轉的問題 | 需求（`StudentProfile`）與能力（`StudentRecord`）分成兩個契約；C2 只讀需求；明示條件由 C6 以差距呈現；隱性競爭力由 C3 在申請模式處理；只有學生自己設定的條件能過濾 |
+| D9 | **可補的門檻不是過濾條件** | 先修、作品集、考試都能在一段時間內補上；不能假設學生今年就申請。把「現在還沒有」當成「不適合」，會重演學生只在既有範圍打轉的問題 | 需求（`StudentProfile`）與能力（`StudentRecord`）分成兩個契約；C2 只讀需求；明示條件由 C6 以差距呈現；隱性競爭力由 C3 在申請模式處理（未來擴充）；只有學生自己設定的條件能過濾 |
 | D10 | **結構與領域無關；產品目標是全領域、全背景** | 使用者不限就學背景（例如材料 → 牙醫 → 設計）；領域寫死在結構裡，日後擴充代價很高 | RIASEC、條件類別、學經歷紀錄都跨領域；`mvp_scope.json` 只是上線階段（v1 → v2 → v3 全領域），見 [expansion.md](expansion.md) |
 | D11 | **測量對所有背景等值** | 題目情境若只對某些背景具體，分數就不可比（B-C1-20） | 測量恆等性與 DIF 檢驗（V-C1-9）；不通過的題目改寫或移除 |
 | D12 | **評估看最差的群體，不只看平均** | 平均指標會掩蓋少數背景的失敗（S-8） | 所有 L3／L5 指標依背景分層；選方法時以最差層為準則之一（延伸 F37 的 maximin） |
-| D13 | **探索推薦不依賴申請規劃** | 核心價值是讓學生找到沒想過的學程；錄取機率需要真實申請結果才能校準，不能讓它卡住或影響推薦（延伸 D9） | 模組 A（C0、C1、C2、C6、`pipeline`、`report`）不 import 模組 B（C3、C4、`application`）；`tests/test_module_boundary.py` 在 CI 檢查 |
+| D13 | **核心只做需求側寫與推薦；申請規劃是未來擴充** | 核心價值是讓學生找到沒想過的學程；錄取機率需要真實申請結果才能校準，不能讓它卡住或影響推薦（延伸 D9） | 核心（C0、C1、C2、C6、`pipeline`、`report`）不 import 擴充（C3、C4、`application`）；`tests/test_module_boundary.py` 在 CI 檢查 |
 
 ## 2. 部件圖
 
@@ -41,10 +41,10 @@ flowchart LR
         C22[C2.2 新穎度] --> C23
         C23 --> C24[C2.4 推薦理由]
     end
-    subgraph C3[C3 錄取可行性]
+    subgraph C3[C3 錄取可行性・未來擴充]
         C31[C3.1 資料 + 選擇偏誤] --> C32[C3.2 階層貝氏模型] --> C33[C3.3 校準]
     end
-    subgraph C4[C4 申請組合]
+    subgraph C4[C4 申請組合・未來擴充]
         C44[C4.4 效用擷取] --> C41[C4.1 精確解]
         C41 --> C42[C4.2 相關性評估]
         C41 --> C43[C4.3 穩健選擇]
@@ -52,8 +52,8 @@ flowchart LR
     C04 -- Program --> C12 & C21 & C22
     C13 -- StudentProfile --> C21
     C14 -- familiar --> C22
-    C24 -- Recommendation --> C44
-    C33 -- AdmitEstimate --> C41
+    C24 -. Recommendation .-> C44
+    C33 -. AdmitEstimate .-> C41
     subgraph C6[C6 先修與申請條件差距]
         C61[C6.1 條件類別] --> C62[C6.2 差距比對]
     end
@@ -61,17 +61,21 @@ flowchart LR
     C1 -- StudentRecord --> C62
     C62 -- RequirementGap --> C24
     C5[C5 模擬與評估框架<br/>已知真相的合成學生] -. 驗證 .-> C0 & C1 & C2 & C3 & C4 & C6
+    classDef future stroke-dasharray: 5 5,color:#888
+    class C3,C4,C31,C32,C33,C41,C42,C43,C44 future
 ```
 
-### 2.1 兩個模組
+虛線（C3、C4）是未來擴充，不在目前的產品範圍；見 §2.1。
 
-| 模組 | 部件 | 程式入口 | 狀態 |
+### 2.1 目前範圍與未來擴充
+
+| 範圍 | 部件 | 程式入口 | 狀態 |
 |---|---|---|---|
-| **A 探索推薦** | C0 Program 知識庫、C1 學生側寫、C2 探索推薦、C6 條件差距 | `aisc.pipeline`、`aisc.report` | 開發中（[ROADMAP.md](ROADMAP.md) 下一步） |
-| **B 申請規劃** | C3 錄取可行性、C4 申請組合 | `aisc.application` | ⏸ 暫緩（2026-10-28）：程式與測試保留、CI 照跑，不新增工項；恢復條件見 ROADMAP「模組 B」 |
-| 共用 | C5 模擬與評估、`contracts.py` | — | C5 驗證兩個模組 |
+| **核心：需求側寫＋推薦** | C0 Program 知識庫、C1 學生側寫、C2 探索推薦、C6 條件差距 | `aisc.pipeline`、`aisc.report` | 開發中（[ROADMAP.md](ROADMAP.md) 下一步） |
+| **未來擴充：申請規劃** | C3 錄取可行性、C4 申請組合 | `aisc.application` | 不在目前的產品範圍（2026-10-28）：程式與測試保留、CI 照跑，只修 bug、不新增工項；恢復條件見 ROADMAP Phase 7 |
+| 共用 | C5 模擬與評估、`contracts.py` | — | C5 驗證全部部件；`AdmitEstimate`、`PortfolioResult` 契約保留給擴充 |
 
-資料只從 A 流向 B：B 讀 A 輸出的 `Recommendation`，B 的結果不回饋推薦（D9、D13）。報告的申請段落是選用的（`render_profile_report(..., plan=None)`）。
+資料只從核心流向擴充：擴充讀核心輸出的 `Recommendation`，結果不回饋推薦（D9、D13）。核心報告不含申請段落；需要時由 `aisc.application.render_plan_section` 另外產生、附在報告後面。
 
 ## 3. 部件總表
 
@@ -82,8 +86,8 @@ flowchart LR
 | **C0** Program 知識庫 | 公開資料 → `Program` | 分類骨架 + 雙重測量 + 一致性品管 | [C0](components/C0-catalog.md) |
 | **C1** 學生側寫 | 問卷回答、錨點、熟悉度 → `StudentProfile`（完整 15 維） | RIASEC 測量模型 + 錨點先驗 + 貝氏自適應問卷 + 熟悉度擷取 | [C1](components/C1-profiling.md) |
 | **C2** 探索推薦 | 完整 `StudentProfile` + `Program` → `DiscoveryResult` | 依契合排序 + 熟悉度分區（v1）；v0 新穎度加權保留為參考；可忠實分解的理由 | [C2](components/C2-discovery.md) |
-| **C3** 錄取可行性 | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) |
-| **C4** 申請組合 | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) |
+| **C3** 錄取可行性（未來擴充） | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) |
+| **C4** 申請組合（未來擴充） | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) |
 | **C5** 模擬與評估 | 合成族群 → 各部件指標 | 已知真相模擬 + 消融 + 盲區探針 | [C5](components/C5-simulation.md) |
 | **C6** 先修與申請條件差距 | `RequirementItem` + `StudentRecord` → `RequirementGap` | 跨領域條件類別 + 確定性比對；只呈現、不過濾（D9）；探索／申請兩種模式 | [C6](components/C6-requirements.md) |
 
@@ -110,15 +114,15 @@ v1 的改動（例如 C2.1 改成考慮強度的距離、C2.2 改成未知機率
 ```
 src/aisc/
   contracts.py      # 部件之間唯一的共用型別
-  pipeline.py       # 模組 A 系統層：只透過各部件公開 API 串接（C2 短名單 → C1.4 熟悉度 → C2.3 v1）
-  application.py    # 模組 B 系統層：推薦 + AdmitEstimate → C4 申請組合（暫緩）
-  report.py         # 模組 A 報告；申請段落選用
+  pipeline.py       # 核心系統層：只透過各部件公開 API 串接（C2 短名單 → C1.4 熟悉度 → C2.3 v1）
+  report.py         # 核心報告：需求剖面、兩區推薦、條件差距
+  application.py    # 未來擴充：推薦 + AdmitEstimate → C4 申請組合、報告附錄
   dimensions.py     # 需求維度登錄 v1：4 層 15 維（docs/rubric.md）
   catalog/          # C0
   profiling/        # C1
   discovery/        # C2
-  feasibility/      # C3
-  portfolio/        # C4
+  feasibility/      # C3（未來擴充）
+  portfolio/        # C4（未來擴充）
   simulation/       # C5
   requirements/     # C6
 tests/

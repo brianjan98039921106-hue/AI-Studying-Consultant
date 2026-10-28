@@ -5,7 +5,7 @@ import copy
 import pytest
 
 from aisc import portfolio as pf
-from aisc.application import plan_applications
+from aisc.application import plan_applications, render_plan_section
 from aisc.contracts import AdmitEstimate, StudentProfile
 from aisc.pipeline import interactive_discovery
 
@@ -74,3 +74,12 @@ def test_custom_costs_and_utilities(recs):
     plan = plan_applications(recs, admit, budget=2, cost=cost, utility=util, rhos=())
     assert sum(cost[ids[j]] for j in plan.result.chosen) <= 2
     assert plan.value_if_correlated == {}
+
+
+def test_plan_section_labels_assumptions(recs):
+    plan = plan_applications(recs, _assumed(recs), budget=2)
+    md = render_plan_section(plan, [r.program for r in recs])
+    assert "未來擴充" in md and "假設值" in md and "ρ = 0.4" in md
+    for pid in plan.chosen_ids:
+        name = next(r.program.degree_name for r in recs if r.program.program_id == pid)
+        assert name in md

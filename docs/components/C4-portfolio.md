@@ -1,5 +1,7 @@
 # C4 申請組合
 
+> **未來擴充（2026-10-28）：** 不在目前的產品範圍（需求側寫＋推薦）。程式與測試保留、CI 照跑，只修 bug、不新增功能；恢復條件見 [ROADMAP.md](../ROADMAP.md) Phase 7。
+
 **目的**：在申請預算內選出期望結果最好的申請組合，並量化模型假設造成的誤差。
 **輸入**：`Recommendation`（→ 效用）、`AdmitEstimate`（→ 機率區間）、申請成本與預算
 **輸出契約**：`contracts.PortfolioResult`

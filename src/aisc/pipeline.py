@@ -6,9 +6,9 @@
         C1.2 v1 profile completion -> C2 shortlist -> C1.4 familiarity check (ask)
         -> C2.3 v1 discover
 
-Module A (discovery: C0, C1, C2, C6) only. Application planning (C3, C4) lives in
-`aisc.application` (module B, deferred) and must not be imported from here; see
-tests/test_module_boundary.py.
+Core scope only (needs profiling and recommendation: C0, C1, C2, C6). Application
+planning (C3, C4) is a future extension in `aisc.application` and must not be
+imported from here (D13, tests/test_module_boundary.py).
 
 `ask` is whatever collects the student's answers: a UI in production, a
 simulated respondent in C5. It receives program_ids and returns

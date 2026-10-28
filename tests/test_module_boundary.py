@@ -1,5 +1,6 @@
-"""Module boundary (ARCHITECTURE §2, D13): module A (discovery: C0, C1, C2, C6, the
-pipeline and the report) must not depend on module B (application planning: C3, C4).
+"""Scope boundary (ARCHITECTURE §2.1, D13): the core (needs profiling and
+recommendation: C0, C1, C2, C6, the pipeline and the report) must not depend on the
+future extension (application planning: C3, C4, aisc.application).
 
 Checked in a fresh interpreter so that modules imported by other tests do not hide a
 dependency.
@@ -9,7 +10,7 @@ import subprocess
 import sys
 import warnings
 
-MODULE_A = [
+CORE = [
     "aisc.contracts",
     "aisc.dimensions",
     "aisc.catalog",
@@ -19,20 +20,20 @@ MODULE_A = [
     "aisc.pipeline",
     "aisc.report",
 ]
-MODULE_B = ("aisc.feasibility", "aisc.portfolio", "aisc.application")
+EXTENSION = ("aisc.feasibility", "aisc.portfolio", "aisc.application")
 
 
-def test_module_a_does_not_load_module_b():
+def test_core_does_not_load_extension():
     code = (
         "import importlib, sys\n"
-        f"for m in {MODULE_A!r}: importlib.import_module(m)\n"
-        f"bad = sorted(m for m in sys.modules if m.startswith({MODULE_B!r}))\n"
+        f"for m in {CORE!r}: importlib.import_module(m)\n"
+        f"bad = sorted(m for m in sys.modules if m.startswith({EXTENSION!r}))\n"
         "print('\\n'.join(bad))\n"
     )
     out = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     ).stdout.strip()
-    assert out == "", f"module A loads module B: {out}"
+    assert out == "", f"core loads the extension: {out}"
 
 
 def test_old_pipeline_path_still_works_with_warning():

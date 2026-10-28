@@ -1,5 +1,7 @@
 # C3 錄取可行性
 
+> **未來擴充（2026-10-28）：** 不在目前的產品範圍（需求側寫＋推薦）。程式與測試保留、CI 照跑，只修 bug、不新增功能；恢復條件見 [ROADMAP.md](../ROADMAP.md) Phase 7。
+
 **目的**：估計 $P(\text{admit} \mid \text{學生}, \text{學程})$，並誠實表達不確定性。
 **輸出契約**：`contracts.AdmitEstimate`（`mean`、`low`、`high`、`method`）——下游必須使用區間。
 **原則**：沒有以真實申請結果擬合的模型時，任何地方使用的錄取機率都必須以 `AdmitEstimate(method="assumed")` 明確標示為假設值；C3.2 v0.2 的估計會以 `method="hierarchical_v0.2_…"` 標示，目前只在合成資料驗證。

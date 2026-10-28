@@ -1,10 +1,12 @@
-"""Module B — application planning (C3 -> C4), deferred (ROADMAP 模組 B).
+"""Future extension — application planning (C3 -> C4); not part of the current
+product scope (ROADMAP Phase 7, ARCHITECTURE §2.1).
 
     plan_applications (application mode only, W-62, D9):
         recommendations + C3 AdmitEstimates -> C4.1 / C4.3 choice, with the C4.2
         correlated-admission value of the chosen portfolio as a sensitivity check
 
-Module A (aisc.pipeline and the discovery components) never imports this module;
+The core (aisc.pipeline, aisc.report and the discovery components) never imports
+this module (D13);
 it consumes module A's output (`Recommendation`) and nothing flows back (D9).
 """
 
@@ -16,7 +18,7 @@ from dataclasses import dataclass
 import numpy as np
 
 from aisc import portfolio as _pf
-from aisc.contracts import AdmitEstimate, PortfolioResult, Recommendation
+from aisc.contracts import AdmitEstimate, PortfolioResult, Program, Recommendation
 
 PLAN_CRITERIA = ("point", "worst_case", "minimax_regret")
 
@@ -89,3 +91,22 @@ def plan_applications(
             draws = _pf.admission_draws(p, rho, n_sim, rng)
             corr[rho] = _pf.portfolio_value_mc(u, draws, chosen)
     return ApplicationPlan(ids, result, corr, assumed)
+
+
+def render_plan_section(plan: ApplicationPlan, programs: Sequence[Program]) -> str:
+    """Markdown section for an application plan (future extension). Append it to the
+    core report from `aisc.report.render_profile_report`; it changes no result."""
+    names = {p.program_id: f"{p.degree_name}（{p.school}）" for p in programs}
+    L = ["## 附錄：申請組合（未來擴充，實驗中）", ""]
+    if plan.assumed:
+        L += ["> 錄取機率是**假設值**（未使用 C3 模型），申請組合與期望效用只供示範。", ""]
+    L += [f"- 方法：{plan.result.method}",
+          "- 建議申請：" + "、".join(names.get(i, i) for i in plan.chosen_ids),
+          "- 期望效用（各校錄取互相獨立的假設下）："
+          f"{plan.result.expected_utility:.1f}"]  # fmt: skip
+    corr = {r: v for r, v in plan.value_if_correlated.items() if r > 0}
+    if corr:
+        L.append("- 若各校錄取結果相關（同一份申請的整體競爭力是共同因素）："
+                 + "、".join(f"ρ = {r}：{v:.1f}" for r, v in corr.items())
+                 + "（相關越高越低；真實 ρ 未知）")  # fmt: skip
+    return "\n".join(L + [""])

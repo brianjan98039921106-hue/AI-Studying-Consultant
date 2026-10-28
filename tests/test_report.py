@@ -5,8 +5,7 @@ from datetime import date
 
 import pytest
 
-from aisc.application import plan_applications
-from aisc.contracts import AdmitEstimate, StudentProfile
+from aisc.contracts import StudentProfile
 from aisc.pipeline import interactive_discovery, prepare_profile
 from aisc.report import render_profile_report
 
@@ -22,20 +21,24 @@ def _run(catalog):
     return profile, prepare_profile(profile, catalog), result
 
 
-def test_report_labels_synthetic_data_completion_and_assumptions(catalog):
+def test_report_labels_synthetic_data_and_completion(catalog):
     profile, completed, result = _run(catalog)
-    admit = {r.program.program_id: AdmitEstimate(r.program.program_id, 0.3, 0.2, 0.4, "assumed")
-             for r in result.discoveries}  # fmt: skip
-    plan = plan_applications(result.discoveries, admit, budget=2)
     before = copy.deepcopy(result)
-    md = render_profile_report(profile, completed, result, plan=plan, today=date(2026, 10, 28))
+    md = render_profile_report(profile, completed, result, today=date(2026, 10, 28))
     assert result == before  # formatting only
-    assert "合成的示範資料" in md and "假設值" in md and "補全" in md
+    assert "合成的示範資料" in md and "補全" in md
     assert "2026-10-28" in md
     for r in result.discoveries:
         assert r.program.degree_name in md
     assert md.count("| 興趣 |") == 6  # every RIASEC dimension listed
-    assert "ρ = 0.4" in md
+    assert "## 附錄：申請組合" not in md  # core report only (D13)
+    assert "不估計錄取機率" in md
+
+
+def test_report_has_no_plan_parameter(catalog):
+    profile, completed, result = _run(catalog)
+    with pytest.raises(TypeError):
+        render_profile_report(profile, completed, result, plan=object())
 
 
 def test_report_validates_inputs(catalog):

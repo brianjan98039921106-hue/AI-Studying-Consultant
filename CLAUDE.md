@@ -1,7 +1,7 @@
 # Notes for AI assistants working in this repo
 
 ## What this is
-A recommender that profiles Taiwanese grad-school applicants by *needs* (not program names) and surfaces US programs they would not have found, then optimises the application portfolio. Read `docs/ARCHITECTURE.md` first, then the spec for the component you are touching in `docs/components/`.
+A recommender that profiles Taiwanese grad-school applicants by *needs* (not program names) and surfaces US programs they would not have found. Current scope is needs profiling + recommendation (C0, C1, C2, C6); admission probability and portfolio optimisation (C3, C4) are a future extension (ROADMAP Phase 7). Read `docs/ARCHITECTURE.md` first, then the spec for the component you are touching in `docs/components/`.
 
 ## Commands
 - Test: `pytest -rx` (probes show as xfail)
@@ -16,7 +16,7 @@ A recommender that profiles Taiwanese grad-school applicants by *needs* (not pro
 - Keep reference implementations (e.g. C4.1 exact solvers, C2 v0 scorers) when adding v1; ablations compare against them.
 - Never report a novelty gain without the matching relevance number.
 - D9: abilities (`StudentRecord`, requirement gaps) never filter or rerank recommendations; C2 must not read them.
-- D13: module A (C0, C1, C2, C6, `pipeline`, `report`) never imports module B (C3, C4, `application`). Module B is deferred: bug fixes only, no new work items (ROADMAP "模組 B").
+- D13: the core (C0, C1, C2, C6, `pipeline`, `report`) never imports the future extension (C3, C4, `application`). The extension is out of scope: bug fixes only, no new work items (ROADMAP Phase 7).
 - Status lives in one file per kind (see CONTRIBUTING.md "Single sources of truth"); new findings get a row in `results/FINDINGS.md`. Verify every number written into a findings file against the raw results before committing.
 - Simulation (L3) conclusions must hold under both truth functions and both generator families (`needs_model`).
 - Tuning parameters in simulation: write the selection rule into the script first (pre-registration), select on one generator, validate on the other, then confirm on fresh seeds. A candidate chosen after seeing held-out results must be re-confirmed on new seeds before use.

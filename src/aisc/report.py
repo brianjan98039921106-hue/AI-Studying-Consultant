@@ -73,12 +73,13 @@ def render_profile_report(
     completed: StudentProfile,
     result: DiscoveryResult,
     gaps: Mapping[str, RequirementGap] | None = None,
-    plan=None,
     today: date | None = None,
 ) -> str:
     """Markdown report. `profile` is what the student answered, `completed` the
     profile actually used for ranking (pipeline.prepare_profile or the C1.3
-    posterior); `plan` is an optional application.ApplicationPlan (module B, application mode)."""
+    posterior). Core only (D13): needs, recommendations and requirement gaps. The
+    application-planning section is a future extension, rendered separately by
+    `aisc.application.render_plan_section`."""
     if profile.student_id != completed.student_id or profile.dims != completed.dims:
         raise ValueError("profile and completed profile must be the same student and dims")
     completed.require_complete("report")
@@ -89,8 +90,6 @@ def render_profile_report(
     warn = []
     if any(p.synthetic for p in shown):
         warn.append("**學程資料是合成的示範資料，不是真實學程，不能用來做決定。**")
-    if plan is not None and plan.assumed:
-        warn.append("錄取機率是**假設值**（未使用 C3 模型），申請組合與期望效用只供示範。")
     if any(k not in profile.needs for k in completed.needs):
         warn.append("部分需求維度學生沒有作答，由系統依先驗補全（下表標示「補全」與不確定性）。")
     if warn:
@@ -120,20 +119,8 @@ def render_profile_report(
     if gaps:
         L += ["條件差距只顯示「還缺什麼」，**不會**影響上面的排序（D9）；"
               "「官網未列條件」不代表沒有門檻。", ""]  # fmt: skip
-    if plan is not None:
-        names = {p.program_id: f"{p.degree_name}（{p.school}）" for p in shown}
-        L += ["## 4. 申請組合（申請模式）", "",
-              f"- 方法：{plan.result.method}",
-              "- 建議申請：" + "、".join(names.get(i, i) for i in plan.chosen_ids),
-              "- 期望效用（各校錄取互相獨立的假設下）："
-              f"{plan.result.expected_utility:.1f}"]  # fmt: skip
-        corr = {r: v for r, v in plan.value_if_correlated.items() if r > 0}
-        if corr:
-            L.append("- 若各校錄取結果相關（同一份申請的整體競爭力是共同因素）："
-                     + "、".join(f"ρ = {r}：{v:.1f}" for r, v in corr.items())
-                     + "（相關越高越低；真實 ρ 未知）")  # fmt: skip
-        L.append("")
-    L += ["## 5. 限制", "",
+    L += ["## 4. 限制", "",
           "- 需求維度尚未經實證驗證（W-41）；推薦只依需求，能力與條件不影響排序。",
-          "- 契合度是模型估計，不是錄取或滿意度的保證。", ""]  # fmt: skip
+          "- 契合度是模型估計，不是錄取或滿意度的保證。",
+          "- 本報告不估計錄取機率、不建議申請組合（未來擴充）。", ""]  # fmt: skip
     return "\n".join(L)
