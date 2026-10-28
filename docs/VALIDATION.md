@@ -119,6 +119,8 @@
 
 C3、C4 暫停（[ARCHITECTURE D13](ARCHITECTURE.md)，2026-10-29）：下列狀態凍結在暫停當時，測試照常執行；V-C3-2～4 等真實資料的驗證不再列為待辦。
 
+> 真實學程目錄 v0（W-77，2026-10-28）：IPEDS 2025 碩士「學校 × CIP」＋ C0.2 職業剖面，強度與取向未測量（B-C0-18 🟡、A-C0-15）；建置時發現的 B-C1-32（錨點的未測量維度被當成證據）已修並由探針鎖定。
+
 | 部件 | G0 | G1 | G2 | G3 |
 |---|---|---|---|---|
 | C0 | ✅ C0.1、C0.2 v1 | ✅ loader、參考表（`test_c0_reference.py`） | W-14／W-15 真實資料建置完成，計數與職業剖面經獨立重算一致（[F48–F53](../results/reference-w14-w15-findings.md)）；全領域參考表 v3（W-65、W-70）建置完成並經獨立重算（[F94–F96](../results/reference-all-v3-findings.md)；B-C0-15 更正後重建），B-C0-10 🟢；B-C0-8 🟢（非學術剖面，[F97–F98](../results/reference-all-v3-findings.md)；v1 參考剖面的探針保留）；B-C0-1 探針失敗中；C0.4 v2 融合數學 L2 ✅（`test_c0_fusion.py`，等 C0.3 證據）；B-C0-9 🟢 系列後備剖面（[F142–F143](../results/series-fallback-findings.md)） | V-C0-2～5 待 W-20 |

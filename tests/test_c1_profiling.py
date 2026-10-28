@@ -130,12 +130,8 @@ def test_b_c1_2_each_v1_mechanism_fixes_it_independently(
 
 
 @pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C1-32: an anchor's unmeasured (placeholder) dimensions shrink the student's prior SD",
-)
 def test_probe_unmeasured_anchor_dims_carry_no_evidence():
+    """B-C1-32 (fixed): an anchor's unmeasured dimensions do not inform the prior."""
     from aisc.contracts import Program
     from aisc.dimensions import DIMENSION_SETS, dims_keys
     from aisc.profiling import blend_profile_v1
