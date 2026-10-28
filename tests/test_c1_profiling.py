@@ -127,3 +127,29 @@ def test_b_c1_2_each_v1_mechanism_fixes_it_independently(
     )
     top = max(out.needs, key=out.needs.get)
     assert (top in {"domain_design", "riasec_a"}) is fixed
+
+
+@pytest.mark.probe
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="B-C1-32: an anchor's unmeasured (placeholder) dimensions shrink the student's prior SD",
+)
+def test_probe_unmeasured_anchor_dims_carry_no_evidence():
+    from aisc.contracts import Program
+    from aisc.dimensions import DIMENSION_SETS, dims_keys
+    from aisc.profiling import blend_profile_v1
+
+    keys = dims_keys("v2")
+    # the layers a catalogue without curriculum evidence cannot measure (A-C0-15)
+    gap = tuple(d.key for d in DIMENSION_SETS["v2"] if d.layer in ("intensity", "orientation"))
+    attrs = {k: 0.3 for k in keys} | {k: 0.5 for k in gap}
+    anchor = Program("a", "S", "MS X", "11.0701", attrs, dims="v2", unmeasured=gap, synthetic=True)
+    other = Program("b", "S", "MS Y", "52.0201", attrs, dims="v2", synthetic=True)
+    catalog = {"a": anchor, "b": other}
+    needs = {"riasec_i": 0.8}
+    with_anchor = blend_profile_v1(StudentProfile("s", needs, anchors=["a"], dims="v2"), catalog)
+    without = blend_profile_v1(StudentProfile("s", needs, dims="v2"), catalog)
+    for k in gap:
+        assert with_anchor.uncertainty[k] == pytest.approx(without.uncertainty[k])
+        assert with_anchor.needs[k] == pytest.approx(without.needs[k])

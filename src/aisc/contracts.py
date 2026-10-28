@@ -74,11 +74,19 @@ class Program:
     retrieved_at: str | None = None  # ISO date
     prestige: float | None = None  # perceived prestige in [0, 1]; used by C5 and V-C2-4
     dims: str = "v1"  # dimension set of `attributes` (W-16c)
+    # Dimensions with no measurement for this programme (e.g. intensity and orientation
+    # before C0.3 curriculum evidence exists). Their `attributes` value is a placeholder
+    # shared by the whole catalogue (A-C0-15), and reports must not cite them as reasons.
+    unmeasured: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if self.prestige is not None and not 0 <= self.prestige <= 1:
             raise ValueError("prestige must lie in [0, 1]")
-        dims_keys(self.dims)  # validates the name
+        keys = dims_keys(self.dims)  # validates the name
+        object.__setattr__(self, "unmeasured", tuple(self.unmeasured))
+        bad = set(self.unmeasured) - set(keys)
+        if bad:
+            raise ValueError(f"unmeasured dimensions not in {self.dims}: {sorted(bad)}")
 
     @cached_property
     def vector(self) -> np.ndarray:
