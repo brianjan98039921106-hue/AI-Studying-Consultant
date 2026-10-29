@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.4.2 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.4.3 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -48,7 +48,7 @@
 | 錄取機率估計 | C3 | ⏸ 暫停（D13）：v0.2 模型、資料載入與校準工具保留，只在合成資料驗證過（§9.2） | — |
 | 顧問介面／側寫報告 | Phase 5 | 🟡 報告 v0 可用（Markdown，§4.10）；介面未開始 | ⚠️ 會自動標示合成資料與補全的維度 |
 
-**一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 報告」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。錄取機率與申請組合暫停（D13）。
+**一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 報告」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。錄取機率與申請組合暫停（D13）。本專案定位為**學生自助工具**（D14），問卷真題目與網頁介面開發中。
 <!-- AUTO:status END -->
 
 ## 最近更新
@@ -58,23 +58,23 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](docs/privacy-notice.md)）；用法沒有改變 | D14 |
 | 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
 | 2026-10-29 | v0.4.1 | 新增實驗中的真實學程目錄 v0（`aisc.catalog.real.load_real_catalog_v0`、`scripts/build_real_catalog.py`，§4.11）；`Program` 新增 `unmeasured` 欄位；報告標示未測量維度與低信心剖面，且不以未測量維度當理由；錨點的未測量維度不再當作先驗證據（B-C1-32） | W-77 |
-| 2026-10-29 | v0.4.0 | 範圍調整（D13）：錄取機率模型（C3）與申請組合（C4）暫停，主線流程到推薦、條件差距與報告為止；程式與介面保留，用法移到 §9；示範程式不再計算申請組合 | D13 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
 
 <!-- AUTO:next-steps START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-來源：[docs/ROADMAP.md](docs/ROADMAP.md) （依證據排序，2026-10-29 更新；C3、C4 暫停，D13）
+來源：[docs/ROADMAP.md](docs/ROADMAP.md) （2026-10-29 更新：學生自助工具，D14；C3、C4 暫停，D13）
 
 | 順序 | 工項 | 依據 |
 |---|---|---|
-| 1 | **W-20** 黃金標準（需第二位評分者）＋ W-76 刺激物選定 | W-76 的配對設計與分析方法都要等實際刺激物（F99–F101）；C0.3 跨領域檢驗 |
-| 2 | **W-41** 題庫 v2：回譯、認知訪談（官方原文已核對；[item-bank-v2.md](docs/item-bank-v2.md)） | 實測前置（[study-protocol.md](docs/study-protocol.md) §8） |
-| 3 | **W-76** 配對設計＋「區分兩種假設」的預先登記參數還原 | 精確份量估不準，區分假設可行（F101） |
-| 4 | **W-40／W-41／W-76** 實測（待 study-protocol §7 決策） | 只有真實資料能決定 v2 是否值得（B-C5-8） |
-| 5 | **W-73** 測量恆等性與 DIF 的分析預先登記（施測前） | D11：題目對所有背景等值才能比較分數；W-41 同一批資料 |
+| 1 | **W-52** 問卷換成真題目：v2 題庫（73 題）接成學生自填的問卷流程，產生 v2 需求剖面 | 程式內仍是抽象占位題；沒有省題方案不劣於全答（F180–F183），自助版先全答 |
+| 2 | **W-77** 真實學程目錄 v0 補強度與取向（W-21 課程擷取；W-20 可由單一審核者人工檢查，D14） | 目前只依興趣與領域排序（§4.11） |
+| 3 | **W-53** 學生自助介面（網頁）：同意 → 作答 → 熟悉度確認 → 推薦 → 報告 | 目前只有 Python API 與 Markdown 報告 |
+| 4 | **W-40** 個資告知與同意（[privacy-notice.md](docs/privacy-notice.md) 範本） | 學生資料屬個人資料（個資法），不是研究倫理 |
+| 5 | **W-41** 題目試答 3–5 人：看得懂、答得出來就修，不做信效度研究 | D14 |
 <!-- AUTO:next-steps END -->
 
 ## 文件導覽

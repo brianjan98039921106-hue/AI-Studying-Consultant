@@ -1,5 +1,7 @@
 # 實測研究方案：側寫信效度 ＋ 需求層權重 ＋ 重測（W-40、W-41、W-76）
 
+> **⏹ 不執行（[ARCHITECTURE D14](ARCHITECTURE.md)，2026-10-29）**：本專案定位為學生自助工具，不做研究。以下方案與分析腳本（`analyze_w41_study.py`、`analyze_w73_invariance.py`）保留作為參考；產品檢查見 [ROADMAP](ROADMAP.md) 下一步。
+
 > 狀態：**草案 v0**（2026-10-27）。尚未施測、尚未收集任何真實資料。
 > 目的：一次施測同時回答三個問題。(1) 題目可不可靠：W-41、V-C1-5～7、V-C1-9。(2) 真實學生判斷「契合」時各層佔多少份量：W-76，用來解開 W-16c 的 B-C5-8。(3) 作答誤差多大：SIMEX 校正需要，見 F86、F90。
 > 依據：[layer-weights.md](layer-weights.md)、[F85–F90](../results/FINDINGS.md)、CONTRIBUTING.md「Personal data」。
