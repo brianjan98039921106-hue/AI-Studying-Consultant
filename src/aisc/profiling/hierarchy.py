@@ -129,8 +129,10 @@ def areas_to_ask(
     """Stage-2 question order (dimensions-v2 §2, W-66): the areas of the highest-rated
     group first (areas_in_group order, cross-linked areas once), then the next group.
     `m` keeps the areas of the top m groups; `q` cuts the list to q areas. Neither has
-    a default: the pre-registered choice is still open (dimensions-v2 §5; F115 is
-    occupation-data evidence only). Ties between groups go to the lower group id."""
+    a default: the pre-registered L3 choice (W-66, scripts/run_l3_two_stage.py)
+    found no m or q that is non-inferior to answering all areas under both
+    generators (F180-F181); F115 is occupation-data evidence only. Ties between
+    groups go to the lower group id."""
     validate_group_scores(group_scores)
     if m is None and q is None:
         raise ValueError("give m (groups) or q (areas)")
