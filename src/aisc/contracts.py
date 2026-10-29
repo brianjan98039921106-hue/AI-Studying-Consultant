@@ -269,6 +269,10 @@ class StudentRecord:
     `planned`:   taxonomy category -> expected completion (ISO date or free text).
     `target_apply_by`: ISO date set BY THE STUDENT; None = exploring, no deadline
     is assumed (D9).
+    `online_only`: completed categories whose only evidence is online courses; a
+    program with `accepts_online=False` does not count them as met (B-C6-11).
+    `unmapped`: course / exam name -> reason, for entries the intake could not map
+    to a category (W-61); shown for manual mapping, never counted as met.
     """
 
     student_id: str
@@ -276,6 +280,8 @@ class StudentRecord:
     completed: dict[str, str] = field(default_factory=dict)
     planned: dict[str, str] = field(default_factory=dict)
     target_apply_by: str | None = None
+    online_only: set[str] = field(default_factory=set)
+    unmapped: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)

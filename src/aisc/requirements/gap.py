@@ -4,6 +4,8 @@ Rules (docs/components/C6-requirements.md):
 - every program passed in gets a RequirementGap: C6 never drops a program;
 - an item is 'met' only if its category is in StudentRecord.completed, 'planned'
   if in StudentRecord.planned, 'unknown' if it has no category, else 'missing';
+- completed evidence that is online only (StudentRecord.online_only) does not
+  meet an item whose program states accepts_online=False (B-C6-11);
 - 'before_target' is filled only when the student set target_apply_by, and lists
   missing required items that the program does not let admitted students finish
   later; C6 does not estimate how long a gap takes to close (no source for it).
@@ -42,6 +44,9 @@ def _check(items: Iterable[RequirementItem], record: StudentRecord,
     unknown = (set(record.completed) | set(record.planned)) - every
     if unknown:
         raise ValueError(f"student record uses unknown categories {sorted(unknown)}")
+    stray = set(record.online_only) - set(record.completed)
+    if stray:
+        raise ValueError(f"online_only categories {sorted(stray)} are not in completed")
 
 
 def compute_gap(
@@ -58,7 +63,9 @@ def compute_gap(
     for it in items:
         if it.category is None:
             unknown.append(it)
-        elif it.category in record.completed:
+        elif it.category in record.completed and not (
+            it.accepts_online is False and it.category in record.online_only
+        ):
             met.append(it)
         elif it.category in record.planned:
             planned.append(it)

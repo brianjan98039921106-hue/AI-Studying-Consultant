@@ -76,3 +76,41 @@ def test_report_shows_gaps_without_changing_order(catalog):
     md2 = render_profile_report(profile, completed, result,
                                 gaps={other: RequirementGap(other)})  # fmt: skip
     assert "條件皆已符合" in md2
+
+
+def test_report_gap_cards_from_intake_record(catalog):
+    """W-61: intake -> C6 gaps -> gap cards with the student's evidence; the order of
+    recommendations is the same with or without the record (D9)."""
+    from pathlib import Path
+
+    from aisc.contracts import RequirementItem
+    from aisc.profiling import load_student_record
+    from aisc.requirements import compute_gaps
+
+    root = Path(__file__).resolve().parents[1]
+    rec = load_student_record(root / "data" / "synthetic" / "student_record_example.json").record
+    profile, completed, result = _run(catalog)
+    profile = StudentProfile(rec.student_id, NEEDS)
+    completed = prepare_profile(profile, catalog)
+    ids = [r.program.program_id for r in (*result.discoveries, *result.known_good)]
+    src = ("https://example.edu/fixture", "2026-10-29")
+    items = [
+        RequirementItem(ids[0], "course", "calculus_1", "required", "One term of calculus", *src),
+        RequirementItem(ids[0], "course", "probability", "required", "Probability theory", *src),
+        RequirementItem(ids[0], "course", "programming_intro", "recommended", "Python", *src),
+        RequirementItem(ids[0], "test", "gre", "required", "GRE General Test", *src),
+    ]
+    gaps = compute_gaps(ids, items, rec)
+    plain = render_profile_report(profile, completed, result, gaps=gaps, today=date(2026, 10, 29))
+    md = render_profile_report(profile, completed, result, gaps=gaps, record=rec,
+                               today=date(2026, 10, 29))  # fmt: skip
+    assert "## 4. 條件差距卡" in md and "「Probability theory」" in md
+    assert "你的紀錄：微積分（一）" in md and "你的規劃：GRE：預計 2027-03" in md
+    assert "僅線上修課" in md  # Python programming was online, page says nothing
+    assert "待人工對應" in md and "| 作業研究 |" in md and "| 計算機概論 |" in md
+    assert "不比對分數" in md  # B-C6-12 warning
+    head = md.split("## 4.")[0]
+    assert head == plain.split("## 4.")[0]  # tables and order unchanged by the record
+    with pytest.raises(ValueError, match="another student"):
+        render_profile_report(profile, completed, result, gaps=gaps,
+                              record=type(rec)("someone-else"))  # fmt: skip

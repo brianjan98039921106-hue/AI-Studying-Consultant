@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.4.1 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.4.2 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -41,7 +41,8 @@
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 真實學程目錄 v0（IPEDS 碩士 × 職業興趣） | C0（W-77） | 🧪 實驗中（§4.11）：17,552 個真實學程（v2 維度）；強度與取向**尚未測量** | ⚠️ 只依興趣與領域排序；同一學門的學校分數相同 |
-| 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
+| 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用；報告附差距卡（官網原文＋學生紀錄並列） | ❌ 尚無真實學程條件資料（W-20） |
+| 學經歷輸入（學位、修課、考試、經驗 → `StudentRecord`） | C1、C6.4 | ✅ 可用（JSON 輸入、欄位檢查、台灣課名對應表 draft-1） | ⚠️ 課名對應表待使用者確認；只比對「有沒有修／考」，不比對最低分數（B-C6-12） |
 | 申請組合最佳化（選哪幾間申請） | C4.1–C4.4 | ⏸ 暫停（D13）：程式與介面保留（`plan_applications`、`AdmitEstimate`），不在主線流程（§9.1） | — |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⏸ 暫停（D13）：v0.2 模型、資料載入與校準工具保留，只在合成資料驗證過（§9.2） | — |
@@ -57,9 +58,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
 | 2026-10-29 | v0.4.1 | 新增實驗中的真實學程目錄 v0（`aisc.catalog.real.load_real_catalog_v0`、`scripts/build_real_catalog.py`，§4.11）；`Program` 新增 `unmeasured` 欄位；報告標示未測量維度與低信心剖面，且不以未測量維度當理由；錨點的未測量維度不再當作先驗證據（B-C1-32） | W-77 |
 | 2026-10-29 | v0.4.0 | 範圍調整（D13）：錄取機率模型（C3）與申請組合（C4）暫停，主線流程到推薦、條件差距與報告為止；程式與介面保留，用法移到 §9；示範程式不再計算申請組合 | D13 |
-| 2026-10-28 | v0.3.19 | 申請結果資料的範本、載入器（隱私欄位檢查、標準化、缺漏處理）與時間切分校準檢查腳本（§4.9、[data-intake.md](docs/data-intake.md)） | W-44 C3.1 |
 <!-- AUTO:changelog END -->
 
 ## 下一步

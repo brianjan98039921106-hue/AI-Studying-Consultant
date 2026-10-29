@@ -9,6 +9,9 @@ assumption or on synthetic data is labelled as such:
       and those dimensions are never cited as reasons (A-C0-15)
     - profiles from the low-confidence series fallback -> a banner
     - dimensions the student did not answer -> shown as completed by C1.2, with SD
+Gap cards (W-61) quote each requirement verbatim with its source and, when the
+StudentRecord is given, the student's own evidence next to it; course names the
+intake could not map are listed for manual mapping.
 """
 
 from __future__ import annotations
@@ -16,7 +19,15 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 
-from aisc.contracts import DiscoveryResult, Program, Recommendation, RequirementGap, StudentProfile
+from aisc.contracts import (
+    DiscoveryResult,
+    Program,
+    Recommendation,
+    RequirementGap,
+    RequirementItem,
+    StudentProfile,
+    StudentRecord,
+)
 from aisc.dimensions import DIMENSION_SETS, LAYERS
 
 LAYER_ZH = {"interest": "興趣", "intensity": "強度", "domain": "領域", "orientation": "取向"}
@@ -71,6 +82,53 @@ def _rec_table(recs, dims, gaps) -> list[str]:
     return [*rows, ""]
 
 
+def _item_line(it: RequirementItem) -> str:
+    cat = it.category or "（無對應類別）"
+    return f"{cat}：「{it.text}」（[官網]({it.source_url})，{it.retrieved_at}）"
+
+
+def _gap_cards(shown: list[Program], gaps, record: StudentRecord | None) -> list[str]:
+    L = ["## 4. 條件差距卡", "",
+         "每張卡引用官網原文。條件差距只呈現、不影響排序（D9）。"
+         "考試與成績只比對「有沒有」，**不比對分數是否達到官網最低要求**，"
+         "請把下方你的紀錄與原文自行對照。", ""]  # fmt: skip
+    evidence = record.completed if record else {}
+    plans = record.planned if record else {}
+    online = record.online_only if record else set()
+    for p in shown:
+        gap = gaps.get(p.program_id)
+        if gap is None:
+            continue
+        L += [f"### {p.degree_name}（{p.school}）", ""]
+        if gap.none_published:
+            L += ["- 官網未列條件：不代表沒有門檻。", ""]
+            continue
+        for it in gap.missing:
+            lvl = "必修" if it.level == "required" else "建議"
+            L.append(f"- 缺少（{lvl}）：{_item_line(it)}")
+        for it in gap.before_target:
+            L.append(f"- 申請前須完成（錄取後不能補）：{_item_line(it)}")
+        for it in gap.planned:
+            mine = plans.get(it.category or "")
+            L.append(f"- 規劃中：{_item_line(it)}" + (f" — 你的規劃：{mine}" if mine else ""))
+        for it in gap.met:
+            mine = evidence.get(it.category or "")
+            note = ""
+            if it.category in online and it.accepts_online is None:
+                note = "（僅線上修課；官網未載明是否接受線上學分）"
+            L.append(f"- 已符合：{_item_line(it)}" + (f" — 你的紀錄：{mine}{note}" if mine else ""))
+        for it in gap.unknown:
+            L.append(f"- 無法判讀（不當作已符合）：「{it.text}」（[官網]({it.source_url})）")
+        L.append("")
+    if record and record.unmapped:
+        L += ["### 待人工對應的課程與考試", "",
+              "以下名稱沒有自動對應到條件類別（對應表 draft，待確認），"
+              "所以在上面的卡片中**不會**算成已符合；請和顧問確認後在輸入檔加上 `categories`。", "",
+              "| 名稱 | 原因 |", "|---|---|"]  # fmt: skip
+        L += [f"| {n} | {why} |" for n, why in record.unmapped.items()] + [""]
+    return L
+
+
 def render_profile_report(
     profile: StudentProfile,
     completed: StudentProfile,
@@ -78,12 +136,17 @@ def render_profile_report(
     gaps: Mapping[str, RequirementGap] | None = None,
     plan=None,
     today: date | None = None,
+    record: StudentRecord | None = None,
 ) -> str:
     """Markdown report. `profile` is what the student answered, `completed` the
     profile actually used for ranking (pipeline.prepare_profile or the C1.3
-    posterior); `plan` is an optional pipeline.ApplicationPlan (application mode)."""
+    posterior); `plan` is an optional pipeline.ApplicationPlan (application mode);
+    `record` (optional, with `gaps`) adds the student's evidence to the gap cards
+    and lists course names that still need manual mapping."""
     if profile.student_id != completed.student_id or profile.dims != completed.dims:
         raise ValueError("profile and completed profile must be the same student and dims")
+    if record is not None and record.student_id != profile.student_id:
+        raise ValueError("record belongs to another student")
     completed.require_complete("report")
     dims = completed.dims
     shown: list[Program] = [r.program for r in (*result.discoveries, *result.known_good)]
@@ -130,9 +193,10 @@ def render_profile_report(
     if gaps:
         L += ["條件差距只顯示「還缺什麼」，**不會**影響上面的排序（D9）；"
               "「官網未列條件」不代表沒有門檻。", ""]  # fmt: skip
+        L += _gap_cards(shown, gaps, record)
     if plan is not None:
         names = {p.program_id: f"{p.degree_name}（{p.school}）" for p in shown}
-        L += ["## 4. 申請組合（申請模式）", "",
+        L += ["## 5. 申請組合（申請模式）", "",
               f"- 方法：{plan.result.method}",
               "- 建議申請：" + "、".join(names.get(i, i) for i in plan.chosen_ids),
               "- 期望效用（各校錄取互相獨立的假設下）："
@@ -143,7 +207,7 @@ def render_profile_report(
                      + "、".join(f"ρ = {r}：{v:.1f}" for r, v in corr.items())
                      + "（相關越高越低；真實 ρ 未知）")  # fmt: skip
         L.append("")
-    L += ["## 5. 限制", "",
+    L += ["## 6. 限制", "",
           "- 需求維度尚未經實證驗證（W-41）；推薦只依需求，能力與條件不影響排序。",
           "- 契合度是模型估計，不是錄取或滿意度的保證。", ""]  # fmt: skip
     return "\n".join(L)

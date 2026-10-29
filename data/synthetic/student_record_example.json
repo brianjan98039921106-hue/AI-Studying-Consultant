@@ -1,0 +1,29 @@
+{
+  "schema": "student_record_intake/1",
+  "student_id": "demo-w61",
+  "synthetic": true,
+  "target_apply_by": null,
+  "degrees": [
+    {"level": "bachelor", "field": "企業管理（虛構示範）", "cip": "52.0201", "year": 2025}
+  ],
+  "courses": [
+    {"name": "微積分（一）", "credits": 3, "grade": "A-"},
+    {"name": "微積分（二）", "credits": 3, "grade": 72},
+    {"name": "商用統計學", "credits": 3, "grade": "B+"},
+    {"name": "經濟學（一）", "credits": 3, "grade": "A"},
+    {"name": "會計學（上）", "credits": 3, "grade": 58},
+    {"name": "會計學（下）", "credits": 3, "grade": 81},
+    {"name": "Python程式設計", "credits": 2, "grade": "通過", "online": true},
+    {"name": "計算機概論", "credits": 3, "grade": "A"},
+    {"name": "作業研究", "credits": 3, "grade": "A+"},
+    {"name": "線性代數", "credits": 3, "status": "planned", "expected": "2027 春季"}
+  ],
+  "exams": [
+    {"name": "TOEFL iBT", "score": "95", "date": "2026-08"},
+    {"name": "GRE", "status": "planned", "expected": "2027-03"}
+  ],
+  "experience": [
+    {"category": "work_experience", "description": "新創公司產品經理（虛構示範）", "months": 18}
+  ],
+  "other": []
+}
