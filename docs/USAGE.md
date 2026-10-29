@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-29 · 對應版本 v0.4.3（研究原型）
+最後更新：2026-10-29 · 對應版本 v0.4.4（研究原型）
 
 ---
 
@@ -17,6 +17,7 @@
 | 輸入需求（15 個維度）＋ 未作答維度自動補全 | C1.1、C1.2 | ✅ 可用 | ⚠️ 維度尚未經實證驗證（W-41） |
 | 大考中心興趣量表分數作為先驗 | C1.1 | ✅ 可用 | ⚠️ 參數未校準（A-C1-8） |
 | 自適應問卷（自動挑下一題） | C1.3 | 🟡 可用，題目為抽象占位題 | ❌ 真實題目文字待 W-41 |
+| 學生自填問卷（73 題真題目）＋終端機自助流程 | C1.1、C1.2 | 🧪 可用（§4.12）：全答、可跳題、v2 剖面；`examples/self_service.py` 從同意到報告 | ⚠️ 題目尚未試答（W-41）；推薦目錄是真實目錄 v0（強度與取向未測量） |
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 真實學程目錄 v0（IPEDS 碩士 × 職業興趣） | C0（W-77） | 🧪 實驗中（§4.11）：17,552 個真實學程（v2 維度）；強度與取向**尚未測量** | ⚠️ 只依興趣與領域排序；同一學門的學校分數相同 |
@@ -403,6 +404,33 @@ print([r.program.degree_name for r in found.discoveries][:2])
 
 也可以先寫成檔案：`python scripts/build_real_catalog.py`（輸出 `data/catalog/real_v0.jsonl`，不進版控），再用 `load_programs` 讀取。
 
+### 4.12 學生自填問卷（73 題真題目）與終端機自助流程
+
+學生自己作答 v2 題庫的 73 題（興趣 12、強度與取向 8、領域群 12、細分領域 41），每題 5 個選項、都可以跳過。細分領域依學生對領域群的作答排序（最有興趣的群先問），只影響順序、不影響計分。計分：(答案 − 1)/4，同一維度取平均；跳過的維度交由補全（`prepare_profile`）。全部都問，是因為模擬中沒有任何省題方案不比全答差（[F180–F183](../results/FINDINGS.md)）。題目尚未經 3–5 人試答（W-41），先當作草案使用。
+
+```python
+from aisc.catalog.real import load_real_catalog_v0
+from aisc.pipeline import interactive_discovery, merge_identical_programs
+from aisc.profiling.questionnaire import Questionnaire
+
+qs = Questionnaire()  # 讀 data/items/item_bank_v2.json
+while qs.next_page():  # 依序：核心 20 題 → 領域群 12 題 → 細分領域 41 題
+    for q in qs.next_page():
+        qs.answer(q.item_id, 4 if q.dimension in ("riasec_i", "quant_intensity") else 2)
+student_q = qs.profile("self-demo")  # v2 需求剖面（含 group_scores）
+print(qs.progress(), round(student_q.needs["riasec_i"], 2))
+
+types, members = merge_identical_programs(load_real_catalog_v0().programs)
+found_q = interactive_discovery(
+    student_q, types, lambda ids: {i: "unknown" for i in ids}, k_new=5, k_known=0
+)
+print([r.program.degree_name for r in found_q.discoveries][:2])
+```
+
+真實目錄 v0 中同一學門所有學校的分數相同，`merge_identical_programs` 先把它們合併成一個「學位類型」（`members` 列出開設的學校），清單才不會被同一學門佔滿（B-C2-30）。學費、STEM OPT 等條件欄位不同的學校不會被合併（B-C2-31）；學位類型代號在每次執行都相同；原本以學程代號記下的錨點，用 `pipeline.to_type_ids(ids, members)` 轉成學位類型代號（B-C2-32）。
+
+學生自己在終端機使用：`python examples/self_service.py`。流程是個資告知與同意（[privacy-notice.md](privacy-notice.md)）→ 73 題 → 熟悉度確認（以學位類型詢問）→ 推薦 → 報告存在 `data/private/`（不進版控）。不需要姓名或聯絡方式；沒有任何作答時不產生推薦，跳過超過一半會提醒；報告檔名每次不同，結尾提醒在共用電腦上看完就刪除。網頁介面是 W-53。
+
 ---
 
 ## 5. 給顧問：建議的使用流程（目前階段）
@@ -482,6 +510,7 @@ print([r.program.degree_name for r in found.discoveries][:2])
 | 2026-10-29 | v0.4.1 | 新增實驗中的真實學程目錄 v0（`aisc.catalog.real.load_real_catalog_v0`、`scripts/build_real_catalog.py`，§4.11）；`Program` 新增 `unmeasured` 欄位；報告標示未測量維度與低信心剖面，且不以未測量維度當理由；錨點的未測量維度不再當作先驗證據（B-C1-32） | W-77 |
 | 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
 | 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](privacy-notice.md)）；用法沒有改變 | D14 |
+| 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs` 與 `to_type_ids`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
 
 ---
 
