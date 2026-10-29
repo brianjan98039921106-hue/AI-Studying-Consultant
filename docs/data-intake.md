@@ -1,5 +1,7 @@
 # 申請結果資料：怎麼準備、怎麼檢查（C3.1）
 
+> **⏸ 暫停（[ARCHITECTURE D13](ARCHITECTURE.md)，2026-10-29）**：錄取機率模型不在目前範圍，現在不需要準備這些資料。範本、載入器與檢查腳本保留，範圍重新納入時照本文件使用。
+
 > 對象：要把歷年申請結果交給 C3 錄取模型的顧問。資料只放在 `data/private/`（已設定不會提交到 GitHub）。
 > 模型與檢驗依據：[components/C3-feasibility.md](components/C3-feasibility.md)、[F128–F150](../results/FINDINGS.md)。目前模型**只在合成資料驗證過**，這份資料就是用來做真實檢驗（V-C3-2～4）。
 

@@ -1,4 +1,5 @@
 """AI Studying Consultant: profile students, surface programs they never
-considered, and optimise the application portfolio."""
+considered. Admission feasibility (C3) and application portfolios (C4) are paused,
+interface kept (docs/ARCHITECTURE.md D13)."""
 
-__version__ = "0.3.19"
+__version__ = "0.4.0"

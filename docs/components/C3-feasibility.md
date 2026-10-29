@@ -1,5 +1,7 @@
 # C3 錄取可行性
 
+> **⏸ 暫停（[ARCHITECTURE D13](../ARCHITECTURE.md)，2026-10-29）**：錄取可行性不在目前範圍。程式與測試凍結保留、不新增功能；介面（`AdmitEstimate`、`plan_applications`）由 `tests/test_interface_freeze.py` 固定。以下規格保留供日後接回。
+
 **目的**：估計 $P(\text{admit} \mid \text{學生}, \text{學程})$，並誠實表達不確定性。
 **輸出契約**：`contracts.AdmitEstimate`（`mean`、`low`、`high`、`method`）——下游必須使用區間。
 **原則**：沒有以真實申請結果擬合的模型時，任何地方使用的錄取機率都必須以 `AdmitEstimate(method="assumed")` 明確標示為假設值；C3.2 v0.2 的估計會以 `method="hierarchical_v0.2_…"` 標示，目前只在合成資料驗證。

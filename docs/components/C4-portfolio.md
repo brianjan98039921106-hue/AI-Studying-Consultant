@@ -1,5 +1,7 @@
 # C4 申請組合
 
+> **⏸ 暫停（[ARCHITECTURE D13](../ARCHITECTURE.md)，2026-10-29）**：申請組合不在目前範圍。程式與測試凍結保留、不新增功能；介面（`AdmitEstimate`、`plan_applications`）由 `tests/test_interface_freeze.py` 固定。以下規格保留供日後接回。
+
 **目的**：在申請預算內選出期望結果最好的申請組合，並量化模型假設造成的誤差。
 **輸入**：`Recommendation`（→ 效用）、`AdmitEstimate`（→ 機率區間）、申請成本與預算
 **輸出契約**：`contracts.PortfolioResult`
