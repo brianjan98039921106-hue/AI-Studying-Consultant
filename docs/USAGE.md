@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-29 · 對應版本 v0.4.4（研究原型）
+最後更新：2026-10-29 · 對應版本 v0.4.5（研究原型）
 
 ---
 
@@ -26,6 +26,7 @@
 | 申請組合最佳化（選哪幾間申請） | C4.1–C4.4 | ⏸ 暫停（D13）：程式與介面保留（`plan_applications`、`AdmitEstimate`），不在主線流程（§9.1） | — |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⏸ 暫停（D13）：v0.2 模型、資料載入與校準工具保留，只在合成資料驗證過（§9.2） | — |
+| 學生自助網頁 | Phase 5（W-53） | 🧪 v0 可用（§4.13）：瀏覽器內計算、不上傳；結果與 Python 模型逐項比對一致 | ⚠️ 題目尚未試答（W-41）；目錄強度與取向未測量 |
 | 顧問介面／側寫報告 | Phase 5 | 🟡 報告 v0 可用（Markdown，§4.10）；介面未開始 | ⚠️ 會自動標示合成資料與補全的維度 |
 
 **一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 報告」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。錄取機率與申請組合暫停（D13）。本專案定位為**學生自助工具**（D14），問卷真題目與網頁介面開發中。
@@ -431,6 +432,18 @@ print([r.program.degree_name for r in found_q.discoveries][:2])
 
 學生自己在終端機使用：`python examples/self_service.py`。流程是個資告知與同意（[privacy-notice.md](privacy-notice.md)）→ 73 題 → 熟悉度確認（以學位類型詢問）→ 推薦 → 報告存在 `data/private/`（不進版控）。不需要姓名或聯絡方式；沒有任何作答時不產生推薦，跳過超過一半會提醒；報告檔名每次不同，結尾提醒在共用電腦上看完就刪除。網頁介面是 W-53。
 
+### 4.13 學生自助網頁
+
+`web/index.html` 是給學生自己用的網頁：同意 → 三段 73 題 → 勾選聽過哪些學門 → 結果（「你可能沒想過」「你已經知道、而且適合」、為什麼適合、開設學校、需求剖面），可以複製結果。全部在瀏覽器裡計算，作答不會上傳，也不會存起來；重新整理就清除。頁面只用系統字型，不向任何第三方送出請求。「為什麼適合」只列你想要的維度（補全後高於中性值 0.5，報告相同，B-C2-34）。
+
+| 用途 | 做法 |
+|---|---|
+| 本機開啟 | 在 `web/` 執行 `python -m http.server`，瀏覽器開 `http://localhost:8000` |
+| 單一檔案（不需伺服器） | `python scripts/build_web_data.py --bundle web/dist/self-service.html`（完整 HTML 文件；給會自己加外框的平台用時加 `--fragment`） |
+| 模型或目錄改了之後 | `python scripts/build_web_data.py` 重建 `web/data.json`（CI 會檢查是否最新） |
+
+網頁的計算核心 `web/engine.js` 是 Python 模型的 JavaScript 版本：問卷計分、補全、v2 預設計分器、短名單與分區推薦。CI 用 24 組作答逐項比對兩者的結果（`tests/test_web_parity.py`，A-C2-60）；改 Python 模型時要同步改 `engine.js`，否則 CI 會失敗。網頁目前用真實目錄 v0：各學門的數理、程式、研究與創業取向還沒有測量，同一學門的學校分數相同。
+
 ---
 
 ## 5. 給顧問：建議的使用流程（目前階段）
@@ -511,6 +524,7 @@ print([r.program.degree_name for r in found_q.discoveries][:2])
 | 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
 | 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](privacy-notice.md)）；用法沒有改變 | D14 |
 | 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs` 與 `to_type_ids`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
+| 2026-10-29 | v0.4.5 | 新增學生自助網頁（`web/index.html`、`web/engine.js`、`web/data.json`；`scripts/build_web_data.py` 匯出資料與打包單一檔案）：作答到結果都在瀏覽器內，不上傳（§4.13） | W-53 |
 
 ---
 

@@ -23,3 +23,6 @@ examples/out/
 
 # W-77 real catalogue v0: rebuilt by scripts/build_real_catalog.py
 data/catalog/
+
+# generated self-contained page (scripts/build_web_data.py --bundle)
+web/dist/

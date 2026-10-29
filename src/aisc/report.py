@@ -40,11 +40,22 @@ def _label(key: str, dims: str) -> str:
     return key
 
 
-def _reasons(rec: Recommendation, dims: str, n: int = 3) -> str:
-    skip = set(rec.program.unmeasured)  # placeholders are not evidence (A-C0-15)
-    items = [(k, v) for k, v in rec.contributions.items() if k not in skip]
-    top = sorted(items, key=lambda kv: -kv[1])[:n]
-    return "、".join(f"{_label(k, dims)}（{v:+.2f}）" for k, v in top if v > 0) or "—"
+REASON_MIN_NEED = 0.5  # cite only needs above the neutral value (B-C2-34)
+
+
+def reason_keys(rec: Recommendation, needs: Mapping[str, float], n: int = 3) -> list[str]:
+    """Dimensions shown as "why it fits": the largest positive contributions among
+    dimensions the student wants (completed value > 0.5, B-C2-34), excluding the
+    programme's unmeasured placeholders (A-C0-15). web/engine.js uses the same rule."""
+    skip = set(rec.program.unmeasured)
+    items = [(k, v) for k, v in rec.contributions.items()
+             if k not in skip and v > 0 and needs.get(k, 0.0) > REASON_MIN_NEED]  # fmt: skip
+    return [k for k, _ in sorted(items, key=lambda kv: -kv[1])[:n]]
+
+
+def _reasons(rec: Recommendation, dims: str, needs: Mapping[str, float], n: int = 3) -> str:
+    keys = reason_keys(rec, needs, n)
+    return "、".join(f"{_label(k, dims)}（{rec.contributions[k]:+.2f}）" for k in keys) or "—"
 
 
 def _gap_cell(gap: RequirementGap | None) -> str:
@@ -67,7 +78,7 @@ def _gap_cell(gap: RequirementGap | None) -> str:
     return "；".join(parts) or "條件皆已符合"
 
 
-def _rec_table(recs, dims, gaps) -> list[str]:
+def _rec_table(recs, dims, gaps, needs) -> list[str]:
     if not recs:
         return ["（沒有符合條件的學程）", ""]
     rows = [
@@ -78,7 +89,7 @@ def _rec_table(recs, dims, gaps) -> list[str]:
         p = r.program
         gap = (gaps or {}).get(p.program_id)
         rows.append(f"| {i} | {p.degree_name} | {p.school} | {p.cip} | {r.relevance:.2f} | "
-                    f"{_reasons(r, dims)} | {_gap_cell(gap)} |")  # fmt: skip
+                    f"{_reasons(r, dims, needs)} | {_gap_cell(gap)} |")  # fmt: skip
     return [*rows, ""]
 
 
@@ -187,9 +198,9 @@ def render_profile_report(
     L += ["", "## 2. 你可能沒想過的學程", "",
           "依契合度排序，且學生回報沒聽過；"
           "理由是各維度對契合度的精確貢獻（加總即為契合度）。", ""]  # fmt: skip
-    L += _rec_table(result.discoveries, dims, gaps)
+    L += _rec_table(result.discoveries, dims, gaps, completed.needs)
     L += ["## 3. 已知且適合的學程", ""]
-    L += _rec_table(result.known_good, dims, gaps)
+    L += _rec_table(result.known_good, dims, gaps, completed.needs)
     if gaps:
         L += ["條件差距只顯示「還缺什麼」，**不會**影響上面的排序（D9）；"
               "「官網未列條件」不代表沒有門檻。", ""]  # fmt: skip
