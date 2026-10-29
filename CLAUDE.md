@@ -16,6 +16,7 @@ A recommender that profiles Taiwanese grad-school applicants by *needs* (not pro
 - Keep reference implementations (e.g. C4.1 exact solvers, C2 v0 scorers) when adding v1; ablations compare against them.
 - Never report a novelty gain without the matching relevance number.
 - D9: abilities (`StudentRecord`, requirement gaps) never filter or rerank recommendations; C2 must not read them.
+- D14: this is a student self-service tool, not research: no ethics review, research consent forms or large validation studies (W-41/W-73/W-76 not run); real user data still follows the Personal Data Protection Act (`docs/privacy-notice.md`). Pre-registration rules for simulations still apply.
 - D13: C3 (admission feasibility) and C4 (portfolio) are paused. Keep their code and tests passing but add no features; their interface (`AdmitEstimate`, `pipeline.plan_applications`) is fixed by `tests/test_interface_freeze.py`. C0, C1, C2, C5 and C6 must not import them, and the default flow, demo and report must work without them.
 - Status lives in one file per kind (see CONTRIBUTING.md "Single sources of truth"); new findings get a row in `results/FINDINGS.md`. Verify every number written into a findings file against the raw results before committing.
 - Simulation (L3) conclusions must hold under both truth functions and both generator families (`needs_model`).
