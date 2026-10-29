@@ -65,6 +65,16 @@ PRE-REGISTERED (written and committed before the first real run, 2026-10-29)
   (provisional: synthetic only, W-41 re-checks with student data); if 1-3 hold for
   C, it becomes the documented setting for area_model="correlated" (that completion
   model stays opt-in). v1 stays the default dimension set (W-16c, unaffected).
+  REPLICATION (pre-registered 2026-10-29 after run 1, before any fresh-seed run):
+  run 1 chose nothing for H (no candidate eligible on archetype) and C-m2 for C,
+  which failed step 2 (continuous). The fresh-seed run (6700/6701/6702,
+  --confirm-c C-m2) is a replication of this negative result. Hypotheses:
+    R1: no H candidate is eligible on both generators;
+    R2: C-m2 is not eligible on the continuous generator;
+    R3: no candidate of either family is eligible on both generators.
+  R1-R3 must all hold for "no m / q passes" to be reported as replicated. Whatever
+  the outcome, no candidate becomes a default from this run (a candidate first
+  passing here was not chosen on run 1 and would need its own pre-registration).
   Disclosure: before this was written, a 20-student timing check (seeds 3/4/5, m=2)
   printed only run times and transition counts. A smoke run of this script on seeds
   6690/6691/6692 (40 students) checks that it runs; its output is seen, so those
