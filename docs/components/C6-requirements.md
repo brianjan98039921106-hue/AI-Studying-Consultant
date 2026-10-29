@@ -47,4 +47,4 @@ B-C6-1 隱性門檻被當成沒有門檻 · B-C6-2 課程類別對應錯誤 · B
 類別表 draft-1 已擴充到各領域（試演、LSAT、執照考試、教師證、學歷等值等，B-C6-4）；學歷等值依學程規定，系統不自行判斷（B-C6-5）；覆蓋率以 V-C6-4 稽核。詳見 [expansion.md](../expansion.md)。
 
 ## 工項
-W-60、W-61、W-62（見 [ROADMAP](../ROADMAP.md)）
+W-60、W-61、W-62a（見 [ROADMAP](../ROADMAP.md)）

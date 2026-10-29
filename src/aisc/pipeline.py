@@ -5,9 +5,11 @@
     interactive_discovery:
         C1.2 v1 profile completion -> C2 shortlist -> C1.4 familiarity check (ask)
         -> C2.3 v1 discover
-    plan_applications (application mode only, W-62, D9):
+    plan_applications (application mode only, W-62b, D9; paused under D13):
         recommendations + C3 AdmitEstimates -> C4.1 / C4.3 choice, with the C4.2
-        correlated-admission value of the chosen portfolio as a sensitivity check
+        correlated-admission value of the chosen portfolio as a sensitivity check.
+        C4 (aisc.portfolio) is imported lazily inside it, so the core flow never
+        loads the paused components (D13, tests/test_module_boundary.py).
 
 `ask` is whatever collects the student's answers: a UI in production, a
 simulated respondent in C5. It receives program_ids and returns
@@ -21,7 +23,6 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from aisc import portfolio as _pf
 from aisc.contracts import (
     AdmitEstimate,
     DiscoveryResult,
@@ -143,7 +144,7 @@ def interactive_discovery(
     )
 
 
-# --- application mode (W-62) ---------------------------------------------------------
+# --- application mode (W-62b) --------------------------------------------------------
 
 PLAN_CRITERIA = ("point", "worst_case", "minimax_regret")
 
@@ -182,6 +183,8 @@ def plan_applications(
     Utility defaults to 100 x relevance; cost defaults to 1 per application. The
     default criterion is the C4.1 point estimate (F110, F120-F122, F134);
     "worst_case" and "minimax_regret" use the AdmitEstimate intervals (C4.3)."""
+    from aisc import portfolio as _pf  # lazy: paused C4 stays out of the core (D13)
+
     if criterion not in PLAN_CRITERIA:
         raise ValueError(f"criterion must be one of {PLAN_CRITERIA}")
     ids = [r.program.program_id for r in recommendations]

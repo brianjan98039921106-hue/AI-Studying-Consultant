@@ -69,7 +69,8 @@ flowchart LR
 | **W-2A** ✅ | 穩健選擇 | C4.3 | `portfolio/robust.py`（最壞情況、最小化最大遺憾）、`scripts/run_l3_portfolio_robust.py` | L2 ✅（對解析值、對窮舉）；L3 V-C4-3 ✅：估計誤差代價 ≤ 3.2%，穩健準則未改善，預設維持點估計（F120–F123） | **B-C4-2** ✅ | W-29 |
 | **W-60** ✅ | 條件差距 v0：契約（`RequirementItem`、`StudentRecord`、`RequirementGap`）＋跨領域條件類別 draft-0＋確定性比對；D9 守門測試 | C6.1、C6.2 | `requirements/gap.py`、`data/reference/requirement_taxonomy.json` | G0 ✅、L2 ✅；類別表待使用者審閱 | B-C1-8、B-C6-1/2 | — |
 | W-61 | 學經歷紀錄輸入：多學位、已修課程對應類別（附台灣課名例子）、考試、經驗 | C1、C6.4 | `StudentRecord` 擷取流程 | L2；W-41 認知訪談 | B-C6-2、A-C6-2 | W-60 |
-| W-62 🟡 | 探索／申請模式（申請模式的 C3／C4 部分 ⏸ 暫停，D13）：管線輸出推薦＋差距卡；學生設定申請日期才啟動 C3／C4 | 系統 | `pipeline`；**申請組合部分已完成**：`plan_applications`（推薦＋AdmitEstimate → C4.1／C4.3，附 C4.2 敏感度；不回饋推薦） | L2 ✅（`test_pipeline_application.py`，含 D9 檢查）；差距卡與申請日期觸發待 W-61 | A-C6-3、B-C6-1 | W-60、W-61 |
+| W-62a | 探索模式（核心）：管線輸出推薦＋差距卡；預設流程與示範不載入 C3／C4（D13） | 系統 | `pipeline`、`report` 接上 C6 差距卡；核心不載入 `aisc.feasibility`／`aisc.portfolio`（`plan_applications` 內延遲載入 C4） | L2；D9 檢查；`test_module_boundary.py`（新的直譯器載入核心與執行示範） | A-C6-3、B-C6-1 | W-60、W-61 |
+| W-62b ⏸ | 申請模式（⏸ 暫停，D13）：學生設定申請日期才啟動 C3／C4 | 系統 | **申請組合部分已完成並凍結**：`plan_applications`（推薦＋AdmitEstimate → C4.1／C4.3，附 C4.2 敏感度；不回饋推薦），介面由 `test_interface_freeze.py` 固定 | L2 ✅（`test_pipeline_application.py`，含 D9 檢查）；申請日期觸發暫緩 | A-C6-3 | W-62a |
 
 ## Phase 3 — 整合與合成驗證（G2）
 
@@ -137,4 +138,4 @@ flowchart LR
 - [x] O\*NET 版本：既有檔案確認為 31.0（檔名與 8,307 筆資料符合 31.0 資料字典），不需重新下載
 - [ ] 下載 O\*NET 31.0 Specific Interest Areas 相關檔案（W-64）
 - [ ] 驗證夥伴：可接觸到的顧問與學生
-- [ ] Repo 維持 Private 或改 Public
+- [x] Repo 維持 Private 或改 Public：**改 Public**（2026-10，PR #27 完成公開前準備）
