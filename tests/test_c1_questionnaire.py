@@ -137,3 +137,82 @@ def test_merge_identical_programs_keeps_members_and_singletons():
     rep = next(p for p in merged if members[p.program_id] is big)
     assert rep.program_id.startswith("type:") and f"等 {len(big)} 所" in rep.school
     assert {p.cip for p in big} == {rep.cip} and rep.attributes == big[0].attributes
+
+
+# --- independent review of W-52 (2026-10-29): B-C2-31..33, B-C1-41 -------------------
+
+
+def _probe(reason):
+    def mark(fn):
+        return pytest.mark.probe(pytest.mark.xfail(strict=True, raises=AssertionError,
+                                                   reason=reason)(fn))  # fmt: skip
+
+    return mark
+
+
+def _real():
+    from aisc.catalog.real import load_real_catalog_v0
+
+    return load_real_catalog_v0(ROOT / "data" / "reference").programs
+
+
+@_probe("B-C2-31: merging hides fields that hard constraints read")
+def test_probe_merge_keeps_programmes_with_different_constraint_fields_apart():
+    from dataclasses import replace
+
+    from aisc.pipeline import merge_identical_programs
+
+    base = next(p for p in _real() if p.cip == "27.0501")
+    a = replace(base, program_id="a", school="A", tuition_usd=80_000)
+    b = replace(base, program_id="b", school="B", tuition_usd=20_000)
+    c = replace(base, program_id="c", school="C", tuition_usd=20_000, synthetic=True)
+    merged, members = merge_identical_programs([a, b, c])
+    assert len(merged) == 3, [len(v) for v in members.values()]
+
+
+@_probe("B-C2-32: anchors given as real programme ids are lost after merging")
+def test_probe_anchor_ids_can_be_translated_to_degree_types():
+    from aisc import pipeline
+
+    real = _real()
+    merged, members = pipeline.merge_identical_programs(real)
+    translate = getattr(pipeline, "to_type_ids", None)
+    assert translate is not None, "no helper to translate programme ids to type ids"
+    anchor = next(p for p in real if p.cip == "27.0501").program_id
+    (tid,) = translate([anchor], members)
+    assert any(m.program_id == anchor for m in members[tid])
+
+
+@_probe("B-C2-33: degree-type ids depend on input order")
+def test_probe_type_ids_are_stable_under_input_order():
+    import random
+
+    from aisc.pipeline import merge_identical_programs
+
+    real = _real()
+    ids1 = {p.cip: p.program_id for p in merge_identical_programs(real)[0]}
+    shuffled = real[:]
+    random.Random(0).shuffle(shuffled)
+    ids2 = {p.cip: p.program_id for p in merge_identical_programs(shuffled)[0]}
+    assert ids1 == ids2
+
+
+def _run_script(tmp_path, payload):
+    path = tmp_path / "a.json"
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    out = tmp_path / "r.md"
+    cmd = [sys.executable, str(ROOT / "examples" / "self_service.py"), "--answers", str(path),
+           "--out", str(out)]  # fmt: skip
+    return subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT), out
+
+
+@_probe("B-C1-41: the self-service flow accepts bad consent and answers silently")
+def test_probe_self_service_validates_consent_and_answers(tmp_path):
+    run, out = _run_script(tmp_path, {"consent": "false", "items": {}})
+    assert not out.exists(), "string 'false' was taken as consent"
+    run, out = _run_script(tmp_path, {"consent": True, "items": {"riasec_r#1": True}})
+    assert run.returncode != 0 and "1-5" in run.stderr + run.stdout
+    run, out = _run_script(tmp_path, {"consent": True, "items": {"riasec_r_1": 3}})
+    assert run.returncode != 0 and "riasec_r_1" in run.stderr + run.stdout
+    run, out = _run_script(tmp_path, {"consent": True, "items": {}})
+    assert run.returncode == 0 and not out.exists(), "a report built on no answers"
