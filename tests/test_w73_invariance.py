@@ -278,3 +278,11 @@ def test_probe_planned_n_detects_large_dif():
         dif = mod.dif_family(Y, st, cols, t1, mod.matching_items())
         hits += any(dif[i]["cls"] == "C" for i in t1)
     assert hits / 20 >= 0.8
+
+
+@_probe("B-C1-45: worst() consumes its generator, so no dimension is ever classed B")
+def test_probe_dimension_class_b_is_reachable():
+    assert mod.worst(c for c in ["A", "B"]) == "B"
+    mh = {g: {"cls": "AA", "smd": 0.0} for g in mod.FOCALS}
+    dif = {"x#1": {"cls": "A", "mh": mh}, "x#2": {"cls": "B", "mh": mh}}
+    assert mod.dimension_dif(dif, {"x": ["x#1", "x#2"]})["x"]["cls"] == "B"
