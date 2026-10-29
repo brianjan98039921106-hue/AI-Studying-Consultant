@@ -26,6 +26,7 @@
 | im | [interest-area-imputation-findings.md](interest-area-imputation-findings.md)（**真實資料**，O\*NET 職業） | 架構檢討 §2.1 |
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
 | dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
+| w73 | [synthetic-w73-plan-check.md](synthetic-w73-plan-check.md)（合成資料；分析計畫檢查） | W-73 |
 | dvs | [synthetic-l3-diversity-findings.md](synthetic-l3-diversity-findings.md) | B-C2-9 |
 | ab | [synthetic-l3-admission-bias-findings.md](synthetic-l3-admission-bias-findings.md) | W-44 |
 | a01 | [synthetic-l3-admission-v01-findings.md](synthetic-l3-admission-v01-findings.md) | W-44 |
@@ -197,6 +198,9 @@
 | F45 | 只用重複題學雜訊消除大部分前期損失，但 Q=45、雜訊 0.40 時仍略差（−0.015） | ✅ | nz（第二次，單次） | 仍未通過守門 |
 | F46 | 校準與排序有結構性衝突：v1 低估雜訊反而少靠有偏誤的錨點先驗 | 💭 | nz（三種模型方向一致） | 先驗品質（B-C1-17）是下一個槓桿 |
 | F47 | 作答偏誤會破壞截斷模型在低雜訊時的校準（0.837） | ✅（只報告） | nz | — |
+| F151 | W-73 分析計畫（每維度 2 題、4 層 × 50 人）未通過預先登記的模擬檢查：沒有違反恆等時，量尺 ΔCFI > 0.01 的誤報率 0.24–0.36（雜訊 0.10）與 0.96–1.00（雜訊 0.18）；雜訊 0.18 時形態模型 72–76% 不可用（CFI < 0.90） | ✅ | w73 | 計畫須在資料前修改（B-C1-40） |
+| F152 | 每次模擬都出現 Heywood 情況（殘差變異到下限）；同一份資料用 semopy 擬合得到相同的 χ²（136.99 vs 137.0）與相同的 Heywood 題目，所以是設計的性質，不是程式錯誤 | ✅（數據）／💭（原因：每因素 2 題、每組 50 人時辨識很弱） | w73 | 見 F151 |
+| F153 | DIF 檢定在沒有 DIF 的題目幾乎不誤報（每題 ≤ 0.006），但一層中某題截距平移 0.15（約 0.6 個量表點）只偵測到 8%、負荷改變 0%；同一個截距平移用截距 ΔCFI 偵測到 40–44% | ✅ | w73 | 200 人的設計無法可靠找出單題不等值 |
 
 ## C3 錄取可行性
 
