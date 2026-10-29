@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-28 · 對應版本 v0.3.19（研究原型）
+最後更新：2026-10-29 · 對應版本 v0.4.0（研究原型）
 
 ---
 
@@ -20,12 +20,12 @@
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
-| 申請組合最佳化（選哪幾間申請） | C4.1–C4.4 | ✅ 精確解；相關錄取（C4.2）、機率區間的穩健選擇（C4.3）、多屬性效用（C4.4）可選用；`plan_applications` 一次完成 | ⚠️ 錄取機率來自 C3 模型（只在合成資料驗證）或自行假設；相關係數與效用權重須自行設定 |
+| 申請組合最佳化（選哪幾間申請） | C4.1–C4.4 | ⏸ 暫停（D13）：程式與介面保留（`plan_applications`、`AdmitEstimate`），不在主線流程（§9.1） | — |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
-| 錄取機率估計 | C3 | 🧪 v0.2 模型可用（§4.9）：階層 logistic、90% 區間、自陳偏誤校正、學程類型、申請年度；校準檢查工具；只在合成資料驗證 | ❌ 尚無真實申請結果資料（只在合成資料驗證，F128–F140） |
-| 顧問介面／側寫報告 | Phase 5 | 🟡 報告 v0 可用（Markdown，§4.10）；介面未開始 | ⚠️ 會自動標示合成資料、假設的錄取機率與補全的維度 |
+| 錄取機率估計 | C3 | ⏸ 暫停（D13）：v0.2 模型、資料載入與校準工具保留，只在合成資料驗證過（§9.2） | — |
+| 顧問介面／側寫報告 | Phase 5 | 🟡 報告 v0 可用（Markdown，§4.10）；介面未開始 | ⚠️ 會自動標示合成資料與補全的維度 |
 
-**一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 申請組合」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。
+**一句話：** 目前可以完整跑一次「需求 → 推薦 → 條件差距 → 報告」流程來理解模型怎麼運作，但學程資料是虛構的，**還不能拿結果給真實學生做決定**。錄取機率與申請組合暫停（D13）。
 
 ---
 
@@ -249,9 +249,145 @@ print("尚缺:", [i.category for i in gap.missing])  # ['gre']（建議，非必
 
 可用的條件類別見 `data/reference/requirement_taxonomy.json`（課程、考試、作品集、經驗、證照、語言等）。
 
-### 4.7 申請組合
+### 4.7 申請組合（⏸ 暫停）
 
-給定每個學程的錄取機率與效用，找出在申請數量（或預算）限制下期望效用最高的組合。**C3 錄取模型尚未完成**，錄取機率必須以 `AdmitEstimate(method="assumed")` 明確標示為假設。
+錄取機率與申請組合目前暫停（[ARCHITECTURE D13](ARCHITECTURE.md)）：主線流程到推薦、條件差距與報告為止。程式與介面保留，用法移到 [§9.1](#91-申請組合c4暫停)。
+
+### 4.8（實驗中）需求維度 v2：涵蓋所有領域
+
+v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
+
+```python
+from aisc.contracts import StudentProfile
+from aisc.dimensions import migrate_needs_v1_to_v2
+from aisc.profiling import complete_neutral
+from aisc.profiling.hierarchy import GROUP_LABELS
+
+# 第一層：學生對 12 個領域群的興趣（0–1）；第二層：只細問感興趣的群
+v2 = StudentProfile(
+    "demo-v2",
+    {"riasec_i": 0.8, "bi_medical_science": 0.9},  # 第二層有作答的領域
+    dims="v2",
+    group_scores={6: 0.8, 1: 0.2},  # 6 = 生命科學、醫學與醫療照護
+)
+full = complete_neutral(v2)  # 未作答的領域：依領域群先驗；群也沒答 → 低基準值，不是 0.5
+print(GROUP_LABELS[6][0], round(full.needs["bi_life_science"], 2), round(full.needs["bi_music"], 2))
+
+# 舊的 v1 需求可轉換（僅供相容，不是測量）
+print(sorted(migrate_needs_v1_to_v2({"domain_finance": 0.9}).items()))
+```
+
+v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用會直接報錯。
+
+第二層要細問哪些領域：`aisc.profiling.hierarchy.areas_to_ask(group_scores, m=2)`（前 m 個群的所有領域）或 `q=8`（依同樣順序取前 q 個）。m、q 沒有預設值：職業資料顯示「相關補全＋細問 4–8 個領域」可能就夠（[F115](../results/interest-area-adaptive-findings.md)），但要等 W-41 學生資料預先登記後才定。
+
+可選用：`complete_neutral(v2, area_model="correlated")`（`pipeline.prepare_profile` 同名參數）以 O\*NET 學到的領域相關結構補全未作答領域。用職業資料檢驗時誤差大幅下降，答得越少越明顯，但未通過全部預先登記條件，所以不是預設（[F105–F107](../results/interest-area-imputation-findings.md)）。
+
+### 4.9 錄取機率模型（⏸ 暫停）
+
+錄取機率模型 C3 暫停（D13），用法移到 [§9.2](#92-錄取機率模型-c32-v02c3暫停)。
+
+### 4.10 側寫報告（Markdown）
+
+把需求剖面、兩區推薦（附理由與條件差距）整理成一份給顧問與學生一起看的報告。報告只負責呈現，不改變任何結果；合成資料、系統補全的維度都會自動標示。
+
+```python
+from aisc.pipeline import prepare_profile
+from aisc.report import render_profile_report
+
+md = render_profile_report(
+    student,  # 學生實際作答的剖面
+    prepare_profile(student, catalog),  # 排序時實際使用的完整剖面
+    result,  # interactive_discovery 的結果
+)
+print(md.splitlines()[0])
+```
+
+`gaps`（選用）是 `{program_id: RequirementGap}`，會在每個學程旁顯示還缺哪些條件，但不影響排序（D9）。`plan`（選用）是暫停中的申請組合結果（§9.1），不給就不會出現該段。
+
+---
+
+## 5. 給顧問：建議的使用流程（目前階段）
+
+| 步驟 | 做什麼 | 對應 |
+|---|---|---|
+| 1 | 和學生談**想做什麼**，不談學校或學程名稱；把有把握的維度填進 `needs` | §4.2 |
+| 2 | 有大考中心興趣量表結果就加入 | §4.3 |
+| 3 | 記下學生心中已有的學程作為 `anchors` | §4.2 |
+| 4 | 執行熟悉度確認，讓學生自己回答聽過哪些 | §4.5 |
+| 5 | 和學生一起看「可能沒想過」清單，討論每一個為什麼契合 | §4.5 |
+| 6 | 對有興趣的學程看條件差距，規劃補修時程 | §4.6 |
+
+目前請把它當作**討論工具**而非結論：學程資料是合成的。選校組合與錄取機率暫不由模型提供（D13）。
+
+---
+
+## 6. 限制與注意事項
+
+| 限制 | 影響 | 何時解決 |
+|---|---|---|
+| 學程目錄是合成資料 | 推薦結果不對應真實學校 | W-20～W-22（C0 真實學程） |
+| 推薦用的學程目錄只涵蓋商管 × 數據 × 工程管理（合成） | 其他領域的學生推薦品質未知；全領域的官方參考表（`data/reference/*_all.csv`：1,233 個 CIP，含專業與研究型博士）已建好，但還不是可推薦的學程；v2 維度（§4.8）實驗中 | W-16c、W-20～W-22 |
+| 程式內的自適應問卷仍是抽象占位題；v2 題庫中文草案（`data/items/item_bank_v2.json`，73 題）尚未回譯與認知訪談 | 還不能直接拿給學生作答 | W-41 |
+| 錄取機率與申請組合暫停（D13） | 模型不建議申請哪幾間 | 範圍重新納入時（W-44、W-45） |
+| 需求維度尚未實證驗證 | 維度可能重疊或遺漏 | W-41、W-73 |
+
+已知假設與盲區的完整清單見 [REGISTER.md](REGISTER.md)。
+
+**個資：** 真實學生資料只能放在 `data/private/`（不會被 commit），收集須取得書面同意（見 [CONTRIBUTING.md](../CONTRIBUTING.md)）。
+
+---
+
+## 7. 常見問題
+
+| 問題 | 回答 |
+|---|---|
+| 為什麼不直接過濾掉學生條件不夠的學程？ | 條件可以補，學生也不一定馬上申請；過濾會讓學生再次只看到自己已知的範圍（D9）。 |
+| 沒填的維度會被當成沒興趣嗎？ | 不會。`pipeline` 會先用錨點補全未作答維度（B-C1-14）；已作答的維度維持原值。 |
+| 「可能沒想過」裡出現學生其實聽過的學程？ | 熟悉度是學生自己回報的，可能漏報；重新執行熟悉度確認即可。 |
+| 為什麼沒有錄取機率和申請組合？ | 範圍決策 D13：先把需求側寫、推薦與條件差距做好；介面保留，之後可以接回（§9）。 |
+| 我的使用方式和本文件不同，或範例跑不起來？ | 請開 issue；本文件的範例由 CI 實際執行，跑不起來代表文件需要更新。 |
+
+---
+
+## 8. 變更紀錄（使用方式）
+
+只記錄**影響使用者的改變**；演算法內部改動見 [results/FINDINGS.md](../results/FINDINGS.md) 與 [ROADMAP.md](ROADMAP.md)。
+
+| 日期 | 版本 | 改變 | 工項 |
+|---|---|---|---|
+| 2026-10-27 | v0.2 | 首版使用說明：安裝、示範、逐步 API、顧問流程、限制；範例納入 CI 執行 | W-05 |
+| 2026-10-27 | v0.3 | 新增實驗中的需求維度 v2（`dims="v2"`、`group_scores`、`migrate_needs_v1_to_v2`），預設仍為 v1（§4.8） | W-16c |
+| 2026-10-27 | v0.3.1 | v2 的 L3 結果：未通過，v2 推薦品質目前低於 v1，請勿用於實際推薦（§1、§4.8）；用法沒有改變 | W-16c |
+| 2026-10-27 | v0.3.2 | 新增實驗用計分器 `domain_gated`（v2 作答 → v1 計分 ＋ 遠領域扣分）；L3 未通過，不建議使用（§4.8） | W-16c |
+| 2026-10-28 | v0.3.3 | 新增全領域官方參考表（`data/reference/*_all.csv`，範圍 `all_scope.json`）：1,209 個 CIP、含專業／研究型博士與研究所證書；推薦目錄不變（§6） | W-65、W-70 |
+| 2026-10-28 | v0.3.4 | 新增 v2 題庫中文草案（`data/items/item_bank_v2.json`，取自 O\*NET 31.0 代表活動；[item-bank-v2.md](item-bank-v2.md)），尚未驗證、不可施測（§6） | W-41 |
+| 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
+| 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
+| 2026-10-28 | v0.3.7 | v2 新增可選用的相關補全 `area_model="correlated"`（§4.8）；全領域參考表新增就業加權版本（參考用，非預設） | 架構檢討、W-71 |
+| 2026-10-28 | v0.3.8 | 申請組合新增 C4.2（錄取相關：`admission_draws`、`portfolio_value_mc`、`recommend_portfolio`）與 C4.3（機率區間的穩健選擇：`worst_case_portfolio`、`minimax_regret_portfolio`）；預設選擇不變（§4.7） | W-29、W-2A |
+| 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |
+| 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
+| 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
+| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
+| 2026-10-28 | v0.3.13 | 輸入檢查更嚴格（第五次稽核）：拼錯的維度、超出 0–1 的作答、未知或型別錯誤的硬條件、重複的學程代碼都會報錯；作答預設不確定性改為 0.25（原 0.5 讓問卷重問已答維度）；重複的錨點只算一次；自適應問卷只為可推薦的學程挑題（§4.2、§4.3、§4.5） | B-C1-26～31、B-C2-20～21 |
+| 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
+| 2026-10-28 | v0.3.15 | v2 新增 `areas_to_ask`：依第一層群分數排出第二層要細問的領域（§4.8；m、q 無預設） | W-66 |
+| 2026-10-28 | v0.3.16 | 錄取機率模型可加入學程類型（`types=`、`predict(..., ptype=)`，§4.9） | W-74 |
+| 2026-10-28 | v0.3.17 | 錄取紀錄可標申請年度（`AdmissionRecord(..., year=)`），模型估計年度波動、預測針對最新年度（§4.9） | B-C3-3 |
+| 2026-10-28 | v0.3.18 | 錄取機率模型新增 `converged` 與 `anchor_conflicts`，未收斂或官方錄取率與紀錄衝突時警告（§4.9） | B-C3-10～12 |
+| 2026-10-28 | v0.3.19 | 申請結果資料的範本、載入器（隱私欄位檢查、標準化、缺漏處理）與時間切分校準檢查腳本（§4.9、[data-intake.md](data-intake.md)） | W-44 C3.1 |
+| 2026-10-29 | v0.4.0 | 範圍調整（D13）：錄取機率模型（C3）與申請組合（C4）暫停，主線流程到推薦、條件差距與報告為止；程式與介面保留，用法移到 §9；示範程式不再計算申請組合 | D13 |
+
+---
+
+## 9. 附錄：暫停的模組（D13）
+
+以下模組不在目前的主線流程，程式與介面保留、測試照常執行，之後可以直接接回：任何來源（C3 模型、顧問估計）只要提供 `AdmitEstimate`，就能交給 `plan_applications`。這兩節的結論只在合成資料成立。
+
+### 9.1 申請組合（C4，暫停）
+
+給定每個學程的錄取機率與效用，找出在申請數量（或預算）限制下期望效用最高的組合。沒有 C3 估計時，錄取機率必須以 `AdmitEstimate(method="assumed")` 明確標示為假設。
 
 ```python
 from aisc.contracts import AdmitEstimate
@@ -321,37 +457,7 @@ plan_mau = plan_applications(shortlist_, admit, budget=3, utility=utility_mau)
 print(round(cr, 3), plan_mau.chosen_ids)
 ```
 
-### 4.8（實驗中）需求維度 v2：涵蓋所有領域
-
-v1 的 5 個領域維度只涵蓋商管 × 數據。v2 改用 O\*NET 的 41 個細分興趣領域（`bi_*`），並以 12 個領域群做兩階段提問（規格見 [dimensions-v2.md](dimensions-v2.md)）。**模擬驗證未通過，預設仍是 v1**：v2 能減少「領域不對」的推薦，但目前的暫定計分器讓整體推薦品質比 v1 差（[F70–F71](../results/synthetic-l3-dims-v2-findings.md)）。請只用來試驗，不要用於實際給學生的推薦。另有實驗用的 `aisc.discovery.domain_gated(tau, lam)`（v1 計分 ＋ 遠領域扣分），同樣未通過模擬驗證（[F81](../results/synthetic-l3-domain-gate-findings.md)），只供研究比較。
-
-```python
-from aisc.contracts import StudentProfile
-from aisc.dimensions import migrate_needs_v1_to_v2
-from aisc.profiling import complete_neutral
-from aisc.profiling.hierarchy import GROUP_LABELS
-
-# 第一層：學生對 12 個領域群的興趣（0–1）；第二層：只細問感興趣的群
-v2 = StudentProfile(
-    "demo-v2",
-    {"riasec_i": 0.8, "bi_medical_science": 0.9},  # 第二層有作答的領域
-    dims="v2",
-    group_scores={6: 0.8, 1: 0.2},  # 6 = 生命科學、醫學與醫療照護
-)
-full = complete_neutral(v2)  # 未作答的領域：依領域群先驗；群也沒答 → 低基準值，不是 0.5
-print(GROUP_LABELS[6][0], round(full.needs["bi_life_science"], 2), round(full.needs["bi_music"], 2))
-
-# 舊的 v1 需求可轉換（僅供相容，不是測量）
-print(sorted(migrate_needs_v1_to_v2({"domain_finance": 0.9}).items()))
-```
-
-v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用會直接報錯。
-
-第二層要細問哪些領域：`aisc.profiling.hierarchy.areas_to_ask(group_scores, m=2)`（前 m 個群的所有領域）或 `q=8`（依同樣順序取前 q 個）。m、q 沒有預設值：職業資料顯示「相關補全＋細問 4–8 個領域」可能就夠（[F115](../results/interest-area-adaptive-findings.md)），但要等 W-41 學生資料預先登記後才定。
-
-可選用：`complete_neutral(v2, area_model="correlated")`（`pipeline.prepare_profile` 同名參數）以 O\*NET 學到的領域相關結構補全未作答領域。用職業資料檢驗時誤差大幅下降，答得越少越明顯，但未通過全部預先登記條件，所以不是預設（[F105–F107](../results/interest-area-imputation-findings.md)）。
-
-### 4.9（實驗中）錄取機率模型 C3.2 v0.2
+### 9.2 錄取機率模型 C3.2 v0.2（C3，暫停）
 
 有歷年申請結果時，可以用階層 logistic 模型估計錄取機率與區間。學生特徵要先以該學程的申請者母體標準化（平均約 0）；自陳資料（如網路上的申請結果分享）標為 `"self_report"`，顧問的完整紀錄標為 `"complete"`。提供官方錄取率時，模型會校正「錄取者較常自陳」的偏誤（合成資料中 RMSE 從 0.13–0.26 降到 0.04–0.07，[F128–F131](../results/synthetic-l3-admission-bias-findings.md)）。**目前沒有真實申請結果資料**；當較強的申請者也較常自陳時，模擬中 v0.2 的區間涵蓋率仍有 86–89%，但會略為低估（[F139–F140](../results/synthetic-l3-admission-pool-confirm-findings.md)），所以結果仍要當作假設值使用。
 
@@ -374,96 +480,3 @@ new = model.predict("prog-c", (0.5, 0.0), family="52.13")  # 沒有資料的學�
 紀錄來自不同申請年度時，在 `AdmissionRecord(..., year=2024)` 標上年度（要嘛全部標、要嘛都不標）：每個較舊的年度有自己的整體難度，預測一律針對最新年度（官方錄取率也請用最新年度的；[F148–F150](../results/synthetic-l3-admission-years-findings.md)）。知道各學程的申請流程類型（一般、面試制、作品集審查、專業學位）時，傳入 `types={program_id: 類型}`；預測新學程時再給 `ptype=`。模擬中這能讓新學程的錄取機率更準，類型沒有效果時也不會變差（[F145–F147](../results/synthetic-l3-admission-types-findings.md)）。
 
 模型沒有收斂（`model.converged` 為 False）或官方錄取率與紀錄嚴重衝突（`model.anchor_conflicts` 列出學程與 logit 差距）時會發出警告：請先檢查資料，再使用這些估計。用自己的歷年申請結果時，照 [data-intake.md](data-intake.md) 準備兩個 CSV（範本在 `data/templates/`），再執行 `python scripts/validate_admission_model.py --records … --rates …`：會檢查隱私欄位、擬合模型，並用時間切分檢查校準；程式介面是 `aisc.feasibility.intake.fit_from_files`。有了留出的真實結果後，可用 `aisc.feasibility` 的 `brier_skill`（是否勝過「官方錄取率」常數預測）、`calibration_slope`（理想為截距 0、斜率 1；斜率小於 1 表示過度自信）、`reliability_table` 與 `by_group`（例如台灣／國際申請者分開）檢查校準（V-C3-2～4）。
-
-### 4.10 側寫報告（Markdown）
-
-把需求剖面、兩區推薦（附理由與條件差距）、申請組合整理成一份給顧問與學生一起看的報告。報告只負責呈現，不改變任何結果；合成資料、假設的錄取機率、系統補全的維度都會自動標示。
-
-```python
-from aisc.pipeline import prepare_profile
-from aisc.report import render_profile_report
-
-md = render_profile_report(
-    student,  # 學生實際作答的剖面
-    prepare_profile(student, catalog),  # 排序時實際使用的完整剖面
-    result,  # interactive_discovery 的結果
-    plan=plan,  # 選用：plan_applications 的結果（申請模式）
-)
-print(md.splitlines()[0])
-```
-
-`gaps`（選用）是 `{program_id: RequirementGap}`，會在每個學程旁顯示還缺哪些條件，但不影響排序（D9）。
-
----
-
-## 5. 給顧問：建議的使用流程（目前階段）
-
-| 步驟 | 做什麼 | 對應 |
-|---|---|---|
-| 1 | 和學生談**想做什麼**，不談學校或學程名稱；把有把握的維度填進 `needs` | §4.2 |
-| 2 | 有大考中心興趣量表結果就加入 | §4.3 |
-| 3 | 記下學生心中已有的學程作為 `anchors` | §4.2 |
-| 4 | 執行熟悉度確認，讓學生自己回答聽過哪些 | §4.5 |
-| 5 | 和學生一起看「可能沒想過」清單，討論每一個為什麼契合 | §4.5 |
-| 6 | 對有興趣的學程看條件差距，規劃補修時程 | §4.6 |
-| 7 | 決定申請時，再討論申請組合 | §4.7 |
-
-目前請把它當作**討論工具**而非結論：學程資料是合成的，錄取機率是假設的。
-
----
-
-## 6. 限制與注意事項
-
-| 限制 | 影響 | 何時解決 |
-|---|---|---|
-| 學程目錄是合成資料 | 推薦結果不對應真實學校 | W-20～W-22（C0 真實學程） |
-| 推薦用的學程目錄只涵蓋商管 × 數據 × 工程管理（合成） | 其他領域的學生推薦品質未知；全領域的官方參考表（`data/reference/*_all.csv`：1,233 個 CIP，含專業與研究型博士）已建好，但還不是可推薦的學程；v2 維度（§4.8）實驗中 | W-16c、W-20～W-22 |
-| 程式內的自適應問卷仍是抽象占位題；v2 題庫中文草案（`data/items/item_bank_v2.json`，73 題）尚未回譯與認知訪談 | 還不能直接拿給學生作答 | W-41 |
-| 錄取機率須自行假設 | 申請組合只是示範計算 | W-44（C3） |
-| 需求維度尚未實證驗證 | 維度可能重疊或遺漏 | W-41、W-73 |
-
-已知假設與盲區的完整清單見 [REGISTER.md](REGISTER.md)。
-
-**個資：** 真實學生資料只能放在 `data/private/`（不會被 commit），收集須取得書面同意（見 [CONTRIBUTING.md](../CONTRIBUTING.md)）。
-
----
-
-## 7. 常見問題
-
-| 問題 | 回答 |
-|---|---|
-| 為什麼不直接過濾掉學生條件不夠的學程？ | 條件可以補，學生也不一定馬上申請；過濾會讓學生再次只看到自己已知的範圍（D9）。 |
-| 沒填的維度會被當成沒興趣嗎？ | 不會。`pipeline` 會先用錨點補全未作答維度（B-C1-14）；已作答的維度維持原值。 |
-| 「可能沒想過」裡出現學生其實聽過的學程？ | 熟悉度是學生自己回報的，可能漏報；重新執行熟悉度確認即可。 |
-| 可以只拿推薦、不跑申請組合嗎？ | 可以。§4.5 就是完整的推薦輸出。 |
-| 我的使用方式和本文件不同，或範例跑不起來？ | 請開 issue；本文件的範例由 CI 實際執行，跑不起來代表文件需要更新。 |
-
----
-
-## 8. 變更紀錄（使用方式）
-
-只記錄**影響使用者的改變**；演算法內部改動見 [results/FINDINGS.md](../results/FINDINGS.md) 與 [ROADMAP.md](ROADMAP.md)。
-
-| 日期 | 版本 | 改變 | 工項 |
-|---|---|---|---|
-| 2026-10-27 | v0.2 | 首版使用說明：安裝、示範、逐步 API、顧問流程、限制；範例納入 CI 執行 | W-05 |
-| 2026-10-27 | v0.3 | 新增實驗中的需求維度 v2（`dims="v2"`、`group_scores`、`migrate_needs_v1_to_v2`），預設仍為 v1（§4.8） | W-16c |
-| 2026-10-27 | v0.3.1 | v2 的 L3 結果：未通過，v2 推薦品質目前低於 v1，請勿用於實際推薦（§1、§4.8）；用法沒有改變 | W-16c |
-| 2026-10-27 | v0.3.2 | 新增實驗用計分器 `domain_gated`（v2 作答 → v1 計分 ＋ 遠領域扣分）；L3 未通過，不建議使用（§4.8） | W-16c |
-| 2026-10-28 | v0.3.3 | 新增全領域官方參考表（`data/reference/*_all.csv`，範圍 `all_scope.json`）：1,209 個 CIP、含專業／研究型博士與研究所證書；推薦目錄不變（§6） | W-65、W-70 |
-| 2026-10-28 | v0.3.4 | 新增 v2 題庫中文草案（`data/items/item_bank_v2.json`，取自 O\*NET 31.0 代表活動；[item-bank-v2.md](item-bank-v2.md)），尚未驗證、不可施測（§6） | W-41 |
-| 2026-10-28 | v0.3.5 | 輸入驗證更嚴格：需求與學程分數不得為 NaN；`uncertainty` 須為正數；`dp_varied_cost` 接受整數值的浮點成本；`evaluate_lists` 新增 `hidden` 參數，全領域學生未傳時報錯 | 程式稽核 |
-| 2026-10-28 | v0.3.6 | 更正全領域參考表：CIP 代碼表的「Moved to／Moved from」原本讀反，補回 24 個現行代碼（DO、DVM 等），共 1,233 個 CIP（v0.3.3 寫的 1,209 有誤） | B-C0-15 |
-| 2026-10-28 | v0.3.7 | v2 新增可選用的相關補全 `area_model="correlated"`（§4.8）；全領域參考表新增就業加權版本（參考用，非預設） | 架構檢討、W-71 |
-| 2026-10-28 | v0.3.8 | 申請組合新增 C4.2（錄取相關：`admission_draws`、`portfolio_value_mc`、`recommend_portfolio`）與 C4.3（機率區間的穩健選擇：`worst_case_portfolio`、`minimax_regret_portfolio`）；預設選擇不變（§4.7） | W-29、W-2A |
-| 2026-10-28 | v0.3.9 | 分區推薦新增可選參數 `diversity`（族群多樣化）；模擬中降低相關性，預設 0、不建議使用（§4.5） | B-C2-9 |
-| 2026-10-28 | v0.3.10 | 新增實驗中的錄取機率模型 C3.2 v0（`aisc.feasibility.fit_admission_model`）：階層 logistic、90% 區間、以官方錄取率校正自陳偏誤（§4.9） | W-44 |
-| 2026-10-28 | v0.3.11 | 錄取機率模型預設改為 v0.2（τ 模型平均＋以申請紀錄積分的官方錄取率錨點，區間涵蓋率較準；`anchor="mean"`、`tau_average=False` 為舊版）；新增 `pipeline.plan_applications`：由推薦＋錄取機率直接產生申請組合，並附錄取相關時的期望效用（§4.7） | W-44、W-62 |
-| 2026-10-28 | v0.3.12 | 新增側寫報告 `aisc.report.render_profile_report`（Markdown：需求剖面、兩區推薦與理由、條件差距、申請組合；自動標示合成資料與假設值，§4.10）；錄取模型的校準檢查工具（§4.9） | W-50、W-44 |
-| 2026-10-28 | v0.3.13 | 輸入檢查更嚴格（第五次稽核）：拼錯的維度、超出 0–1 的作答、未知或型別錯誤的硬條件、重複的學程代碼都會報錯；作答預設不確定性改為 0.25（原 0.5 讓問卷重問已答維度）；重複的錨點只算一次；自適應問卷只為可推薦的學程挑題（§4.2、§4.3、§4.5） | B-C1-26～31、B-C2-20～21 |
-| 2026-10-28 | v0.3.14 | 申請組合可用多屬性效用：`ahp_weights`（成對比較權重與一致性比率）、`multi_attribute_utility`、`scale_linear`（§4.7） | W-45 |
-| 2026-10-28 | v0.3.15 | v2 新增 `areas_to_ask`：依第一層群分數排出第二層要細問的領域（§4.8；m、q 無預設） | W-66 |
-| 2026-10-28 | v0.3.16 | 錄取機率模型可加入學程類型（`types=`、`predict(..., ptype=)`，§4.9） | W-74 |
-| 2026-10-28 | v0.3.17 | 錄取紀錄可標申請年度（`AdmissionRecord(..., year=)`），模型估計年度波動、預測針對最新年度（§4.9） | B-C3-3 |
-| 2026-10-28 | v0.3.18 | 錄取機率模型新增 `converged` 與 `anchor_conflicts`，未收斂或官方錄取率與紀錄衝突時警告（§4.9） | B-C3-10～12 |
-| 2026-10-28 | v0.3.19 | 申請結果資料的範本、載入器（隱私欄位檢查、標準化、缺漏處理）與時間切分校準檢查腳本（§4.9、[data-intake.md](data-intake.md)） | W-44 C3.1 |

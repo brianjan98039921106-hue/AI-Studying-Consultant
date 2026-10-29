@@ -10,7 +10,7 @@
 | D1 | **需求空間與標籤空間分離** | 學生不知道 program 名稱，但知道自己想做什麼。「契合」看內容，「新穎」看名稱 | C2 的 relevance 只用屬性向量，novelty 只用 CIP／熟悉度 |
 | D2 | **Program 屬性雙重測量** | 單一資料來源（官網文案或分類代碼）都有系統性偏誤，兩個獨立來源互相檢驗 | C0.2 職業橋接 vs C0.3 課程擷取，C0.4 比對一致性 |
 | D3 | **需求維度錨定在已驗證的構念** | 自訂維度沒有信效度保證 | C1.1 以 Holland RIASEC（O*NET 使用的興趣模型）為骨架，再加通過因素分析的領域維度 |
-| D4 | **不確定性端到端傳遞** | 點估計會讓下游過度自信 | C1 輸出後驗標準差、C3 輸出區間、C4 用區間做穩健選擇 |
+| D4 | **不確定性端到端傳遞** | 點估計會讓下游過度自信 | C1 輸出後驗標準差；C3 輸出區間、C4 用區間做穩健選擇（C3、C4 暫停，D13） |
 | D5 | **部件只透過資料契約溝通** | 單獨開發、單獨驗證、可替換 | `src/aisc/contracts.py`；部件之間不互相 import 內部函式 |
 | D6 | **先模擬驗證，再真人驗證** | 真人資料少且昂貴，演算法錯誤要先在已知真相的環境抓出來 | C5 模擬器提供已知的真實需求，每個部件都要先過 L3 |
 | D7 | **新穎 = 學生不知道，而非分類距離遠** | 分類距離只是代理變數 | C1.4 熟悉度擷取，C2.2 v1 改用「未知機率」 |
@@ -19,6 +19,7 @@
 | D10 | **結構與領域無關；產品目標是全領域、全背景** | 使用者不限就學背景（例如材料 → 牙醫 → 設計）；領域寫死在結構裡，日後擴充代價很高 | RIASEC、條件類別、學經歷紀錄都跨領域；`mvp_scope.json` 只是上線階段（v1 → v2 → v3 全領域），見 [expansion.md](expansion.md) |
 | D11 | **測量對所有背景等值** | 題目情境若只對某些背景具體，分數就不可比（B-C1-20） | 測量恆等性與 DIF 檢驗（V-C1-9）；不通過的題目改寫或移除 |
 | D12 | **評估看最差的群體，不只看平均** | 平均指標會掩蓋少數背景的失敗（S-8） | 所有 L3／L5 指標依背景分層；選方法時以最差層為準則之一（延伸 F37 的 maximin） |
+| D13 | **錄取可行性與申請組合暫不納入範圍；介面保留**（2026-10-29） | 先把與錄取無關、可獨立驗證的部分做好：需求側寫、探索推薦、條件差距、報告；錄取模型需要真實申請結果才能驗證 | C3、C4 的程式與測試凍結保留（不新增功能、測試照常執行）；預設流程與示範不使用；介面是契約 `AdmitEstimate` 與 `pipeline.plan_applications`，由 `tests/test_interface_freeze.py` 固定；之後任何來源（模型或顧問估計）提供 `AdmitEstimate` 即可接回 |
 
 ## 2. 部件圖
 
@@ -40,10 +41,10 @@ flowchart LR
         C22[C2.2 新穎度] --> C23
         C23 --> C24[C2.4 推薦理由]
     end
-    subgraph C3[C3 錄取可行性]
+    subgraph C3[C3 錄取可行性 ⏸ 暫停 D13]
         C31[C3.1 資料 + 選擇偏誤] --> C32[C3.2 階層貝氏模型] --> C33[C3.3 校準]
     end
-    subgraph C4[C4 申請組合]
+    subgraph C4[C4 申請組合 ⏸ 暫停 D13]
         C44[C4.4 效用擷取] --> C41[C4.1 精確解]
         C41 --> C42[C4.2 相關性評估]
         C41 --> C43[C4.3 穩健選擇]
@@ -51,8 +52,8 @@ flowchart LR
     C04 -- Program --> C12 & C21 & C22
     C13 -- StudentProfile --> C21
     C14 -- familiar --> C22
-    C24 -- Recommendation --> C44
-    C33 -- AdmitEstimate --> C41
+    C24 -. Recommendation .-> C44
+    C33 -. AdmitEstimate .-> C41
     subgraph C6[C6 先修與申請條件差距]
         C61[C6.1 條件類別] --> C62[C6.2 差距比對]
     end
@@ -60,6 +61,8 @@ flowchart LR
     C1 -- StudentRecord --> C62
     C62 -- RequirementGap --> C24
     C5[C5 模擬與評估框架<br/>已知真相的合成學生] -. 驗證 .-> C0 & C1 & C2 & C3 & C4 & C6
+    style C3 stroke-dasharray: 5 5
+    style C4 stroke-dasharray: 5 5
 ```
 
 ## 3. 部件總表
@@ -71,8 +74,8 @@ flowchart LR
 | **C0** Program 知識庫 | 公開資料 → `Program` | 分類骨架 + 雙重測量 + 一致性品管 | [C0](components/C0-catalog.md) |
 | **C1** 學生側寫 | 問卷回答、錨點、熟悉度 → `StudentProfile`（完整 15 維） | RIASEC 測量模型 + 錨點先驗 + 貝氏自適應問卷 + 熟悉度擷取 | [C1](components/C1-profiling.md) |
 | **C2** 探索推薦 | 完整 `StudentProfile` + `Program` → `DiscoveryResult` | 依契合排序 + 熟悉度分區（v1）；v0 新穎度加權保留為參考；可忠實分解的理由 | [C2](components/C2-discovery.md) |
-| **C3** 錄取可行性 | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) |
-| **C4** 申請組合 | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) |
+| **C3** 錄取可行性（⏸ 暫停，D13） | 歷史結果 → `AdmitEstimate` | 階層貝氏 logistic + 選擇偏誤處理 + 校準 | [C3](components/C3-feasibility.md) |
+| **C4** 申請組合（⏸ 暫停，D13） | `Recommendation` + `AdmitEstimate` → `PortfolioResult` | Kapur & Hong 精確解 + copula 相關性 + 穩健最佳化 | [C4](components/C4-portfolio.md) |
 | **C5** 模擬與評估 | 合成族群 → 各部件指標 | 已知真相模擬 + 消融 + 盲區探針 | [C5](components/C5-simulation.md) |
 | **C6** 先修與申請條件差距 | `RequirementItem` + `StudentRecord` → `RequirementGap` | 跨領域條件類別 + 確定性比對；只呈現、不過濾（D9）；探索／申請兩種模式 | [C6](components/C6-requirements.md) |
 
