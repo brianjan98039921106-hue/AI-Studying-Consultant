@@ -104,7 +104,7 @@ class MultiGroupCFA:
     loading-1 item. Sharing across groups is set per non-marker loading (lam_shared),
     per intercept (tau_shared) and per factor mean (kappa_free: free in groups 2..G)."""
 
-    def __init__(self, means, covs, ns, fac):
+    def __init__(self, means, covs, ns, fac, tau_equivalent=False):
         self.m = [np.asarray(v, float) for v in means]
         self.S = [np.asarray(c, float) for c in covs]
         self.n = np.asarray(ns, float)
@@ -113,6 +113,8 @@ class MultiGroupCFA:
         self.fac = np.asarray(fac)
         self.q = int(self.fac.max()) + 1
         self.markers = [int(np.flatnonzero(self.fac == k)[0]) for k in range(self.q)]
+        if tau_equivalent:  # every loading fixed at 1 (exploration only, not the plan)
+            self.markers = list(range(self.p))
         self.free_items = [i for i in range(self.p) if i not in self.markers]
         self.tril = np.tril_indices(self.q)
         self.logdetS = [np.linalg.slogdet(S)[1] for S in self.S]
