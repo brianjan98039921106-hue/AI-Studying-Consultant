@@ -131,7 +131,7 @@ def areas_to_ask(
     `m` keeps the areas of the top m groups; `q` cuts the list to q areas. Neither has
     a default: the pre-registered L3 choice (W-66, scripts/run_l3_two_stage.py)
     found no m or q that is non-inferior to answering all areas under both
-    generators (F180-F182); F115 is occupation-data evidence only. Ties between
+    generators (F180-F181); F115 is occupation-data evidence only. Ties between
     groups go to the lower group id."""
     validate_group_scores(group_scores)
     if m is None and q is None:
