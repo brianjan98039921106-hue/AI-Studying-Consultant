@@ -253,7 +253,7 @@
 | A-C6-12 | 假設 | 學士以上學位 → 具備 `bachelor_degree` | W-61 | 學程不承認某些學位（三年制、專科＋二技、境外學位） | B-C6-5 | 不自動填 `bachelor_equivalency`；專業學位與其他學歷不自動推論 | — | — |
 | A-C6-13 | 假設 | 學生自填的「線上」標記正確 | W-61 | 混成課程、遠距上課的實體課被誤標或漏標 | W-41 認知訪談 | 只有某類別的證據全部是線上課程時才標為僅線上 | — | — |
 | B-C6-10 | 盲區 | **課名對應表覆蓋不足**：系所自訂課名、英文課名變體不在表中，已修過的課在差距卡上顯示為缺少 | W-61（2026-10-29） | 學生以為自己缺課（不會誤報已符合，但差距卡變吵） | `StudentRecord.unmapped`；報告「待人工對應」清單 | 依 W-41 收集的實際課名擴充對應表；學生可手動對應 | M | 🟡（表外課名列出待人工對應，不猜測） |
-| B-C6-11 | 盲區 | **線上課程被當成符合不接受線上學分的條件** | W-61（2026-10-29） | 誤報「已滿足」 | 探針 `test_probe_online_only_course_does_not_meet_offline_requirement` | `StudentRecord.online_only`；官網註明不接受線上學分時列為缺少 | M | 🔴 |
+| B-C6-11 | 盲區 | **線上課程被當成符合不接受線上學分的條件** | W-61（2026-10-29） | 誤報「已滿足」 | 探針 `test_probe_online_only_course_does_not_meet_offline_requirement` | `StudentRecord.online_only`；官網註明不接受線上學分時列為缺少 | M | 🟢（C6.2 依 `accepts_online=False` 判為缺少，`test_online_only_course_does_not_meet_offline_requirement`） |
 | B-C6-12 | 盲區 | **有考／有修 ≠ 達到最低分數**：TOEFL 70 對上最低 90、C- 對上「B 以上」，C6 仍判為已滿足 | W-61（2026-10-29） | 誤報「已滿足」（V-C6-2） | 探針 `test_probe_score_below_published_minimum_is_not_met` | 需在 `RequirementItem` 加入最低分數並由 C0.3 擷取（W-20／W-21）；目前差距卡把學生的分數與官網原文並列，提示自行比對 | M | 🟡（探針失敗中；差距卡並列分數與原文） |
 
 ## S 系統層

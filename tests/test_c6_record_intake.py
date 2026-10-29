@@ -258,17 +258,21 @@ def test_intake_record_feeds_the_existing_gap_computation():
     assert {i.category for i in gap.missing} == {"probability"}  # 商用統計 ≠ probability
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason="B-C6-11: online-only evidence still meets accepts_online=False",
-)
-def test_probe_online_only_course_does_not_meet_offline_requirement(cmap):
+def test_online_only_course_does_not_meet_offline_requirement(cmap):
+    """B-C6-11 (fixed): online-only evidence does not meet accepts_online=False; it
+    still meets items that accept online credit or say nothing about it."""
     rec = _intake(cmap, courses=[{"name": "Python程式設計", "online": True}]).record
     strict = _req("programming_intro", accepts_online=False)
     gap = compute_gap("p", [strict], rec, load_taxonomy(TAXONOMY))
     assert gap.met == () and gap.missing == (strict,)
+    for ok in (_req("programming_intro"), _req("programming_intro", accepts_online=True)):
+        assert compute_gap("p", [ok], rec).met == (ok,)
+    mixed = _intake(cmap, courses=[{"name": "Python程式設計", "online": True},
+                                   {"name": "程式設計"}]).record  # fmt: skip
+    assert compute_gap("p", [strict], mixed).met == (strict,)
+    with pytest.raises(ValueError, match="online_only"):
+        compute_gap("p", [], StudentRecord("s", online_only={"statistics"}),
+                    load_taxonomy(TAXONOMY))  # fmt: skip
 
 
 @pytest.mark.probe

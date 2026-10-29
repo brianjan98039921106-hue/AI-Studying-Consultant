@@ -106,6 +106,7 @@
 | V-C6-2 | L5 | 「已滿足」誤報率（學生課程被錯判為滿足條件） | ≤ 5%（寧可列為無法判斷） |
 | V-C6-3 | L2 | 差距不影響推薦：C2 讀不到學經歷；每個學程都有差距輸出 | ✅ `test_c6_requirements.py` |
 | V-C6-4 | L5 | 條件類別覆蓋率：黃金標準中無法對應類別的條件比例，依 CIP 族群 | 每族群 ≤ 10% |
+| V-C6-5 | L2 | 學經歷輸入（W-61）：驗證錯誤附欄位路徑、課名依對應表完全比對、表外與待確認課名列出不猜測、不及格不算已完成、C2 讀不到學經歷 | ✅ `test_c6_record_intake.py` |
 
 ### 系統層
 | ID | 層級 | 指標 | 門檻 |
@@ -129,7 +130,7 @@ C3、C4 暫停（[ARCHITECTURE D13](ARCHITECTURE.md)，2026-10-29）：下列狀
 | C3 | ⏸ 暫停（D13）；✅ C3.2 v0、v0.1、v0.2 | ✅ C3.2 v0／v0.1／v0.2（參數還原、區間、自陳平移的辨識；`test_c3_feasibility.py`） | V-C3-1 ✅（[F128–F131](../results/synthetic-l3-admission-bias-findings.md)）；v0.1（τ 模型平均）預先登記採用，B-C3-9 🟢（[F136–F138](../results/synthetic-l3-admission-v01-findings.md)）；v0.2（母體積分錨點）新種子確認後採用，B-C3-8 🟢（[F139–F140](../results/synthetic-l3-admission-pool-confirm-findings.md)）；學程類型層 B-C3-6 🟢（[F145–F147](../results/synthetic-l3-admission-types-findings.md)）；年度效果 B-C3-3 🟢（[F148–F150](../results/synthetic-l3-admission-years-findings.md)） | V-C3-2～4 待真實申請結果（資料範本、載入器與時間切分檢查腳本已備：[data-intake.md](data-intake.md)） |
 | C4 | ⏸ 暫停（D13）；✅ C4.1、C4.2、C4.3、C4.4 v0 | ✅ C4.1；C4.2（ρ = 0 對解析值、ρ = 1 對封閉解、邊際機率不變；B-C4-1 🟢）；C4.3（對解析值、對窮舉；B-C4-2 🟢） | V-C4-2 ✅（[F109–F112](../results/synthetic-l3-portfolio-corr-findings.md)：高估 3–23%，選擇遺憾小，預設維持 C4.1）；V-C4-3 ✅（[F120–F123](../results/synthetic-l3-portfolio-robust-findings.md)：估計誤差代價小，穩健準則未改善，預設維持 C4.1） | — |
 | C5 | ✅ C5.1–C5.3 | ✅ C5.1–C5.3（L2 30 項） | 不適用 | — |
-| C6 | ✅ C6.1 draft-0、C6.2 v0 | ✅ C6.2 v0（V-C6-3） | 不適用（確定性比對） | V-C6-1/2 待 W-20 |
+| C6 | ✅ C6.1 draft-1、C6.2 v0、C6.4 學經歷輸入（A-C6-10～13） | ✅ C6.2 v0（V-C6-3）；C6.4 學經歷輸入（V-C6-5，`test_c6_record_intake.py`）；B-C6-11 🟢（僅線上修課不符合不收線上學分的條件）；B-C6-12 探針失敗中（最低分數未比對） | 不適用（確定性比對） | V-C6-1/2 待 W-20；課名對應表 draft-1 待使用者確認 |
 
 所有發現的狀態：[results/FINDINGS.md](../results/FINDINGS.md)。最新 L3 結果：[C3 年度效果](../results/synthetic-l3-admission-years-findings.md)、[C3 學程類型](../results/synthetic-l3-admission-types-findings.md)、[C3 v0.2 確認](../results/synthetic-l3-admission-pool-confirm-findings.md)、[V-C3-1 自陳偏誤](../results/synthetic-l3-admission-bias-findings.md)、[C3 → C4](../results/synthetic-l3-admission-portfolio-findings.md)、[V-C4-3 穩健選擇](../results/synthetic-l3-portfolio-robust-findings.md)、[V-C4-2 錄取相關](../results/synthetic-l3-portfolio-corr-findings.md)、[族群多樣化](../results/synthetic-l3-diversity-findings.md)、[領域把關](../results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](../results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](../results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](../results/synthetic-l3-noise-findings.md)、[端到端](../results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](../results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](../results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](../results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](../results/synthetic-l3-v1-continuous-findings.md)、[v1](../results/synthetic-l3-v1-findings.md)、[v0](../results/synthetic-l3-v0-findings.md)）
 
