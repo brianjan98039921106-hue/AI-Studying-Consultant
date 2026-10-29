@@ -48,7 +48,7 @@
 | 測量恆等性（W-73） | 多群組驗證性因素分析：形態、量尺、截距恆等性逐步檢驗（Vandenberg & Lance, 2000, *Organizational Research Methods*）；判準 ΔCFI ≤ 0.01（Cheung & Rensvold, 2002, *Structural Equation Modeling*） | A-C1-19 |
 | 題目差異功能 DIF（W-73） | Mantel–Haenszel 與邏輯斯迴歸 DIF（Holland & Wainer, 1993, *Differential Item Functioning*） | A-C1-19 |
 | 題目參數校準（W-73） | 等級反應模型（Samejima, 1969, *Psychometrika Monograph* 17） | A-C1-12 由校準後的作答模型取代 |
-| 兩階段提問（W-66） | 先粗後細：先測 RIASEC 與大領域群，依結果只深入相關子領域；切換規則以 L3 預先登記選擇 | A-C1-14 |
+| 兩階段提問（W-66） | 先粗後細：先測 RIASEC 與大領域群，依結果只深入相關子領域。切換參數（`hierarchy.areas_to_ask`）：**m** ＝ 細問第一層分數最高的 m 個群的全部領域（題數隨學生而變）；**q** ＝ 固定細問題數，依同一順序取前 q 個領域（可能在群內截斷，依登錄順序）。m／q 以 L3 預先登記選擇：以**非劣性檢定**（Piaggio et al., 2012, *JAMA* 308(24) CONSORT 非劣性延伸）與 51 題全答比較，界限內者取平均題數最少（`scripts/run_l3_two_stage.py`） | A-C1-14、A-C1-45～48 |
 | 領域相關補全（C1 v2，architecture-review §2.1） | 多變量常態條件期望：未答領域 ＝ μ_U + Σ_UO Σ_OO⁻¹ (y_O − μ_O)，O 為已觀測變數（已答領域與 12 個領域群分數，觀測雜訊加在對角）；條件變異數 Σ_UU − Σ_UO Σ_OO⁻¹ Σ_OU 作為先驗不確定性（Anderson, 2003, *An Introduction to Multivariate Statistical Analysis*, ch. 2）。μ、Σ 以 O\*NET 職業的 41 領域剖面與由其算出的群分數估計，Σ 以 Ledoit–Wolf 收縮（Ledoit & Wolf, 2004, *Journal of Multivariate Analysis* 88）穩定逆矩陣 | A-C1-25、A-C1-26 |
 | 領域的自適應提問（C1 v2，B-C1-21） | 貝氏實驗設計（Chaloner & Verdinelli, 1995, *Statistical Science* 10(3)）：沿用上一列的聯合常態模型，每答一題就以條件分佈更新所有領域；下一題選 (A) **A 最適**：讓 41 個領域的後驗變異數總和下降最多的領域，下降量 = Σ_k Cov(k, j)² ／ (Var(j) + σ²)；或 (U) **上信賴界**：後驗平均 + 後驗標準差最大的領域（Srinivas, Krause, Kakade & Seeger, 2010, *ICML* 的 GP-UCB 思路，目標是找出最高的領域）。兩階段提問（先 12 群、再細問最高的群）仍是對照組 | A-C1-25、A-C1-26、A-C1-27 |
 | 已答領域去雜訊（C1 v2，F116） | 經驗貝氏收縮（Efron & Morris, 1975, *JASA* 70；單變量即 Kelley 的真分數估計）：已答領域也以聯合常態的後驗平均 E[w_j ｜ 全部作答] 取代原始作答，等於把作答往「其他作答所預測的值」拉，拉的程度由作答雜訊 σ² 與後驗變異數決定。σ → 0 時就是原始作答 | A-C1-25、A-C1-26、A-C1-27 |
