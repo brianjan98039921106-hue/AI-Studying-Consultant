@@ -74,7 +74,7 @@
 | 2 | **W-41** 題庫 v2：回譯、認知訪談（官方原文已核對；[item-bank-v2.md](docs/item-bank-v2.md)） | 實測前置（[study-protocol.md](docs/study-protocol.md) §8） |
 | 3 | **W-76** 配對設計＋「區分兩種假設」的預先登記參數還原 | 精確份量估不準，區分假設可行（F101） |
 | 4 | **W-40／W-41／W-76** 實測（待 study-protocol §7 決策） | 只有真實資料能決定 v2 是否值得（B-C5-8） |
-| 5 | **W-73** 測量恆等性與 DIF 的分析預先登記（施測前） | D11：題目對所有背景等值才能比較分數；W-41 同一批資料 |
+| 5 | **W-41／W-73** 施測前決定：核心維度加到每維 ≥ 3 題、S1 加原科系群欄位、W-73 的 R 程式以合成資料試跑 | W-73 預先登記發現兩題維度無法定位 DIF（F160，B-C1-40）、計畫人數下檢定力不足（F163，B-C1-42） |
 <!-- AUTO:next-steps END -->
 
 ## 文件導覽
@@ -92,7 +92,7 @@
 | **所有發現的狀態總表** | [results/FINDINGS.md](results/FINDINGS.md) |
 
 <!-- AUTO:latest-results START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-最新 L3 合成驗證結論（來源：[docs/VALIDATION.md §5](docs/VALIDATION.md)）：[W-66 兩階段 m／q](results/synthetic-l3-two-stage-findings.md)、[C3 年度效果](results/synthetic-l3-admission-years-findings.md)、[C3 學程類型](results/synthetic-l3-admission-types-findings.md)、[C3 v0.2 確認](results/synthetic-l3-admission-pool-confirm-findings.md)、[V-C3-1 自陳偏誤](results/synthetic-l3-admission-bias-findings.md)、[C3 → C4](results/synthetic-l3-admission-portfolio-findings.md)、[V-C4-3 穩健選擇](results/synthetic-l3-portfolio-robust-findings.md)、[V-C4-2 錄取相關](results/synthetic-l3-portfolio-corr-findings.md)、[族群多樣化](results/synthetic-l3-diversity-findings.md)、[領域把關](results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](results/synthetic-l3-noise-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](results/synthetic-l3-v1-continuous-findings.md)、[v1](results/synthetic-l3-v1-findings.md)、[v0](results/synthetic-l3-v0-findings.md)）
+最新 L3 合成驗證結論（來源：[docs/VALIDATION.md §5](docs/VALIDATION.md)）：[W-73 DIF 規則操作特性（合成）](results/w73-dif-power-findings.md)、[W-66 兩階段 m／q](results/synthetic-l3-two-stage-findings.md)、[C3 年度效果](results/synthetic-l3-admission-years-findings.md)、[C3 學程類型](results/synthetic-l3-admission-types-findings.md)、[C3 v0.2 確認](results/synthetic-l3-admission-pool-confirm-findings.md)、[V-C3-1 自陳偏誤](results/synthetic-l3-admission-bias-findings.md)、[C3 → C4](results/synthetic-l3-admission-portfolio-findings.md)、[V-C4-3 穩健選擇](results/synthetic-l3-portfolio-robust-findings.md)、[V-C4-2 錄取相關](results/synthetic-l3-portfolio-corr-findings.md)、[族群多樣化](results/synthetic-l3-diversity-findings.md)、[領域把關](results/synthetic-l3-domain-gate-findings.md)、[v2 計分器選擇](results/synthetic-l3-v2-scorer-findings.md)、[需求維度 v1 vs v2](results/synthetic-l3-dims-v2-findings.md)、[C1.3 v2 雜訊模型](results/synthetic-l3-noise-findings.md)、[端到端](results/synthetic-l3-e2e-findings.md)、[C1.3 自適應問卷](results/synthetic-l3-adaptive-findings.md)、[C1.2 v1](results/synthetic-l3-c1-v1-findings.md)、[v2：熟悉度擷取＋分區呈現](results/synthetic-l3-v2-findings.md)（前幾版：[跨生成模型](results/synthetic-l3-v1-continuous-findings.md)、[v1](results/synthetic-l3-v1-findings.md)、[v0](results/synthetic-l3-v0-findings.md)）
 <!-- AUTO:latest-results END -->
 
 ## 使用方式
