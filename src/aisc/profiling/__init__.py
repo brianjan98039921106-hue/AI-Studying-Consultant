@@ -7,6 +7,8 @@ Sub-components (docs/components/C1-profiling.md):
          v1 anchors as prior for unanswered dims + prestige widening
     C1.3 adaptive questionnaire (adaptive.py)                     — v1: 4 item-selection strategies
     C1.4 familiarity elicitation (what the student already knows) — v1 done (familiarity.py)
+    C6.4 student-record intake (record_intake.py, W-61)           — abilities -> StudentRecord;
+         never passed to C2 (D9)
 """
 
 from aisc.profiling.adaptive import (
@@ -26,9 +28,25 @@ from aisc.profiling.anchors import (
 )
 from aisc.profiling.ceec import RiasecPrior, apply_prior, riasec_prior_from_ceec
 from aisc.profiling.familiarity import LEVELS, STRICT_KNOWN, apply_familiarity, known_ids
+from aisc.profiling.record_intake import (
+    CourseMap,
+    IntakeResult,
+    RecordIntakeError,
+    intake_student_record,
+    load_course_map,
+    load_student_record,
+    normalize_name,
+)
 
 __all__ = [
     "AdaptiveSession",
+    "CourseMap",
+    "IntakeResult",
+    "RecordIntakeError",
+    "intake_student_record",
+    "load_course_map",
+    "load_student_record",
+    "normalize_name",
     "Item",
     "NOISE_MODELS",
     "STRATEGIES",

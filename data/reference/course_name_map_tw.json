@@ -1,0 +1,219 @@
+{
+  "version": "draft-1",
+  "taxonomy_version": "draft-1",
+  "status": "DRAFT-1 2026-10-29 — NOT CONFIRMED. The user confirms the Taiwanese course-name examples (W-61, ROADMAP). Hand-written from common Taiwanese course titles; no school's syllabus was checked. Until confirmed, every mapping is a proposal shown to the student with the rule that produced it (A-C6-10, B-C6-2).",
+  "matching": "Rule-based, no LLM, no fuzzy matching. A name is normalised (Unicode NFKC, lower case, whitespace removed, a trailing parenthesised teaching-language note such as （英文授課） dropped) and split into a base name and an optional ordinal: （一）(1)(I) 一 上 I 1 -> 1, （二）(2)(II) 二 下 II 2 -> 2, up to 4. The base must equal an alias exactly. `categories` apply to every ordinal unless `by_ordinal` overrides it ('none' = no ordinal; [] = recognised but not mapped). Names under `review` are recognised but deliberately not mapped: they are listed for manual mapping with the reason. Anything else is unmatched and also listed for manual mapping; nothing is guessed.",
+  "courses": [
+    {
+      "id": "calculus",
+      "names": ["微積分", "微積分甲", "微積分乙", "微積分丙", "初等微積分", "大一微積分", "calculus"],
+      "categories": ["calculus_1"],
+      "by_ordinal": {"2": ["calculus_2"], "3": ["calculus_2"], "4": ["calculus_2"]},
+      "note": "未標序號的「微積分」只算 calculus_1（無法確定是否含級數與多變數）；（二）以後算 calculus_2。部分學校的微積分 2 仍是單變數，需確認"
+    },
+    {
+      "id": "multivariable_calculus",
+      "names": ["多變數微積分", "多變量微積分", "向量微積分", "multivariablecalculus", "vectorcalculus"],
+      "categories": ["calculus_2"],
+      "note": ""
+    },
+    {
+      "id": "linear_algebra",
+      "names": ["線性代數", "線性代數導論", "應用線性代數", "基礎線性代數", "linearalgebra"],
+      "categories": ["linear_algebra"],
+      "note": ""
+    },
+    {
+      "id": "probability",
+      "names": ["機率", "機率論", "機率學", "機率導論", "初等機率論", "probability", "probabilitytheory", "introductiontoprobability"],
+      "categories": ["probability"],
+      "note": ""
+    },
+    {
+      "id": "statistics",
+      "names": ["統計學", "統計學原理", "基礎統計學", "初等統計學", "應用統計學", "商用統計學", "企業統計學", "管理統計學", "經濟統計學", "社會統計學", "心理統計學", "教育統計學", "生物統計學", "迴歸分析", "statistics", "businessstatistics", "appliedstatistics", "biostatistics", "regressionanalysis"],
+      "categories": ["statistics"],
+      "note": "商用／管理／社會統計只算 statistics，不算 probability（B-C6-2）"
+    },
+    {
+      "id": "probability_and_statistics",
+      "names": ["機率與統計", "機率統計", "工程機率與統計", "機率與統計學", "數理統計", "數理統計學", "probabilityandstatistics", "mathematicalstatistics"],
+      "categories": ["probability", "statistics"],
+      "note": "同時算 probability 與 statistics；機率部分的深度依學校而異，需確認"
+    },
+    {
+      "id": "discrete_math",
+      "names": ["離散數學", "離散數學導論", "discretemathematics", "discretemath"],
+      "categories": ["discrete_math"],
+      "note": ""
+    },
+    {
+      "id": "programming",
+      "names": ["程式設計", "計算機程式設計", "計算機程式", "程式語言", "程式設計導論", "計算機概論與程式設計", "c程式設計", "c語言程式設計", "c++程式設計", "java程式設計", "python程式設計", "python程式語言", "introductiontoprogramming", "computerprogramming", "programming"],
+      "categories": ["programming_intro"],
+      "note": ""
+    },
+    {
+      "id": "data_structures",
+      "names": ["資料結構", "演算法", "演算法概論", "資料結構與演算法", "datastructures", "algorithms", "datastructuresandalgorithms"],
+      "categories": ["data_structures"],
+      "note": ""
+    },
+    {
+      "id": "databases",
+      "names": ["資料庫", "資料庫系統", "資料庫管理", "資料庫管理系統", "資料庫系統概論", "databasesystems", "databasemanagement"],
+      "categories": ["databases"],
+      "note": ""
+    },
+    {
+      "id": "economics_principles",
+      "names": ["經濟學", "經濟學原理", "經濟學概論", "初級經濟學", "principlesofeconomics", "economics"],
+      "categories": ["microeconomics", "macroeconomics"],
+      "by_ordinal": {"1": ["microeconomics"], "2": ["macroeconomics"]},
+      "note": "一學期的經濟學通常個體與總體都教；（一）（二）依多數學校的上下學期分工分別算個體、總體，需確認"
+    },
+    {
+      "id": "microeconomics",
+      "names": ["個體經濟學", "個經", "中級個體經濟學", "microeconomics", "intermediatemicroeconomics", "principlesofmicroeconomics"],
+      "categories": ["microeconomics"],
+      "note": ""
+    },
+    {
+      "id": "macroeconomics",
+      "names": ["總體經濟學", "總經", "中級總體經濟學", "macroeconomics", "intermediatemacroeconomics", "principlesofmacroeconomics"],
+      "categories": ["macroeconomics"],
+      "note": ""
+    },
+    {
+      "id": "accounting",
+      "names": ["會計學", "初級會計學", "會計學原理", "中級會計學", "財務會計", "管理會計", "成本會計", "成本與管理會計", "accounting", "financialaccounting", "managerialaccounting", "principlesofaccounting"],
+      "categories": ["accounting"],
+      "note": ""
+    },
+    {
+      "id": "finance_intro",
+      "names": ["財務管理", "財務管理概論", "公司理財", "公司財務", "公司財務管理", "corporatefinance", "financialmanagement"],
+      "categories": ["finance_intro"],
+      "note": ""
+    },
+    {
+      "id": "physics",
+      "names": ["普通物理", "普通物理學", "大學物理", "物理學", "普通物理實驗", "普通物理學實驗", "generalphysics", "physics"],
+      "categories": ["physics"],
+      "note": "實驗課也列為證據；學程要求「含實驗」時請看證據是否包含實驗課"
+    },
+    {
+      "id": "general_chemistry",
+      "names": ["普通化學", "普通化學實驗", "大學化學", "generalchemistry"],
+      "categories": ["general_chemistry"],
+      "note": "類別要求含實驗；台灣常分開開課，兩門都會列為證據"
+    },
+    {
+      "id": "organic_chemistry",
+      "names": ["有機化學", "有機化學實驗", "organicchemistry"],
+      "categories": ["organic_chemistry"],
+      "note": "同上：請看證據是否包含實驗課"
+    },
+    {
+      "id": "biochemistry",
+      "names": ["生物化學", "生化", "biochemistry"],
+      "categories": ["biochemistry"],
+      "note": ""
+    },
+    {
+      "id": "general_biology",
+      "names": ["普通生物學", "普通生物學實驗", "生物學", "generalbiology"],
+      "categories": ["general_biology"],
+      "note": "同上：請看證據是否包含實驗課"
+    },
+    {
+      "id": "anatomy_physiology",
+      "names": ["解剖學", "人體解剖學", "大體解剖學", "生理學", "人體生理學", "解剖生理學", "anatomy", "physiology", "humananatomyandphysiology"],
+      "categories": ["anatomy_physiology"],
+      "note": "只修解剖或只修生理也會算；學程要求兩者時請看證據"
+    },
+    {
+      "id": "health_science",
+      "names": ["微生物學", "營養學", "病理學", "microbiology", "nutrition"],
+      "categories": ["physiology_or_health_science"],
+      "note": ""
+    },
+    {
+      "id": "design_foundations",
+      "names": ["基本設計", "基礎設計", "設計基礎", "素描", "色彩學", "平面設計", "立體設計", "視覺傳達設計", "designfundamentals", "drawing"],
+      "categories": ["design_foundations"],
+      "note": ""
+    },
+    {
+      "id": "studio_art",
+      "names": ["油畫", "水彩", "雕塑", "水墨畫", "painting", "sculpture"],
+      "categories": ["studio_art"],
+      "note": ""
+    },
+    {
+      "id": "writing",
+      "names": ["英文寫作", "英文作文", "英語寫作", "學術英文寫作", "學術寫作", "englishcomposition", "academicwriting"],
+      "categories": ["writing"],
+      "note": ""
+    },
+    {
+      "id": "research_methods",
+      "names": ["研究方法", "研究法", "研究方法論", "社會科學研究方法", "社會研究法", "researchmethods"],
+      "categories": ["research_methods"],
+      "note": ""
+    },
+    {
+      "id": "music_theory",
+      "names": ["樂理", "基礎樂理", "和聲學", "視唱聽寫", "musictheory"],
+      "categories": ["music_theory"],
+      "note": ""
+    }
+  ],
+  "review": [
+    {
+      "names": ["商用微積分", "經濟數學", "管理數學", "商用數學", "businesscalculus"],
+      "reason": "商管版本的數學課，深度不一；美國學程常要求一般微積分，請對照官網原文手動對應"
+    },
+    {
+      "names": ["計算機概論", "資訊概論", "電腦概論", "introductiontocomputers"],
+      "reason": "內容可能是電腦概論而非寫程式；若有寫程式作業，可手動對應 programming_intro"
+    },
+    {
+      "names": ["工程數學"],
+      "reason": "可能涵蓋線性代數或微分方程，各校不同；請依課綱手動對應"
+    },
+    {
+      "names": ["高等微積分", "advancedcalculus"],
+      "reason": "實分析性質，不等於 calculus_2 的多變數微積分；請依內容手動對應"
+    },
+    {
+      "names": ["計量經濟學", "econometrics"],
+      "reason": "通常含迴歸，但是否抵統計要求依學程而定"
+    },
+    {
+      "names": ["大一英文", "英文", "英語", "英語會話", "英文閱讀"],
+      "reason": "一般英文課通常不等於 academic writing；有寫作為主的課可手動對應 writing"
+    },
+    {
+      "names": ["統計軟體應用", "資料分析", "數據分析"],
+      "reason": "工具課，不一定含統計推論"
+    }
+  ],
+  "exams": [
+    {"names": ["gre", "gregeneral", "gregeneraltest"], "category": "gre"},
+    {"names": ["gresubject", "gresubjecttest"], "category": "subject_test"},
+    {"names": ["gmat", "gmatfocus", "gmatfocusedition"], "category": "gmat"},
+    {"names": ["dat", "dentaladmissiontest"], "category": "dat"},
+    {"names": ["mcat"], "category": "mcat"},
+    {"names": ["lsat"], "category": "lsat"},
+    {"names": ["toefl", "toeflibt", "托福", "ielts", "ieltsacademic", "雅思", "duolingoenglishtest", "det", "多鄰國", "pteacademic"], "category": "english_proficiency"},
+    {"names": ["jlpt", "日檢", "日本語能力試驗", "topik", "韓檢", "delf", "dalf", "testdaf", "dele", "hsk"], "category": "other_language"},
+    {"names": ["專技高考", "專門職業及技術人員高等考試", "醫師國考", "護理師國考", "nclex", "nclex-rn", "feexam"], "category": "licensing_exam"}
+  ],
+  "exam_review": [
+    {
+      "names": ["toeic", "多益", "全民英檢", "gept", "toeflitp", "ieltsgeneral", "ieltsgeneraltraining"],
+      "reason": "多數美國研究所不接受作為英語能力證明；請以學程官網為準"
+    }
+  ]
+}
