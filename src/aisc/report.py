@@ -5,8 +5,9 @@ produce and changes nothing (D9: requirement gaps are shown next to a
 recommendation, never used to filter or reorder). Every number that rests on an
 assumption or on synthetic data is labelled as such:
     - programmes with `synthetic=True` -> a banner saying the catalogue is not real
-    - AdmitEstimate(method="assumed")  -> probabilities and expected utility marked
-      as assumptions (C3 not used)
+    - programmes with unmeasured dimensions (real catalogue v0, B-C0-18) -> a banner,
+      and those dimensions are never cited as reasons (A-C0-15)
+    - profiles from the low-confidence series fallback -> a banner
     - dimensions the student did not answer -> shown as completed by C1.2, with SD
 """
 
@@ -29,7 +30,9 @@ def _label(key: str, dims: str) -> str:
 
 
 def _reasons(rec: Recommendation, dims: str, n: int = 3) -> str:
-    top = sorted(rec.contributions.items(), key=lambda kv: -kv[1])[:n]
+    skip = set(rec.program.unmeasured)  # placeholders are not evidence (A-C0-15)
+    items = [(k, v) for k, v in rec.contributions.items() if k not in skip]
+    top = sorted(items, key=lambda kv: -kv[1])[:n]
     return "、".join(f"{_label(k, dims)}（{v:+.2f}）" for k, v in top if v > 0) or "—"
 
 
@@ -91,6 +94,13 @@ def render_profile_report(
         warn.append("**學程資料是合成的示範資料，不是真實學程，不能用來做決定。**")
     if plan is not None and plan.assumed:
         warn.append("錄取機率是**假設值**（未使用 C3 模型），申請組合與期望效用只供示範。")
+    gap_dims = sorted({k for p in shown for k in p.unmeasured})
+    if gap_dims:
+        names = "、".join(_label(k, dims) for k in gap_dims)
+        warn.append(f"學程的{names}**尚未測量**（只用職業興趣資料），這些維度不影響排序，"
+                    "也不列為理由；同一學門的學程目前分數相同。")  # fmt: skip
+    if any(p.attribute_source == "occupation_fallback" for p in shown):
+        warn.append("部分學程的學門沒有職業對照，興趣剖面取自同系列學門的平均（低信心）。")
     if any(k not in profile.needs for k in completed.needs):
         warn.append("部分需求維度學生沒有作答，由系統依先驗補全（下表標示「補全」與不確定性）。")
     if warn:

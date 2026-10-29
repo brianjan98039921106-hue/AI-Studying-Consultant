@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-29 · 對應版本 v0.4.0（研究原型）
+最後更新：2026-10-29 · 對應版本 v0.4.1（研究原型）
 
 ---
 
@@ -19,6 +19,7 @@
 | 自適應問卷（自動挑下一題） | C1.3 | 🟡 可用，題目為抽象占位題 | ❌ 真實題目文字待 W-41 |
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
+| 真實學程目錄 v0（IPEDS 碩士 × 職業興趣） | C0（W-77） | 🧪 實驗中（§4.11）：17,552 個真實學程（v2 維度）；強度與取向**尚未測量** | ⚠️ 只依興趣與領域排序；同一學門的學校分數相同 |
 | 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
 | 申請組合最佳化（選哪幾間申請） | C4.1–C4.4 | ⏸ 暫停（D13）：程式與介面保留（`plan_applications`、`AdmitEstimate`），不在主線流程（§9.1） | — |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
@@ -305,6 +306,34 @@ print(md.splitlines()[0])
 
 `gaps`（選用）是 `{program_id: RequirementGap}`，會在每個學程旁顯示還缺哪些條件，但不影響排序（D9）。`plan`（選用）是暫停中的申請組合結果（§9.1），不給就不會出現該段。
 
+### 4.11（實驗中）真實學程目錄 v0
+
+以 IPEDS 2025 的真實「學校 × 學門（CIP）」碩士學程，加上由 O\*NET 職業資料推得的興趣與 41 個領域分數建立目錄（v2 維度）。數理強度、程式強度、研究取向、創業取向**還沒有測量**：以共用暫填值代入、列在 `Program.unmeasured`，不影響 v2 預設計分器的排序，報告也不會把它們當理由（A-C0-15、B-C0-18）。同一學門的學校分數相同，所以推薦清單會被同一學門的不同學校佔滿；目前請把結果讀成「學門」推薦。
+
+```python
+from aisc.catalog.real import load_real_catalog_v0
+from aisc.contracts import StudentProfile
+from aisc.pipeline import interactive_discovery
+
+real = load_real_catalog_v0()  # 讀 data/reference/，不需網路；預設碩士、畢業人數 ≥ 10
+print(len(real.programs), "real programs; unmeasured:", real.programs[0].unmeasured)
+
+student_v2 = StudentProfile(
+    "demo-v2", {"riasec_i": 0.8, "bi_mathematics_statistics": 0.9, "bi_finance": 0.7}, dims="v2"
+)
+found = interactive_discovery(
+    student_v2,
+    real.programs,
+    lambda ids: {i: "unknown" for i in ids},
+    n_shortlist=10,
+    k_new=5,
+    k_known=0,
+)
+print([r.program.degree_name for r in found.discoveries][:2])
+```
+
+也可以先寫成檔案：`python scripts/build_real_catalog.py`（輸出 `data/catalog/real_v0.jsonl`，不進版控），再用 `load_programs` 讀取。
+
 ---
 
 ## 5. 給顧問：建議的使用流程（目前階段）
@@ -326,7 +355,7 @@ print(md.splitlines()[0])
 
 | 限制 | 影響 | 何時解決 |
 |---|---|---|
-| 學程目錄是合成資料 | 推薦結果不對應真實學校 | W-20～W-22（C0 真實學程） |
+| 示範用學程目錄是合成資料；真實目錄 v0（§4.11）的強度與取向尚未測量 | 推薦只依興趣與領域，同一學門的學校無法區分 | W-20～W-22（W-21 前導已完成，[w21-pilot.md](w21-pilot.md)） |
 | 推薦用的學程目錄只涵蓋商管 × 數據 × 工程管理（合成） | 其他領域的學生推薦品質未知；全領域的官方參考表（`data/reference/*_all.csv`：1,233 個 CIP，含專業與研究型博士）已建好，但還不是可推薦的學程；v2 維度（§4.8）實驗中 | W-16c、W-20～W-22 |
 | 程式內的自適應問卷仍是抽象占位題；v2 題庫中文草案（`data/items/item_bank_v2.json`，73 題）尚未回譯與認知訪談 | 還不能直接拿給學生作答 | W-41 |
 | 錄取機率與申請組合暫停（D13） | 模型不建議申請哪幾間 | 範圍重新納入時（W-44、W-45） |
@@ -378,6 +407,7 @@ print(md.splitlines()[0])
 | 2026-10-28 | v0.3.18 | 錄取機率模型新增 `converged` 與 `anchor_conflicts`，未收斂或官方錄取率與紀錄衝突時警告（§4.9） | B-C3-10～12 |
 | 2026-10-28 | v0.3.19 | 申請結果資料的範本、載入器（隱私欄位檢查、標準化、缺漏處理）與時間切分校準檢查腳本（§4.9、[data-intake.md](data-intake.md)） | W-44 C3.1 |
 | 2026-10-29 | v0.4.0 | 範圍調整（D13）：錄取機率模型（C3）與申請組合（C4）暫停，主線流程到推薦、條件差距與報告為止；程式與介面保留，用法移到 §9；示範程式不再計算申請組合 | D13 |
+| 2026-10-29 | v0.4.1 | 新增實驗中的真實學程目錄 v0（`aisc.catalog.real.load_real_catalog_v0`、`scripts/build_real_catalog.py`，§4.11）；`Program` 新增 `unmeasured` 欄位；報告標示未測量維度與低信心剖面，且不以未測量維度當理由；錨點的未測量維度不再當作先驗證據（B-C1-32） | W-77 |
 
 ---
 

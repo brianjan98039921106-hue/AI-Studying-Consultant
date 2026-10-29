@@ -180,6 +180,8 @@ def blend_profile_v1(
     require_same_dims(profile, anchors)
     a_mean, a_sigma = anchor_prior(anchors, list(catalog.values()), sigma0, prestige_beta)
     priors = _area_priors(profile, area_model)
+    # B-C1-32: a dimension any anchor has not measured (placeholder value) is no evidence
+    no_anchor_info = {k for a in anchors for k in a.unmeasured}
 
     needs: dict[str, float] = {}
     uncertainty: dict[str, float] = {}
@@ -193,7 +195,7 @@ def blend_profile_v1(
             )
             sd_a = a_sigma
         w_s = 1.0 / s_sd**2
-        w_a = 0.0 if np.isinf(sd_a) else 1.0 / sd_a**2
+        w_a = 0.0 if np.isinf(sd_a) or k in no_anchor_info else 1.0 / sd_a**2
         needs[k] = float(np.clip((s_val * w_s + a_mean[i] * w_a) / (w_s + w_a), 0, 1))
         uncertainty[k] = float(np.sqrt(1.0 / (w_s + w_a)))
     return _with(profile, needs, uncertainty)
