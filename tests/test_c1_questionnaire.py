@@ -113,10 +113,27 @@ def test_self_service_runs_without_consent_records_nothing(tmp_path):
     assert run.returncode == 0 and not (tmp_path / "r.md").exists()
 
 
-@pytest.mark.probe
-@pytest.mark.xfail(strict=True, raises=AssertionError,
-                   reason="B-C2-30: one degree type fills the self-service list")  # fmt: skip
 def test_probe_self_service_list_shows_distinct_degree_types(tmp_path):
+    """B-C2-30 (fixed): the list shows distinct degree types, not one degree at
+    many schools."""
     lines = _self_service(tmp_path)
-    degrees = {ln.split("｜")[-1] for ln in lines}
+    degrees = {next(seg for seg in ln.split("｜") if "(Master's)" in seg) for ln in lines}
     assert len(lines) >= 5 and len(degrees) == len(lines), lines[:3]
+
+
+def test_merge_identical_programs_keeps_members_and_singletons():
+    from dataclasses import replace
+
+    from aisc.catalog.real import load_real_catalog_v0
+    from aisc.pipeline import merge_identical_programs
+
+    real = load_real_catalog_v0(ROOT / "data" / "reference").programs
+    odd = replace(real[0], program_id="odd", attributes={**real[0].attributes, "riasec_r": 0.0})
+    merged, members = merge_identical_programs([*real, odd])
+    assert sum(len(v) for v in members.values()) == len(real) + 1
+    assert len({p.program_id for p in merged}) == len(merged) == len(members)
+    assert members["odd"] == [odd]  # a programme with no twin is kept unchanged
+    big = max(members.values(), key=len)
+    rep = next(p for p in merged if members[p.program_id] is big)
+    assert rep.program_id.startswith("type:") and f"等 {len(big)} 所" in rep.school
+    assert {p.cip for p in big} == {rep.cip} and rep.attributes == big[0].attributes

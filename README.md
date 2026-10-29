@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.4.3 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.4.4 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -38,6 +38,7 @@
 | 輸入需求（15 個維度）＋ 未作答維度自動補全 | C1.1、C1.2 | ✅ 可用 | ⚠️ 維度尚未經實證驗證（W-41） |
 | 大考中心興趣量表分數作為先驗 | C1.1 | ✅ 可用 | ⚠️ 參數未校準（A-C1-8） |
 | 自適應問卷（自動挑下一題） | C1.3 | 🟡 可用，題目為抽象占位題 | ❌ 真實題目文字待 W-41 |
+| 學生自填問卷（73 題真題目）＋終端機自助流程 | C1.1、C1.2 | 🧪 可用（§4.12）：全答、可跳題、v2 剖面；`examples/self_service.py` 從同意到報告 | ⚠️ 題目尚未試答（W-41）；推薦目錄是真實目錄 v0（強度與取向未測量） |
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 真實學程目錄 v0（IPEDS 碩士 × 職業興趣） | C0（W-77） | 🧪 實驗中（§4.11）：17,552 個真實學程（v2 維度）；強度與取向**尚未測量** | ⚠️ 只依興趣與領域排序；同一學門的學校分數相同 |
@@ -58,9 +59,9 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
 | 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](docs/privacy-notice.md)）；用法沒有改變 | D14 |
 | 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
-| 2026-10-29 | v0.4.1 | 新增實驗中的真實學程目錄 v0（`aisc.catalog.real.load_real_catalog_v0`、`scripts/build_real_catalog.py`，§4.11）；`Program` 新增 `unmeasured` 欄位；報告標示未測量維度與低信心剖面，且不以未測量維度當理由；錨點的未測量維度不再當作先驗證據（B-C1-32） | W-77 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
@@ -70,11 +71,10 @@
 
 | 順序 | 工項 | 依據 |
 |---|---|---|
-| 1 | **W-52** 問卷換成真題目：v2 題庫（73 題）接成學生自填的問卷流程，產生 v2 需求剖面 | 程式內仍是抽象占位題；沒有省題方案不劣於全答（F180–F183），自助版先全答 |
-| 2 | **W-77** 真實學程目錄 v0 補強度與取向（W-21 課程擷取；W-20 可由單一審核者人工檢查，D14） | 目前只依興趣與領域排序（§4.11） |
-| 3 | **W-53** 學生自助介面（網頁）：同意 → 作答 → 熟悉度確認 → 推薦 → 報告 | 目前只有 Python API 與 Markdown 報告 |
-| 4 | **W-40** 個資告知與同意（[privacy-notice.md](docs/privacy-notice.md) 範本） | 學生資料屬個人資料（個資法），不是研究倫理 |
-| 5 | **W-41** 題目試答 3–5 人：看得懂、答得出來就修，不做信效度研究 | D14 |
+| 1 | **W-77** 真實學程目錄 v0 補強度與取向（W-21 課程擷取；W-20 可由單一審核者人工檢查，D14） | 目前只依興趣與領域排序（§4.11） |
+| 2 | **W-53** 學生自助介面（網頁）：同意 → 作答 → 熟悉度確認 → 推薦 → 報告 | 目前只有 Python API 與 Markdown 報告 |
+| 3 | **W-40** 個資告知與同意（[privacy-notice.md](docs/privacy-notice.md) 範本） | 學生資料屬個人資料（個資法），不是研究倫理 |
+| 4 | **W-41** 題目試答 3–5 人：看得懂、答得出來就修，不做信效度研究；可直接用 `python examples/self_service.py`（W-52 ✅） | D14 |
 <!-- AUTO:next-steps END -->
 
 ## 文件導覽

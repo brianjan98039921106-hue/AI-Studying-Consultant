@@ -19,7 +19,7 @@ simulated respondent in C5. It receives program_ids and returns
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 
@@ -38,6 +38,41 @@ from aisc.discovery.constraints import passes_constraints, validate_constraints
 from aisc.profiling import AdaptiveSession, Item, apply_familiarity, blend_profile_v1
 
 AskFn = Callable[[list[str]], dict[str, str]]
+
+
+def merge_identical_programs(
+    catalog: Sequence[Program],
+) -> tuple[list[Program], dict[str, list[Program]]]:
+    """Merge programmes the model cannot tell apart (same CIP, degree name, dimension
+    set, attribute vector and unmeasured list) into one "degree type" (B-C2-30).
+
+    Real catalogue v0 gives every school in a CIP the same vector, so without this the
+    list fills up with one degree at many schools. Returns (catalogue to rank,
+    {type program_id: member programmes}); a programme with no twin is kept as is.
+    The representative keeps the first member's fields (members sorted by school),
+    with program_id "type:<cip>:<n>" and school "<first school> 等 N 所". Anchors and
+    familiarity refer to the returned ids. Once attributes differ between schools
+    (W-21, W-22) nothing is merged."""
+    groups: dict[tuple, list[Program]] = {}
+    for p in catalog:
+        key = (p.cip, p.degree_name, p.dims, tuple(sorted(p.attributes.items())),
+               tuple(p.unmeasured))  # fmt: skip
+        groups.setdefault(key, []).append(p)
+    out: list[Program] = []
+    members: dict[str, list[Program]] = {}
+    for n, ps in enumerate(groups.values()):
+        ps = sorted(ps, key=lambda q: (q.school, q.program_id))
+        if len(ps) == 1:
+            out.append(ps[0])
+            members[ps[0].program_id] = ps
+            continue
+        rep = replace(ps[0], program_id=f"type:{ps[0].cip}:{n}",
+                      school=f"{ps[0].school} 等 {len(ps)} 所")  # fmt: skip
+        out.append(rep)
+        members[rep.program_id] = ps
+    return out, members
+
+
 AnswerFn = Callable[[Item], float]
 
 

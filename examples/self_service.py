@@ -26,7 +26,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from aisc.catalog.real import load_real_catalog_v0  # noqa: E402
-from aisc.pipeline import interactive_discovery, prepare_profile  # noqa: E402
+from aisc.pipeline import (  # noqa: E402
+    interactive_discovery,
+    merge_identical_programs,
+    prepare_profile,
+)
 from aisc.profiling.questionnaire import Questionnaire, load_questions  # noqa: E402
 from aisc.report import render_profile_report  # noqa: E402
 
@@ -83,7 +87,8 @@ def main() -> None:
     student = qs.profile(f"self-{date.today().isoformat()}")
     print(f"\n完成：{total - len(qs.skipped())} 題作答、{len(qs.skipped())} 題跳過。")
 
-    catalog = load_real_catalog_v0(ROOT / "data" / "reference").programs
+    real = load_real_catalog_v0(ROOT / "data" / "reference").programs
+    catalog, members = merge_identical_programs(real)  # one entry per degree type (B-C2-30)
     names = {p.program_id: p.degree_name for p in catalog}
 
     def ask(program_ids: list[str]) -> dict[str, str]:
@@ -107,7 +112,9 @@ def main() -> None:
     out.write_text(report, encoding="utf-8")
     print("\n== 你可能沒想過 ==")
     for r in result.discoveries:
-        print(f"  {r.program.school}｜{r.program.degree_name}")
+        schools = [m.school for m in members[r.program.program_id]]
+        more = f" 等 {len(schools)} 所" if len(schools) > 3 else ""
+        print(f"  {r.program.degree_name}｜{'、'.join(schools[:3])}{more}")
     print(f"\n完整報告：{out}")
 
 
