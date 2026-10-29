@@ -13,6 +13,8 @@ Everything the page needs, exported from the Python model so the JavaScript engi
 
     python scripts/build_web_data.py            # write web/data.json
     python scripts/build_web_data.py --check    # exit 1 if web/data.json is stale
+    python scripts/build_web_data.py --bundle web/dist/self-service.html
+        # one self-contained page (engine and data inlined) for hosting without a server
 """
 
 from __future__ import annotations
@@ -82,6 +84,7 @@ def build() -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
+    ap.add_argument("--bundle", type=Path, default=None)
     args = ap.parse_args()
     text = json.dumps(build(), ensure_ascii=False, separators=(",", ":")) + "\n"
     if args.check:
@@ -89,9 +92,28 @@ def main() -> None:
             raise SystemExit("web/data.json is stale: run python scripts/build_web_data.py")
         print("web/data.json is up to date")
         return
+    if args.bundle:
+        bundle(text, args.bundle)
+        return
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")
     print(f"wrote {OUT} ({OUT.stat().st_size / 1e6:.2f} MB)")
+
+
+def bundle(data_text: str, out: Path) -> None:
+    """Inline engine.js and the data into index.html (no relative loads)."""
+    page = (ROOT / "web" / "index.html").read_text("utf-8")
+    engine = (ROOT / "web" / "engine.js").read_text("utf-8")
+    tag = '<script src="engine.js"></script>'
+    if page.count(tag) != 1:
+        raise SystemExit("index.html must load engine.js exactly once")
+    safe = data_text.strip().replace("</", "<\\/")
+    page = page.replace(
+        tag, f"<script>\n{engine}</script>\n<script>window.AISC_DATA = {safe};</script>"
+    )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(page, encoding="utf-8")
+    print(f"wrote {out} ({out.stat().st_size / 1e6:.2f} MB)")
 
 
 if __name__ == "__main__":

@@ -110,3 +110,14 @@ def test_javascript_engine_matches_the_python_pipeline(tmp_path):
         for key in ("discoveries", "knownGood"):
             assert [x[0] for x in g[key]] == [x[0] for x in e[key]], (i, key)
             assert np.allclose([x[1] for x in g[key]], [x[1] for x in e[key]], atol=1e-9)
+
+
+def test_bundle_inlines_engine_and_data(tmp_path):
+    out = tmp_path / "page.html"
+    run = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_web_data.py"), "--bundle",
+                          str(out)], capture_output=True, text=True)  # fmt: skip
+    assert run.returncode == 0, run.stderr
+    page = out.read_text(encoding="utf-8")
+    assert '<script src="engine.js"></script>' not in page
+    assert "function makeEngine" in page and "window.AISC_DATA = {" in page
+    assert "</script>" not in page.split("window.AISC_DATA = ", 1)[1].split(";</script>", 1)[0]
