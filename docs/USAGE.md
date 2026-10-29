@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-29 · 對應版本 v0.4.1（研究原型）
+最後更新：2026-10-29 · 對應版本 v0.4.2（研究原型）
 
 ---
 
@@ -20,7 +20,8 @@
 | 熟悉度確認（「你聽過這些學程嗎？」） | C1.4 | ✅ 可用 | ⚠️ 漏報／誤報率待實測 |
 | 分區推薦：「你可能沒想過」＋「已知且適合」 | C2 v1 | ✅ L3 合成驗證通過 | ❌ 學程目錄目前是**合成資料** |
 | 真實學程目錄 v0（IPEDS 碩士 × 職業興趣） | C0（W-77） | 🧪 實驗中（§4.11）：17,552 個真實學程（v2 維度）；強度與取向**尚未測量** | ⚠️ 只依興趣與領域排序；同一學門的學校分數相同 |
-| 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用 | ❌ 尚無真實學程條件資料（W-20） |
+| 先修與申請條件差距卡 | C6 v0 | ✅ 比對邏輯可用；報告附差距卡（官網原文＋學生紀錄並列） | ❌ 尚無真實學程條件資料（W-20） |
+| 學經歷輸入（學位、修課、考試、經驗 → `StudentRecord`） | C1、C6.4 | ✅ 可用（JSON 輸入、欄位檢查、台灣課名對應表 draft-1） | ⚠️ 課名對應表待使用者確認；只比對「有沒有修／考」，不比對最低分數（B-C6-12） |
 | 申請組合最佳化（選哪幾間申請） | C4.1–C4.4 | ⏸ 暫停（D13）：程式與介面保留（`plan_applications`、`AdmitEstimate`），不在主線流程（§9.1） | — |
 | 需求維度 v2（41 個跨領域興趣領域、兩階段提問的先驗） | C1.1、C1.2、C2.1 | 🧪 實驗中，可選用（`dims="v2"`）；預設仍為 v1 | ❌ L3 未通過（W-16c，F71）：領域不符下降，但暫定計分器下推薦品質低於 v1 |
 | 錄取機率估計 | C3 | ⏸ 暫停（D13）：v0.2 模型、資料載入與校準工具保留，只在合成資料驗證過（§9.2） | — |
@@ -191,7 +192,56 @@ for r in result.known_good:
 
 ### 4.6 先修與申請條件差距
 
-條件差距**只呈現、不過濾**：推薦清單不會因為學生缺先修而刪掉或降低排序（設計原則 D9）。差距可以補，學生也不一定馬上申請。
+條件差距**只呈現、不過濾**：推薦清單不會因為學生缺先修而刪掉或降低排序（設計原則 D9）。差距可以補，學生也不一定馬上申請。學經歷只交給條件差距（C6），推薦（C2）讀不到。
+
+#### 學經歷輸入（W-61）
+
+每位學生一個 JSON 檔（UTF-8，`"schema": "student_record_intake/1"`）。選 JSON 而不是 CSV：一位學生有多個學位、多門課、多個考試與經驗，各自欄位不同，JSON 一個檔就能放下，CSV 要拆成好幾個檔；Python dict 用同樣的結構也可以直接傳入（`intake_student_record`）。虛構範例：[`data/synthetic/student_record_example.json`](../data/synthetic/student_record_example.json)。**真實學生的檔案只能放在 `data/private/`**，`student_id` 請用代號。
+
+| 區塊 | 欄位（* 為必填） | 說明 |
+|---|---|---|
+| 最上層 | `schema`*、`student_id`*、`synthetic`、`target_apply_by` | `target_apply_by` 探索時留 `null`；只有學生自己設定日期才進入申請模式 |
+| `degrees` | `level`*（`bachelor`／`master`／`doctorate`／`professional`／`other`）、`field`*、`cip`、`year` | 可多個、可跨領域；專科、副學士填 `other`。學士以上學位自動算 `bachelor_degree`；**不會**自動判斷是否等同美國學士（`bachelor_equivalency`，依學程規定） |
+| `courses` | `name`*、`credits`、`grade`、`online`、`status`、`expected`、`categories` | 課名照成績單寫；`grade` 可填 0–100、A+～C-、P／通過／抵免、F／不及格／W／停修（D 各校不一，請填百分制）；不及格與停修不算已修；`status: "planned"` 要附 `expected`（預計完成時間）；`categories` 用來手動對應（`[]` 表示確認不對應任何類別） |
+| `exams` | `name`*、`score`、`date`、`status`、`expected`、`category` | GRE、GMAT、TOEFL／托福、IELTS／雅思、Duolingo、LSAT、DAT、MCAT、日檢、專技高考等；分數會保留在證據中 |
+| `experience` | `category`*（`work_experience`、`research_experience` 等）、`description`*、`months`、`status`、`expected` | |
+| `other` | `category`*（作品集、證照、面試、其他語言等）、`evidence`*、`status`、`expected` | |
+
+課名對應用的是**明確、有版本的對應表** [`data/reference/course_name_map_tw.json`](../data/reference/course_name_map_tw.json)（draft-1，**待使用者確認**）：全形轉半形、去空白、拆出序號（（一）、上、I、1）後**完全比對**，不做模糊比對、不用 LLM。
+
+| 課名例子 | 對應類別 |
+|---|---|
+| 微積分、微積分（一）、微積分甲上、Calculus I | `calculus_1` |
+| 微積分（二）、多變數微積分 | `calculus_2` |
+| 線性代數 | `linear_algebra` |
+| 統計學、商用統計學、心理統計學 | `statistics`（**不算** `probability`） |
+| 機率與統計、數理統計 | `probability` ＋ `statistics` |
+| 程式設計、計算機程式設計、Python程式設計 | `programming_intro` |
+| 資料結構、演算法 | `data_structures` |
+| 經濟學（一）／（二） | `microeconomics`／`macroeconomics`（未標序號的經濟學原理兩者都算） |
+| 會計學、財務會計 | `accounting` |
+| 財務管理、公司理財 | `finance_intro` |
+| 普通化學、有機化學、普通生物學、解剖學 | 對應的理科類別 |
+| 計算機概論、商用微積分、工程數學、高等微積分、計量經濟學、大一英文 | **不自動對應**：內容因校而異，列入待人工對應並附原因 |
+
+對應表以外的課名（例如作業研究、體育）一律列入 `record.unmapped`，**不會猜**、也不會算已符合；確認後在輸入檔加上 `categories` 即可。
+
+```python
+from aisc.profiling import load_student_record
+
+intake = load_student_record("data/synthetic/student_record_example.json")  # 虛構示範學生
+print(intake.map_version, sorted(intake.record.completed))
+print("規劃中:", sorted(intake.record.planned))
+print("待人工對應:", sorted(intake.record.unmapped))
+for e in intake.entries[:4]:
+    print(e.name, "→", e.categories, e.source)  # 每門課用了哪一條規則
+```
+
+輸入有錯時會一次列出所有問題與位置（例如 `courses[1].expected: planned items need an expected completion`、`courses[2].categories: 'statistcs' is not a course category (did you mean statistics?)`），型別是 `RecordIntakeError`（`.errors` 為清單）。
+
+#### 計算差距
+
+也可以不經輸入檔，直接建立 `StudentRecord`：
 
 ```python
 from aisc.contracts import RequirementItem, StudentRecord
@@ -247,6 +297,8 @@ print("尚缺:", [i.category for i in gap.missing])  # ['gre']（建議，非必
 | `unknown` | 條件無法對應到類別，**不會**當作已符合 |
 | `none_published` | 官網沒列條件；不代表沒有門檻 |
 | `before_target` | 學生設了 `target_apply_by` 才會出現：申請前必須補、錄取後不能補的項目 |
+
+學生紀錄的另外兩個欄位：`online_only`（某類別的證據全是線上課程；學程註明不接受線上學分時，該條件列為缺少）、`unmapped`（待人工對應的課名與考試）。考試與成績目前只比對「有沒有」，**不比對分數是否達到官網最低要求**（B-C6-12）；差距卡會把你的分數與官網原文並列，請自行對照。
 
 可用的條件類別見 `data/reference/requirement_taxonomy.json`（課程、考試、作品集、經驗、證照、語言等）。
 
@@ -304,7 +356,24 @@ md = render_profile_report(
 print(md.splitlines()[0])
 ```
 
-`gaps`（選用）是 `{program_id: RequirementGap}`，會在每個學程旁顯示還缺哪些條件，但不影響排序（D9）。`plan`（選用）是暫停中的申請組合結果（§9.1），不給就不會出現該段。
+`gaps`（選用）是 `{program_id: RequirementGap}`，會在每個學程旁顯示還缺哪些條件，並加上「條件差距卡」一節（每個條件引用官網原文與來源），但不影響排序（D9）。再加上 `record`（選用，§4.6 的 `StudentRecord`），差距卡會並列學生自己的紀錄（課名、學分、成績、考試分數），並列出待人工對應的課名。`plan`（選用）是暫停中的申請組合結果（§9.1），不給就不會出現該段。
+
+```python
+from dataclasses import replace
+
+shown_ids = [r.program.program_id for r in result.discoveries + result.known_good]
+my_record = replace(intake.record, student_id=student.student_id)  # 示範：讓虛構紀錄對上示範學生
+src_ = {"source_url": "https://example.edu/fixture", "retrieved_at": "2026-10-29"}
+demo_items = [  # 示範用虛構條件
+    RequirementItem(shown_ids[0], "course", "probability", "required", "Probability", **src_),
+    RequirementItem(shown_ids[0], "course", "calculus_1", "required", "Calculus I", **src_),
+]
+card_gaps = compute_gaps(shown_ids, demo_items, my_record, taxonomy)
+md = render_profile_report(
+    student, prepare_profile(student, catalog), result, gaps=card_gaps, record=my_record
+)
+print([line for line in md.splitlines() if line.startswith("## ")])
+```
 
 ### 4.11（實驗中）真實學程目錄 v0
 
@@ -345,7 +414,8 @@ print([r.program.degree_name for r in found.discoveries][:2])
 | 3 | 記下學生心中已有的學程作為 `anchors` | §4.2 |
 | 4 | 執行熟悉度確認，讓學生自己回答聽過哪些 | §4.5 |
 | 5 | 和學生一起看「可能沒想過」清單，討論每一個為什麼契合 | §4.5 |
-| 6 | 對有興趣的學程看條件差距，規劃補修時程 | §4.6 |
+| 6 | 填學經歷輸入檔（學位、修課、考試、經驗）；和學生一起確認「待人工對應」的課名 | §4.6 |
+| 7 | 對有興趣的學程看條件差距卡，規劃補修時程 | §4.6、§4.10 |
 
 目前請把它當作**討論工具**而非結論：學程資料是合成的。選校組合與錄取機率暫不由模型提供（D13）。
 
@@ -360,6 +430,8 @@ print([r.program.degree_name for r in found.discoveries][:2])
 | 程式內的自適應問卷仍是抽象占位題；v2 題庫中文草案（`data/items/item_bank_v2.json`，73 題）尚未回譯與認知訪談 | 還不能直接拿給學生作答 | W-41 |
 | 錄取機率與申請組合暫停（D13） | 模型不建議申請哪幾間 | 範圍重新納入時（W-44、W-45） |
 | 需求維度尚未實證驗證 | 維度可能重疊或遺漏 | W-41、W-73 |
+| 台灣課名對應表是草案（draft-1），只涵蓋常見課名 | 系所自訂課名會列為待人工對應；同名課程深淺不一（B-C6-2） | 使用者確認例子；W-41 收集實際課名 |
+| 條件差距只比對「有沒有修／考」 | TOEFL 分數或課程成績未達學程最低要求時仍顯示已符合（B-C6-12） | 學程端最低分數擷取（W-20、W-21） |
 
 已知假設與盲區的完整清單見 [REGISTER.md](REGISTER.md)。
 
@@ -408,6 +480,7 @@ print([r.program.degree_name for r in found.discoveries][:2])
 | 2026-10-28 | v0.3.19 | 申請結果資料的範本、載入器（隱私欄位檢查、標準化、缺漏處理）與時間切分校準檢查腳本（§4.9、[data-intake.md](data-intake.md)） | W-44 C3.1 |
 | 2026-10-29 | v0.4.0 | 範圍調整（D13）：錄取機率模型（C3）與申請組合（C4）暫停，主線流程到推薦、條件差距與報告為止；程式與介面保留，用法移到 §9；示範程式不再計算申請組合 | D13 |
 | 2026-10-29 | v0.4.1 | 新增實驗中的真實學程目錄 v0（`aisc.catalog.real.load_real_catalog_v0`、`scripts/build_real_catalog.py`，§4.11）；`Program` 新增 `unmeasured` 欄位；報告標示未測量維度與低信心剖面，且不以未測量維度當理由；錨點的未測量維度不再當作先驗證據（B-C1-32） | W-77 |
+| 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
 
 ---
 
