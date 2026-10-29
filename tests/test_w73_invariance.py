@@ -135,26 +135,33 @@ def test_cfa_decision_rules():
     def s(cfi, rmsea, ok=True):
         return {"ok": ok, "cfi": cfi, "rmsea": rmsea}
 
-    good = {"configural": s(0.97, 0.05), "thresholds": s(0.965, 0.055), "scalar": s(0.958, 0.06)}
+    good = {"configural": s(0.97, 0.05), "thresholds": s(0.97, 0.05),
+            "metric": s(0.966, 0.055), "scalar": s(0.962, 0.06)}  # fmt: skip
     v = mod.cfa_verdict(good)
-    assert v["configural"] and v["thresholds"] and v["scalar"] and not v["scalar_small"]
-    bad = good | {"scalar": s(0.94, 0.08)}
-    assert mod.cfa_verdict(bad)["scalar"] is False
+    assert v["configural"] and v["metric"] and v["scalar"] and v["thresholds_dcfi"] == 0
+    # small-sample rule is primary: Delta CFI .008 fails it but passes the large rule
+    loose = good | {"metric": s(0.962, 0.055), "scalar": s(0.958, 0.06)}
+    v = mod.cfa_verdict(loose)
+    assert v["metric"] is False and v["metric_large"] is True and v["scalar"] is False
+    # Delta RMSEA alone can fail a step
+    assert mod.cfa_verdict(good | {"metric": s(0.97, 0.062)})["metric"] is False
+    assert mod.cfa_verdict(good | {"scalar": s(0.94, 0.08)})["scalar"] is False
     assert mod.cfa_verdict({"configural": s(0.93, 0.05)})["configural"] is False
     assert mod.cfa_verdict({"configural": s(0.97, 0.05, ok=False)})["configural"] is False
-    part = bad | {"partial": s(0.962, 0.058)}
+    part = good | {"scalar": s(0.94, 0.08), "partial": s(0.964, 0.058)}
     assert mod.cfa_verdict(part)["partial"] is True
 
 
 def test_dimension_verdicts():
-    ok = {"configural": True, "scalar": True}
+    ok = {"configural": True, "metric": True, "scalar": True}
     assert mod.dimension_verdict(2, 0, False, ok, False) == "可比較"
     assert "只依 DIF" in mod.dimension_verdict(2, 0, False, None, False)
     assert "檢定力不足" in mod.dimension_verdict(2, 0, False, None, True)
+    assert "中度 DIF" in mod.dimension_verdict(2, 0, False, None, True, moderate=True)
     assert "維度層 DIF" in mod.dimension_verdict(2, 1, False, None, False)
     assert "形態" in mod.dimension_verdict(2, 0, False, {"configural": False}, False)
-    assert "純量未通過" in mod.dimension_verdict(2, 0, False, {"configural": True,
-                                                              "scalar": False}, False)  # fmt: skip
+    assert "量尺未通過" in mod.dimension_verdict(2, 0, False, ok | {"metric": False}, False)
+    assert "純量未通過" in mod.dimension_verdict(2, 0, False, ok | {"scalar": False}, False)
     # partial invariance needs >= 3 items with >= 2 clean ones (unreachable today)
     assert "部分可比較" in mod.dimension_verdict(3, 1, True, None, False)
     failed_partial = {"configural": True, "partial": False}
@@ -168,14 +175,39 @@ def test_grm_conversion_from_theta_parameterisation():
     assert mod.grm_from_lavaan(rows) == {("x1", "1"): (2.0, [-0.5, 0.5])}
 
 
+def test_cfa_models_and_partial_rules():
+    dd = {k: {"cls": "A"} for ks in mod.CORE_MODELS.values() for k in ks}
+    assert set(mod.cfa_models(dd)) == {"riasec", "core"}
+    dd["riasec_i"]["cls"] = "C"
+    models = mod.cfa_models(dd)
+    assert "riasec_i" not in models["riasec_reduced"] and len(models["riasec_reduced"]) == 5
+    for k in ("quant_intensity", "programming_intensity", "research_orientation"):
+        dd[k]["cls"] = "C"
+    assert "core_reduced" not in mod.cfa_models(dd)  # one two-item factor is not identified
+    # partial invariance only frees items of factors with >= 3 items, keeping >= 2 fixed
+    dims = {"riasec_i": ["a#1", "a#2", "a#3"]} | {k: ["x"] for k in ("other",)}
+    dif = {"a#1": {"cls": "C"}, "a#2": {"cls": "A"}, "a#3": {"cls": "A"}}
+    assert mod.cfa_partial(dif, dd, dims, {"m": ["riasec_i"]}) == {"m": ["a_1"]}
+    two = {"riasec_i": ["a#1", "a#2"]}
+    assert mod.cfa_partial(dif, dd, two, {"m": ["riasec_i"]}) == {"m": []}
+
+
 def test_r_script_carries_the_preregistered_choices():
     dims = mod.dim_items()
-    partial = {"riasec": ["riasec_i_1", "riasec_i_2"], "core": []}
-    r = mod.r_script(dims, partial)
+    dd = {k: {"cls": "A"} for ks in mod.CORE_MODELS.values() for k in ks}
+    dd["riasec_i"]["cls"] = "C"
+    models = mod.cfa_models(dd)
+    dims3 = dims | {"riasec_s": ["riasec_s#1", "riasec_s#2", "riasec_s#3"]}
+    ncat = {i: 5 for k in dims3 for i in dims3[k]} | {"riasec_s#3": 3}
+    r = mod.r_script(dims3, models, {"riasec": ["riasec_s_3"]}, ncat)
     for s in ('estimator = "WLSMV"', 'parameterization = "theta"', "Wu.Estabrook.2016",
-              "F_riasec_i =~ riasec_i_1", '"riasec_i_1 | t4"', "w73_cfa_fit.csv"):  # fmt: skip
+              "F_riasec_i =~ riasec_i_1", '"intercepts"', "cfi.robust", "not_converged",
+              'paste("error:"', "status = status", 'run_step("riasec_reduced"',
+              '"riasec_s_3 | t2"', "w73_cfa_fit.csv"):  # fmt: skip
         assert s in r, s
-    assert r.count("partial = c(") == 1  # only the model with a C dimension frees items
+    assert '"riasec_s_3 | t3"' not in r  # a 3-category item has only 2 thresholds
+    assert 'group.partial = ""' not in r and "if (length(part))" in r
+    assert r.count('"partial"') == 1
 
 
 # --- synthetic dry runs --------------------------------------------------------------
@@ -224,15 +256,16 @@ def test_dry_run_writes_report_cfa_files_and_reads_fit(tmp_path):
     assert (folder / "w73_cfa.R").exists()
     with open(folder / "w73_cfa_fit.csv", "w", newline="", encoding="utf-8") as fh:
         w = csv.writer(fh)
-        w.writerow(["model", "step", "converged", "cfi", "rmsea", "chisq", "df"])
+        w.writerow(["model", "step", "status", "index", "cfi", "rmsea", "chisq", "df"])
         for m in ("riasec", "core"):
-            w.writerow([m, "configural", "TRUE", 0.97, 0.05, 50, 40])
-            w.writerow([m, "thresholds", "TRUE", 0.968, 0.05, 60, 70])
-            w.writerow([m, "scalar", "TRUE", 0.95, 0.07, 90, 85])
+            w.writerow([m, "configural", "ok", "robust", 0.97, 0.05, 50, 40])
+            w.writerow([m, "thresholds", "ok", "robust", 0.97, 0.05, 50, 40])
+            w.writerow([m, "metric", "ok", "robust", 0.968, 0.052, 60, 50])
+            w.writerow([m, "scalar", "ok", "robust", 0.95, 0.07, 90, 85])
     res = subprocess.run(run, capture_output=True, text=True, env=env)
     assert res.returncode == 0, res.stderr[-800:]
     text = (folder / "w73_analysis.md").read_text(encoding="utf-8")
-    assert "| riasec | ✅ | ✅ | ❌ |" in text
+    assert "| riasec | ok | robust | ✅ | ✅ | ❌ |" in text
 
 
 # --- probes (blind spots registered by the plan) -------------------------------------
@@ -276,12 +309,12 @@ def test_probe_planned_n_detects_large_dif():
     for _ in range(20):
         Y, st = mod.sim_items(40, mod.POWER_IMPACT, {"group": 2, "shift": 1.0}, pars, rng)
         dif = mod.dif_family(Y, st, cols, t1, mod.matching_items())
-        hits += any(dif[i]["cls"] == "C" for i in t1)
+        hits += any(dif[i]["cls"] != "A" for i in t1)  # detection = class B or C (v2)
     assert hits / 20 >= 0.8
 
 
-@_probe("B-C1-45: worst() consumes its generator, so no dimension is ever classed B")
-def test_probe_dimension_class_b_is_reachable():
+def test_dimension_class_b_is_reachable():
+    """B-C1-45 (fixed): worst() used to exhaust its generator, so no dimension was B."""
     assert mod.worst(c for c in ["A", "B"]) == "B"
     mh = {g: {"cls": "AA", "smd": 0.0} for g in mod.FOCALS}
     dif = {"x#1": {"cls": "A", "mh": mh}, "x#2": {"cls": "B", "mh": mh}}

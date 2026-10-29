@@ -1,6 +1,6 @@
 """Pre-registered measurement-invariance and DIF analysis of the W-41 field study (W-73,
-V-C1-9, D11; THEORY "測量恆等性與 DIF（W-73）"; A-C1-40..44, B-C1-40..44). Reads only the
-de-identified S1 file of the W-41 study; no study data existed when this was committed.
+V-C1-9, D11; THEORY "測量恆等性與 DIF（W-73）"; A-C1-40..44, B-C1-40..45). Reads only the
+de-identified S1 file of the W-41 study; no study data existed when v1 or v2 was committed.
 
 FILES (default folder data/private/study/; header in data/templates/study_s1.csv)
   s1.csv  respondent_id, stratum, [synthetic], one column per item_id of
@@ -8,18 +8,23 @@ FILES (default folder data/private/study/; header in data/templates/study_s1.csv
   stratum is one of same_field / adjacent / distant / multi_degree (protocol §2, D12).
   Reference group: same_field; focal groups: the other three.
   Optional, written by the generated R script (see CFA below):
-  w73_cfa_fit.csv     model, step, converged, cfi, rmsea, chisq, df
+  w73_cfa_fit.csv     model, step, status, index, cfi, rmsea, chisq, df
+                      (status "ok", "not_converged" or "error: <message>"; index
+                      "robust" or "scaled", whichever lavaan returned, robust first)
   w73_cfa_params.csv  lavaan parameterEstimates() of the configural models (+ model)
 
-PRE-REGISTERED (v1 committed 2026-10-29, before any study data existed).
+PRE-REGISTERED v2 (v1 committed 2026-10-29; v2 the same day after an independent review
+of the v1 code and synthetic dry-run output, still before any study data existed;
+changes listed at the end).
 ITEM TIERS (fixed by the item bank, not by the data)
   Tier 1  the 10 two-item dimensions (6 RIASEC, 2 intensity, 2 orientation; 20 items).
           Matching criterion = raw sum of the dimension's two items (studied item
           included, Holland & Thayer 1988). With two items and this criterion the two
           items' Mantel statistics are identical and their SMDs are exact negatives
-          (given the sum, the two conditional means add up to the sum; F160). Tier 1 DIF
-          is therefore a DIMENSION-level result ("the two items do not keep the same
-          relation across strata"); which item is biased is not identified (B-C1-40).
+          (given the sum, the two conditional means add up to the sum; F160). |SMD|/SD is
+          NOT mirrored (each item has its own SD), so the two items can land in different
+          ETS classes; the larger one does not localise DIF. Tier 1 DIF is therefore a
+          DIMENSION-level result; which item is biased is not identified (B-C1-40).
   Tier 2  the 53 single-item dimensions (12 area groups, 41 areas). Matching criterion
           = raw sum of the RIASEC items of the type(s) the area links to in O*NET
           (data/reference/basic_interest_map.csv); a group uses the union of the types of
@@ -32,25 +37,31 @@ DIF METHODS (S1 only; both run on every item)
   MH  polytomous Mantel test (Mantel 1963; Zwick, Donoghue & Grima 1993), each focal
       group vs same_field, stratified on every value of the matching criterion; effect
       size SMD (Dorans & Schmitt) divided by the SD of the item in reference + focal.
-      ETS class (Zwick 2012): AA if p_BH >= .05 or |SMD|/SD <= .17; CC if p_BH < .05 and
-      |SMD|/SD > .25; BB otherwise. Item MH class = worst over the three focal groups.
+      Class after Zwick (2012): AA if p_BH >= .05 or |SMD|/SD <= .17; CC if p_BH < .05
+      and |SMD|/SD > .25; BB otherwise. DEVIATION: ETS uses the unadjusted p < .05; this
+      plan uses Benjamini-Hochberg adjusted p (60 Tier 1 tests), which makes BB/CC
+      harder to reach. Item MH class = worst over the three focal groups.
   LR  proportional-odds logistic regression (Zumbo 1999; Swaminathan & Rogers 1990):
       M1 item ~ match; M2 + stratum dummies; M3 + stratum x match (match standardised).
-      Test M3 vs M1 (likelihood ratio, df = 2 x number of focal groups present).
-      Effect: Nagelkerke Delta R2 (M3 - M1). Class (Jodoin & Gierl 2001): C if p_BH < .05
-      and Delta R2 >= .070; B if p_BH < .05 and .035 <= Delta R2 < .070; A otherwise.
-      Report only: M2 vs M1 (uniform), M3 vs M2 (non-uniform), Zumbo-Thomas class
-      (.13 / .26). A fit that does not converge (or |beta| > 15, separation) is
-      "not computable" and counts as class A with a note.
+      Test M3 vs M1 (likelihood ratio, df = 2 x number of focal groups present, 6).
+      Effect: Nagelkerke Delta R2 (M3 - M1). Class with the Jodoin & Gierl (2001)
+      cutoffs: C if p_BH < .05 and Delta R2 >= .070; B if p_BH < .05 and .035 <= Delta
+      R2 < .070; A otherwise. EXTRAPOLATION: those cutoffs were derived for dichotomous
+      items, two groups and a 2-df test; here they are applied to 5-point items, four
+      strata and 6 df, where Delta R2 is further diluted (F162). Report only: M2 vs M1
+      (uniform), M3 vs M2 (non-uniform), Zumbo-Thomas class (.13 / .26). A fit that
+      does not converge (or |beta| > 15, separation) is "not computable" (class A, noted).
   MULTIPLE TESTING: Benjamini-Hochberg at q = .05 within each method x tier family
       (LR Tier 1: 20 tests; MH Tier 1: 60; LR Tier 2: 53; MH Tier 2: 159).
   ITEM CLASS: C if LR = C or MH = CC; else B if LR = B or MH = BB; else A.
   DIMENSION CLASS (Tier 1): the worse of its two items; flagged focal groups = those
       with MH CC/BB in either item.
-  LOCALISATION AID (Tier 1 RIASEC only, report only): MH of each item matched on the
-      sum of the area items linked to that type; the item with the larger |SMD|/SD for a
-      flagged focal group is listed first as the candidate for content review. It is
-      not a test (the anchor is a different construct, A-C1-43) and never decides.
+  DETECTION: a dimension (or Tier 2 item) is "detected" when its class is B or C
+      (C = large DIF, B = moderate DIF).
+  LOCALISATION AID (Tier 1 RIASEC only, report only): for B or C dimensions, MH of each
+      item matched on the sum of the area items linked to that type; the item with the
+      larger |SMD|/SD for a flagged focal group is listed first as the candidate for
+      content review. It is not a test (the anchor is a different construct, A-C1-43).
 MULTI-GROUP ORDINAL CFA (Tier 1 only; external tool, pre-registered choice)
   Tool: R lavaan (Rosseel 2012) 0.6-19 + semTools 0.5-6 measEq.syntax; estimator WLSMV,
   parameterization theta, ID.fac std.lv, ID.cat Wu.Estabrook.2016. This script writes the
@@ -58,16 +69,29 @@ MULTI-GROUP ORDINAL CFA (Tier 1 only; external tool, pre-registered choice)
   (no numpy implementation of ordinal WLSMV; no new Python dependency).
   Models: "riasec" 6 correlated factors x 2 items; "core" 4 correlated factors x 2 items
   (quant, programming, research, entrepreneurship); every item loads on its own factor.
+  If any dimension of a model is DIF class C, a second model "<name>_reduced" without
+  those dimensions is also fitted; the unflagged dimensions are judged on it.
   Respondents: complete on all 20 Tier 1 items. Categories: a category with zero
   responses in any stratum is merged with its neighbour toward the midpoint (3), the
   same way in every stratum, until all are non-empty (lavaan needs the same categories).
-  Steps (Wu & Estabrook 2016 order for ordinal items): configural -> thresholds ->
-  scalar (thresholds + loadings); "partial" = scalar with the thresholds and loadings
-  of every item of a DIF-C dimension freed (no modification-index search).
-  Configural acceptable: converged, CFI >= .95 and RMSEA <= .08 (scaled).
-  A step HOLDS if Delta CFI (previous - this) <= .010 AND Delta RMSEA (this - previous)
-  <= .015 (Cheung & Rensvold 2002; Chen 2007); partial is compared with configural.
-  Report only: Chen's small-sample Delta CFI <= .005.
+  Steps (group.equal), after Wu & Estabrook (2016) and Svetina, Rutkowski & Rutkowski
+  (2020): configural (none); thresholds ("thresholds"; REPORT ONLY: with >= 3
+  categories and this identification it is equivalent to the configural model and
+  tests nothing); metric ("thresholds", "loadings"); scalar ("thresholds", "loadings",
+  "intercepts").
+  Fit indices: robust CFI / RMSEA (cfi.robust, rmsea.robust) when lavaan returns them,
+  otherwise the scaled ones; the index used is recorded per row.
+  Configural acceptable: status ok, CFI >= .95 and RMSEA <= .08.
+  A step HOLDS (PRIMARY: Chen 2007 small-sample rule, N <= 300) if Delta CFI (previous -
+  this) <= .005 AND Delta RMSEA (this - previous) <= .010; metric is compared with
+  configural, scalar with metric. Report only: the Cheung & Rensvold (2002) / Chen
+  large-sample rule (.010 / .015). CAVEAT: both rules were derived for continuous
+  indicators and normal-theory ML, not ordinal WLSMV (Sass, Schmitt & Marsh 2014); they
+  are used as conventions, not calibrated cutoffs (A-C1-44).
+  PARTIAL INVARIANCE: only for factors with >= 3 items, freeing the C items' thresholds
+  and loadings while >= 2 items stay constrained. With the current two-item factors it
+  is never run (freeing a two-item factor's items leaves it unidentified); the reduced
+  model above is used instead.
   GRM calibration (report only): from the configural theta-parameterised estimates,
   normal-ogive a = lambda, b_k = tau_k / lambda (Takane & de Leeuw 1987; Kamata & Bauer
   2008); logistic a = 1.702 lambda.
@@ -77,35 +101,52 @@ BINDING
   respondents (project rule: below that a group has fewer people than free parameters,
   B-C1-42). Otherwise: "前導，不具約束力".
   POWER RULE: a dimension without DIF is read as "invariant" only where the --power
-  reference run gives power >= .80 for a large uniform DIF (delta = 1.0) at the smallest
-  stratum size used (N80 below); otherwise "not detected (low power)". N80 = the
-  smallest tested n per stratum (40 / 100 / 200) with that power. Reference run
-  (synthetic, seed 2026, results/w73-dif-power.md, F163): power 11.5% / 38.5% / 35.5%,
-  so no tested size qualifies and N80 = infinity: at any planned size a dimension
-  without DIF is "not detected", never "invariant".
-  --impact-check (added after the reference run; exploratory, report only): Tier 2
-  false-flag rate for two sizes of stratum mean differences (F164).
+  reference run gives power >= .80 to DETECT (class B or C) a large uniform DIF
+  (delta = 1.0) at the smallest stratum size used; N80 = the smallest tested n per
+  stratum with that power (constant N80 below, from results/w73-dif-power.md, F163);
+  below it the verdict is "not detected (low power)". v2 reference run (seed 2026, 200
+  replications): detection power 25.5% / 54.5% / 89.0% / 99.0% at 40 / 100 / 200 / 400
+  per stratum, so N80 = 200 (CC alone: 11.5% / 38.5% / 35.5% / 32.0%, because the
+  effective |SMD|/SD under the simulated mean differences is 0.217, below .25).
+  --impact-check (added after the v1 reference run; exploratory, report only): Tier 2
+  false-flag rate for two sizes of stratum mean differences, 20 datasets per cell (F164).
+  --asymmetry (added in v2 after review; report only): |SMD|/SD gap between the two
+  items of a dimension (F160).
 DECISIONS
-  Tier 1 dimension C -> both items REVIEW in cognitive interviews (aid lists the
-      candidate first). An item is REVISED only when the interview finds a content
-      reason (rewrite with other O*NET activities of the same element, or a new item);
-      a revised item is re-tested in the next cohort and REMOVED if its dimension is C
-      again. B -> REVIEW. A -> KEEP. No item is revised or removed on these data alone:
-      with two items per dimension the data cannot say which one (B-C1-40).
+  Tier 1 dimension C -> NOT COMPARABLE; both items REVIEW in cognitive interviews (the
+      aid lists the candidate first). Dimension B -> REVIEW; verdict "comparable, moderate
+      DIF flagged". An item is REVISED only when the interview finds a content reason
+      (rewrite with other O*NET activities of the same element, or a new item); a
+      revised item is re-tested in the next cohort and REMOVED if its dimension is C
+      again. A -> KEEP. No item is revised or removed on these data alone: with two
+      items per dimension the data cannot say which one (B-C1-40).
   Tier 2 item C or B -> REVIEW (single item); A -> KEEP (not tested for invariance).
   Dimension comparability across strata (Tier 1; general rule for k items):
-      COMPARABLE        no C item and (CFA scalar holds for its model, binding)
+      COMPARABLE        no C item and (CFA scalar holds for the model it is judged on)
       COMPARABLE (DIF only)  no C item, CFA not run or not binding
       PARTIAL           k >= 3, C items localised and >= 2 items not C, partial CFA holds
                         or not run: latent means only; observed-score means are NOT
-                        comparable (Steinmetz 2013). Unreachable with the current
-                        two-item dimensions.
-      NOT COMPARABLE    dimension C (two items); configural or partial CFA fails; or
-                        scalar fails with no C dimension to free
-      A COMPARABLE verdict below N80 per stratum is printed "not detected (low power)".
+                        comparable (Steinmetz 2013). Unreachable with two-item factors.
+      NOT COMPARABLE    dimension C; configural fails; or metric / scalar fails for the
+                        model the dimension is judged on
+      B dimensions carry "moderate DIF flagged"; a COMPARABLE verdict below N80 per
+      stratum is printed "not detected (low power)".
   Tier 2 dimensions: always "not tested (single item)"; flagged items listed.
 NOT IN THIS SCRIPT: invariance by source field (s1.csv has no field column, B-C1-44);
   invariance over time (S1 vs S2).
+v1 -> v2 (independent review of the v1 code and synthetic dry-run output; no study
+  data): worst() consumed its generator so no dimension was ever B (B-C1-45, fixed);
+  detection = class B or C and the power rule uses it (v1: C only); ETS-with-BH and the
+  Jodoin-Gierl cutoffs labelled as deviation / extrapolation; CFA steps renamed and
+  fixed (v1 called thresholds + loadings "scalar" and decided on the uninformative
+  thresholds step; scalar now adds intercepts); primary fit rule is Chen's small-sample
+  rule on both Delta CFI and Delta RMSEA (v1: .010 / .015, and its small-sample variant
+  changed CFI only); robust fit indices preferred; v1's partial step freed whole
+  two-item factors (unidentified) and is replaced by the reduced model; the R script
+  records errors and non-convergence explicitly, omits group.partial when unused and
+  writes only the thresholds an item has after collapsing; the power run adds n = 400
+  for delta = 1.0 and population effect sizes under the simulated mean differences and
+  for the 4-stratum LR fit.
 
     python scripts/analyze_w73_invariance.py --data data/private/study
     python scripts/analyze_w73_invariance.py --make-fake <folder>   # synthetic files
@@ -143,8 +184,10 @@ MIN_CFA = 100  # per stratum, project rule (B-C1-42)
 ETS = (0.17, 0.25)
 JG = (0.035, 0.070)
 ZT = (0.13, 0.26)
-CFI_MIN, RMSEA_MAX, DCFI, DRMSEA, DCFI_SMALL = 0.95, 0.08, 0.010, 0.015, 0.005
-N80 = math.inf  # reference --power run: no tested n reached power .80 (F163)
+CFI_MIN, RMSEA_MAX = 0.95, 0.08
+CHEN_SMALL = (0.005, 0.010)  # primary step rule (Delta CFI, Delta RMSEA), Chen 2007
+LARGE = (0.010, 0.015)  # report only: Cheung & Rensvold 2002 / Chen large-sample
+N80 = 200  # v2 reference --power run: smallest tested n with detection power >= .80 (F163)
 RIASEC_NAME = {"Realistic": "r", "Investigative": "i", "Artistic": "a", "Social": "s",
                "Enterprising": "e", "Conventional": "c"}  # fmt: skip
 CORE_MODELS = {
@@ -407,6 +450,7 @@ def dif_family(Y: np.ndarray, st: np.ndarray, cols: dict[str, int], items: list[
 
 
 def worst(classes) -> str:
+    classes = list(classes)  # a generator would be exhausted by the first test (B-C1-45)
     return "C" if "C" in classes else ("B" if "B" in classes else "A")
 
 
@@ -477,55 +521,99 @@ def rname(item: str) -> str:
     return item.replace("#", "_")
 
 
-def cfa_partial(ddif: dict, dims: dict) -> dict[str, list[str]]:
-    return {model: [rname(i) for k in keys if ddif[k]["cls"] == "C" for i in dims[k]]
-            for model, keys in CORE_MODELS.items()}  # fmt: skip
+def cfa_models(ddif: dict) -> dict[str, list[str]]:
+    """Models to fit: the two pre-registered ones, plus '<name>_reduced' without the
+    DIF-C dimensions when at least two factors remain (one two-item factor alone is not
+    identified)."""
+    out = {}
+    for name, keys in CORE_MODELS.items():
+        out[name] = list(keys)
+        keep = [k for k in keys if ddif[k]["cls"] != "C"]
+        if len(keep) < len(keys) and len(keep) >= 2:
+            out[f"{name}_reduced"] = keep
+    return out
 
 
-def r_script(dims: dict, partial: dict[str, list[str]]) -> str:
+def cfa_partial(dif: dict, ddif: dict, dims: dict, models: dict) -> dict[str, list[str]]:
+    """Items freed in the partial step: C items of factors with >= 3 items, only while
+    >= 2 items of the factor stay constrained. Empty for two-item factors."""
+    out = {}
+    for name, keys in models.items():
+        part = []
+        for k in keys:
+            its = dims[k]
+            cs = [i for i in its if dif[i]["cls"] == "C"]
+            if len(its) >= 3 and cs and len(its) - len(cs) >= 2:
+                part += cs
+        out[name] = [rname(i) for i in part]
+    return out
+
+
+def r_script(dims: dict, models: dict[str, list[str]], partial: dict[str, list[str]],
+             ncat: dict[str, int]) -> str:  # fmt: skip
+    """R script for the ordinal multi-group CFA. ncat = categories per item after
+    collapsing (an item has ncat - 1 thresholds)."""
+
     def model(keys):
         return "\\n".join(f"F_{k} =~ " + " + ".join(rname(i) for i in dims[k]) for k in keys)
 
     lines = [
-        "# Generated by scripts/analyze_w73_invariance.py (W-73 pre-registration). Do not edit.",
-        "# Pre-registered tool versions: lavaan 0.6-19, semTools 0.5-6.",
+        "# Generated by scripts/analyze_w73_invariance.py (W-73 pre-registration v2).",
+        "# Do not edit. Pre-registered tool versions: lavaan 0.6-19, semTools 0.5-6.",
         "library(lavaan); library(semTools)",
         'd <- read.csv("w73_cfa_items.csv")',
         "fit_rows <- list(); par_rows <- list()",
+        "measures <- function(fit) {",
+        '  fm <- tryCatch(fitMeasures(fit, c("cfi.robust", "rmsea.robust", "chisq.scaled",',
+        '    "df.scaled")), error = function(e) rep(NA, 4))',
+        '  if (!any(is.na(fm[1:2]))) return(list(index = "robust", fm = fm))',
+        '  fm <- fitMeasures(fit, c("cfi.scaled", "rmsea.scaled", "chisq.scaled", "df.scaled"))',
+        '  list(index = "scaled", fm = fm)',
+        "}",
+        "run_step <- function(name, step, m, its, eq, part) {",
+        "  args <- list(configural.model = m, data = d, ordered = its,",
+        '    parameterization = "theta", ID.fac = "std.lv", ID.cat = "Wu.Estabrook.2016",',
+        '    group = "stratum")',
+        "  if (length(eq)) args$group.equal <- eq",
+        "  if (length(part)) args$group.partial <- part",
+        '  status <- "ok"',
+        "  fit <- tryCatch({",
+        "    syn <- do.call(measEq.syntax, args)",
+        '    cfa(as.character(syn), data = d, ordered = its, group = "stratum",',
+        '      estimator = "WLSMV", parameterization = "theta")',
+        '  }, error = function(e) { status <<- paste("error:", conditionMessage(e)); NULL })',
+        '  if (!is.null(fit) && !lavInspect(fit, "converged")) status <- "not_converged"',
+        "  index <- NA; fm <- rep(NA, 4)",
+        '  if (status == "ok") { r <- measures(fit); index <- r$index; fm <- r$fm }',
+        "  fit_rows[[length(fit_rows) + 1]] <<- data.frame(model = name, step = step,",
+        "    status = status, index = index, cfi = fm[1], rmsea = fm[2], chisq = fm[3],",
+        "    df = fm[4])",
+        '  if (status == "ok" && step == "configural") {',
+        "    pe <- parameterEstimates(fit); pe$model <- name",
+        "    par_rows[[length(par_rows) + 1]] <<- pe",
+        "  }",
+        "}",
+        'steps <- list(configural = character(0), thresholds = "thresholds",',
+        '  metric = c("thresholds", "loadings"),',
+        '  scalar = c("thresholds", "loadings", "intercepts"))',
     ]
-    for name, keys in CORE_MODELS.items():
-        its = [rname(i) for k in keys for i in dims[k]]
+    for name, keys in models.items():
+        its = [i for k in keys for i in dims[k]]
         part = []
-        for i in partial[name]:
+        for i in partial.get(name, []):
             fac = next(k for k in keys if any(rname(x) == i for x in dims[k]))
-            part += [f"F_{fac} =~ {i}"] + [f"{i} | t{t}" for t in range(1, 5)]
-        steps = ('list(configural = "", thresholds = "thresholds", '
-                 'scalar = c("thresholds", "loadings")'
-                 + (', partial = c("thresholds", "loadings")' if part else "") + ")")  # fmt: skip
+            orig = next(x for x in dims[fac] if rname(x) == i)
+            part += [f"F_{fac} =~ {i}"] + [f"{i} | t{t}" for t in range(1, ncat[orig])]
         lines += [
             f'm <- "{model(keys)}"',
-            "its <- c(" + ", ".join(f'"{i}"' for i in its) + ")",
-            f"steps <- {steps}",
-            "part <- c(" + ", ".join(f'"{p}"' for p in part) + ")",
-            "for (s in names(steps)) {",
-            "  syn <- measEq.syntax(configural.model = m, data = d, ordered = its,",
-            '    parameterization = "theta", ID.fac = "std.lv", ID.cat = "Wu.Estabrook.2016",',
-            '    group = "stratum", group.equal = steps[[s]],',
-            '    group.partial = if (s == "partial") part else "")',
-            "  fit <- tryCatch(cfa(as.character(syn), data = d, ordered = its,",
-            '    group = "stratum", estimator = "WLSMV", parameterization = "theta"),',
-            "    error = function(e) NULL)",
-            '  ok <- !is.null(fit) && lavInspect(fit, "converged")',
-            '  fm <- if (ok) fitMeasures(fit, c("cfi.scaled", "rmsea.scaled", "chisq.scaled",',
-            '    "df.scaled")) else rep(NA, 4)',
-            f'  fit_rows[[length(fit_rows) + 1]] <- data.frame(model = "{name}", step = s,',
-            "    converged = ok, cfi = fm[1], rmsea = fm[2], chisq = fm[3], df = fm[4])",
-            '  if (ok && s == "configural") {',
-            f'    pe <- parameterEstimates(fit); pe$model <- "{name}"',
-            "    par_rows[[length(par_rows) + 1]] <- pe",
-            "  }",
-            "}",
+            "its <- c(" + ", ".join(f'"{rname(i)}"' for i in its) + ")",
+            "for (s in names(steps)) run_step(" + f'"{name}"' + ", s, m, its, steps[[s]], NULL)",
         ]
+        if part:
+            lines += [
+                "part <- c(" + ", ".join(f'"{p}"' for p in part) + ")",
+                f'run_step("{name}", "partial", m, its, steps$scalar, part)',
+            ]
     lines += [
         'write.csv(do.call(rbind, fit_rows), "w73_cfa_fit.csv", row.names = FALSE)',
         "if (length(par_rows)) write.csv(do.call(rbind, par_rows), "
@@ -545,38 +633,46 @@ def read_fit(path: Path) -> dict[str, dict[str, dict]]:
     out: dict[str, dict[str, dict]] = defaultdict(dict)
     with open(path, encoding="utf-8-sig", newline="") as fh:
         for r in csv.DictReader(fh):
+            status = (r.get("status") or "").strip()
             out[r["model"]][r["step"]] = {
-                "ok": r["converged"].strip().upper() == "TRUE",
+                "ok": status == "ok",
+                "status": status,
+                "index": (r.get("index") or "").strip(),
                 "cfi": _num(r["cfi"]),
                 "rmsea": _num(r["rmsea"]),
             }
     return dict(out)
 
 
-def step_holds(prev: dict, cur: dict, dcfi: float = DCFI) -> bool:
+def step_holds(prev: dict, cur: dict, rule: tuple[float, float] = CHEN_SMALL) -> bool:
     if not (prev["ok"] and cur["ok"]):
         return False
-    return prev["cfi"] - cur["cfi"] <= dcfi and cur["rmsea"] - prev["rmsea"] <= DRMSEA
+    return prev["cfi"] - cur["cfi"] <= rule[0] and cur["rmsea"] - prev["rmsea"] <= rule[1]
 
 
 def cfa_verdict(steps: dict[str, dict]) -> dict:
-    """Configural acceptable? thresholds / scalar / partial hold? (None = not run)."""
+    """Configural acceptable? metric / scalar / partial hold (primary small-sample rule;
+    *_large = report-only large-sample rule)? None = not run."""
     c = steps.get("configural")
     if c is None:
         return {"configural": None}
     conf = c["ok"] and c["cfi"] >= CFI_MIN and c["rmsea"] <= RMSEA_MAX
-    out = {"configural": conf, "thresholds": None, "scalar": None, "partial": None}
+    out = {"configural": conf, "metric": None, "scalar": None, "partial": None,
+           "status": c.get("status", ""), "index": c.get("index", "")}  # fmt: skip
+    t = steps.get("thresholds")
+    if t and t["ok"] and c["ok"]:
+        out["thresholds_dcfi"] = c["cfi"] - t["cfi"]
     if not conf:
         return out
-    t, s, p = steps.get("thresholds"), steps.get("scalar"), steps.get("partial")
-    if t:
-        out["thresholds"] = step_holds(c, t)
-        out["thresholds_small"] = step_holds(c, t, DCFI_SMALL)
-    if t and s:
-        out["scalar"] = bool(out["thresholds"]) and step_holds(t, s)
-        out["scalar_small"] = bool(out.get("thresholds_small")) and step_holds(t, s, DCFI_SMALL)
-    if p:
-        out["partial"] = step_holds(c, p)
+    mt, sc, pa = steps.get("metric"), steps.get("scalar"), steps.get("partial")
+    if mt:
+        out["metric"] = step_holds(c, mt)
+        out["metric_large"] = step_holds(c, mt, LARGE)
+    if mt and sc:
+        out["scalar"] = bool(out["metric"]) and step_holds(mt, sc)
+        out["scalar_large"] = bool(out.get("metric_large")) and step_holds(mt, sc, LARGE)
+    if mt and pa:
+        out["partial"] = bool(out["metric"]) and step_holds(mt, pa)
     return out
 
 
@@ -594,7 +690,7 @@ def grm_from_lavaan(rows: list[dict]) -> dict[tuple[str, str], tuple[float, list
 
 
 def dimension_verdict(k_items: int, n_c: int, localised: bool, cfa: dict | None,
-                      underpowered: bool) -> str:  # fmt: skip
+                      underpowered: bool, moderate: bool = False) -> str:  # fmt: skip
     """Comparability of one dimension across strata (header DECISIONS)."""
     if cfa is not None and cfa.get("configural") is False:
         return "不可比較（形態恆等性未通過）"
@@ -604,11 +700,14 @@ def dimension_verdict(k_items: int, n_c: int, localised: bool, cfa: dict | None,
                 return "不可比較（部分純量未通過）"
             return "部分可比較（只比潛在平均；觀察分數平均不可比）"
         return "不可比較（維度層 DIF）" if k_items == 2 else "不可比較（DIF 無法定位）"
-    if cfa is not None and cfa.get("scalar") is False and cfa.get("partial") is not True:
+    if cfa is not None and cfa.get("metric") is False:
+        return "不可比較（CFA 量尺未通過）"
+    if cfa is not None and cfa.get("scalar") is False:
         return "不可比較（CFA 純量未通過）"
     base = "可比較" if cfa is not None and cfa.get("scalar") else \
         "可比較（只依 DIF；CFA 未執行或不具約束力）"  # fmt: skip
-    return "未偵測到差異（檢定力不足）" if underpowered else base
+    verdict = "未偵測到差異（檢定力不足）" if underpowered else base
+    return verdict + ("；標記中度 DIF（B），送審查" if moderate else "")
 
 
 def item_decision(r: dict, tier: int, dim_cls: str | None = None) -> str:
@@ -616,7 +715,9 @@ def item_decision(r: dict, tier: int, dim_cls: str | None = None) -> str:
         return "審查（單題）" if r["cls"] in "BC" else "保留（未經恆等性檢驗）"
     if dim_cls == "C":
         return "審查（維度層 DIF，B-C1-40）"
-    return "審查（認知訪談）" if r["cls"] == "B" else "保留"
+    if dim_cls == "B":
+        return "審查（維度層中度 DIF）"
+    return "保留"
 
 
 # --- report ----------------------------------------------------------------------------
@@ -659,7 +760,7 @@ def run(data: Path, out: Path) -> None:
     n_used2 = [min(dif2[i]["n_st"][g] for i in t2) for g in range(4)]
     bind1, bind2 = binding_dif(n_used), binding_dif(n_used2)
     underpowered = min(n_used) < N80
-    n80_txt = "模擬的 40–200 人都未達檢定力 .80" if math.isinf(N80) else str(N80)
+    n80_txt = "模擬的人數都未達檢定力 .80" if math.isinf(N80) else f"{N80} 人"
 
     comp = np.all(Y[:, [cols[i] for i in t1]] > 0, axis=1)
     n_cfa = [int((comp & (st == g)).sum()) for g in range(4)]
@@ -671,7 +772,10 @@ def run(data: Path, out: Path) -> None:
         cc = {i: collapse_categories(Y[comp, cols[i]], st[comp]) for i in t1} if comp.any() else {}
         for r, s in enumerate(st[comp]):
             w.writerow([STRATA[s], *(int(cc[i][r]) for i in t1)])
-    (out.parent / "w73_cfa.R").write_text(r_script(dims, cfa_partial(ddif, dims)), "utf-8")
+    ncat = {i: int(cc[i].max()) if i in cc else 5 for i in t1}
+    models = cfa_models(ddif)
+    rtext = r_script(dims, models, cfa_partial(dif1, ddif, dims, models), ncat)
+    (out.parent / "w73_cfa.R").write_text(rtext, "utf-8")
     fitp = data / "w73_cfa_fit.csv"
     cfa = {m: cfa_verdict(s) for m, s in read_fit(fitp).items()} if fitp.exists() else {}
 
@@ -707,16 +811,19 @@ def run(data: Path, out: Path) -> None:
           f"完整作答人數（各層）：{'/'.join(map(str, n_cfa))}；已輸出 `w73_cfa_items.csv` 與 "
           "`w73_cfa.R`（在輸出資料夾執行 `Rscript w73_cfa.R`，再重跑本腳本）。", ""]  # fmt: skip
     if cfa:
-        L += ["| 模型 | 形態 | 閾值 | 純量 | 部分純量 | 小樣本 ΔCFI .005（閾值／純量） |",
-              "|---|---|---|---|---|---|"]  # fmt: skip
+        L += ["主要判準：Chen (2007) 小樣本規則 ΔCFI ≤ .005 且 ΔRMSEA ≤ .010（原為連續 ML 所訂，"
+              "A-C1-44）；大樣本規則 .010／.015 只報告；閾值步驟與形態模型等價，只報告 ΔCFI。", "",
+              "| 模型 | 狀態 | 指標 | 形態 | 量尺 | 純量 | 部分純量 | 大樣本規則（量尺／純量） "
+              "| 閾值步驟 ΔCFI |", "|---|---|---|---|---|---|---|---|---|"]  # fmt: skip
 
         def mk(v):
             return "—" if v is None else ("✅" if v else "❌")
 
         for m, v in cfa.items():
-            L.append(f"| {m} | {mk(v['configural'])} | {mk(v.get('thresholds'))} | "
-                     f"{mk(v.get('scalar'))} | {mk(v.get('partial'))} | "
-                     f"{mk(v.get('thresholds_small'))}／{mk(v.get('scalar_small'))} |")  # fmt: skip
+            L.append(f"| {m} | {v.get('status', '')} | {v.get('index', '')} | "
+                     f"{mk(v['configural'])} | {mk(v.get('metric'))} | {mk(v.get('scalar'))} | "
+                     f"{mk(v.get('partial'))} | {mk(v.get('metric_large'))}／"
+                     f"{mk(v.get('scalar_large'))} | {f3(v.get('thresholds_dcfi'))} |")  # fmt: skip
         parp = data / "w73_cfa_params.csv"
         if parp.exists():
             with open(parp, encoding="utf-8-sig", newline="") as fh:
@@ -728,11 +835,12 @@ def run(data: Path, out: Path) -> None:
     else:
         L.append("尚未提供 `w73_cfa_fit.csv`：可比性只依 DIF。")
     L += ["", f"## 4. 各維度跨背景層的可比性{tag1}", "", "| 維度 | 判定 |", "|---|---|"]
-    for k in ddif:
+    for k, v in ddif.items():
         model = next(m for m, ks in CORE_MODELS.items() if k in ks)
-        c = cfa.get(model) if cfa and bind_cfa else None
+        judged = f"{model}_reduced" if f"{model}_reduced" in models else model
+        c = cfa.get(judged) if cfa and bind_cfa else None
         n_c = sum(dif1[i]["cls"] == "C" for i in dims[k])
-        verdict = dimension_verdict(len(dims[k]), n_c, False, c, underpowered)
+        verdict = dimension_verdict(len(dims[k]), n_c, False, c, underpowered, v["cls"] == "B")
         L.append(f"| {k} | {verdict} |")
     flagged2 = [i for i in t2 if dif2[i]["cls"] in "BC"]
     L += [
@@ -834,6 +942,11 @@ SCENARIOS = {  # name: (impact, dif on STUDIED for the distant stratum)
     "U10 均勻 DIF δ = 1.0": (POWER_IMPACT, {"group": 2, "shift": 1.0}),
     "NU 非均勻 DIF a × 0.5": (POWER_IMPACT, {"group": 2, "a_mult": 0.5}),
 }
+EXTRA_N = {"N1 無 DIF、有平均差": (400,), "U10 均勻 DIF δ = 1.0": (400,)}  # v2: trend in n
+
+
+def scenario_ns(name: str, ns=POWER_N) -> tuple[int, ...]:
+    return tuple(ns) + EXTRA_N.get(name, ())
 
 
 def sim_items(n_per: int, impact, dif, pars, rng) -> tuple[np.ndarray, np.ndarray]:
@@ -858,7 +971,7 @@ def _power_cell(args) -> tuple:
     sdim = STUDIED.split("#")[0]
     other_dims = [k for k, its in dims.items() if len(its) > 1 and k != sdim]
     rng = np.random.default_rng([SEED, n, list(SCENARIOS).index(name)])
-    do_t2 = dif is None
+    do_t2 = dif is None and n <= max(POWER_N)
     c = defaultdict(float)
     for _ in range(reps):
         Y, st = sim_items(n, impact, dif, pars, rng)
@@ -866,6 +979,7 @@ def _power_cell(args) -> tuple:
         dd = dimension_dif(d1, dims)
         c["fp_dim_c"] += sum(dd[k]["cls"] == "C" for k in other_dims)
         c["fp_dim_bc"] += sum(dd[k]["cls"] != "A" for k in other_dims)
+        c["any_bc"] += any(dd[k]["cls"] != "A" for k in other_dims)
         c["fp_lr"] += sum(d1[i]["lr_class"] == "C" for k in other_dims for i in dims[k])
         c["fp_mh"] += sum(d1[i]["mh_class"] == "CC" for k in other_dims for i in dims[k])
         c["any_c"] += any(dd[k]["cls"] == "C" for k in other_dims)
@@ -874,7 +988,8 @@ def _power_cell(args) -> tuple:
         c["pw_lr"] += any(d1[i]["lr_class"] == "C" for i in dims[sdim])
         c["pw_mh"] += any(d1[i]["mh_class"] == "CC" for i in dims[sdim])
         if dif is not None and dd[sdim]["cls"] != "A" and 2 in dd[sdim]["focal"]:
-            aid = localisation_aid(Y, st, cols, dims, {sdim: {"cls": "C", "focal": [2]}})
+            aid = localisation_aid(Y, st, cols, dims, {sdim: {"cls": dd[sdim]["cls"],
+                                                              "focal": [2]}})  # fmt: skip
             c["aid_n"] += 1
             c["aid_ok"] += aid[sdim][0][0] == STUDIED
         if do_t2:
@@ -884,7 +999,8 @@ def _power_cell(args) -> tuple:
     k = len(other_dims)
     out = {"fp_dim_c": c["fp_dim_c"] / (reps * k), "fp_dim_bc": c["fp_dim_bc"] / (reps * k),
            "fp_lr": c["fp_lr"] / (reps * 2 * k), "fp_mh": c["fp_mh"] / (reps * 2 * k),
-           "any_c": c["any_c"] / reps, "pw_c": c["pw_c"] / reps, "pw_bc": c["pw_bc"] / reps,
+           "any_c": c["any_c"] / reps, "any_bc": c["any_bc"] / reps,
+           "pw_c": c["pw_c"] / reps, "pw_bc": c["pw_bc"] / reps,
            "pw_lr": c["pw_lr"] / reps, "pw_mh": c["pw_mh"] / reps,
            "aid": c["aid_ok"] / c["aid_n"] if c["aid_n"] else math.nan,
            "aid_n": c["aid_n"]}  # fmt: skip
@@ -894,26 +1010,32 @@ def _power_cell(args) -> tuple:
     return (name, n), out
 
 
-def population_effects() -> dict[str, tuple[float, float]]:
-    """|SMD|/SD and Delta R2_N of the planted DIF: 20,000 per group, no impact,
-    same_field vs distant only."""
+def population_effects() -> dict[str, tuple[float, float, float, float]]:
+    """Large-sample (20,000 per stratum) effect sizes of the planted DIF:
+    (|SMD|/SD and Delta R2_N, no mean differences, same_field vs distant only;
+     |SMD|/SD distant vs same_field and Delta R2_N of the 4-stratum rule (df 6), both
+     under the simulated mean differences POWER_IMPACT)."""
     bank = [it["item_id"] for it in item_bank()]
     cols, match = {i: j for j, i in enumerate(bank)}, matching_items()
     pars = dict(zip(bank, item_params(len(bank), np.random.default_rng(SEED)), strict=True))
     pop, rng = {}, np.random.default_rng(SEED + 1)
     j, mj = cols[STUDIED], [cols[m] for m in match[STUDIED]]
-    for name, (_, dif) in SCENARIOS.items():
+    for name, (impact, dif) in SCENARIOS.items():
         if dif is None:
             continue
         Y, st = sim_items(20000, (0, 0, 0, 0), dif, pars, rng)
         sel = (st == REF) | (st == 2)
         y, m = Y[sel, j], Y[sel][:, mj].sum(axis=1)
-        pop[name] = (mantel(y, st[sel] == 2, m)["es"], lr_dif(y, m, st[sel])["dr2"])
+        es0, dr0 = mantel(y, st[sel] == 2, m)["es"], lr_dif(y, m, st[sel])["dr2"]
+        Y, st = sim_items(20000, impact, dif, pars, rng)
+        y, m = Y[:, j], Y[:, mj].sum(axis=1)
+        es1 = mantel(y[sel], st[sel] == 2, m[sel])["es"]
+        pop[name] = (es0, dr0, es1, lr_dif(y, m, st)["dr2"])
     return pop
 
 
 def power(out: Path, reps: int = POWER_REPS, ns=POWER_N, workers: int = 2) -> dict:
-    cells = [(name, n, reps) for name in SCENARIOS for n in ns]
+    cells = [(name, n, reps) for name in SCENARIOS for n in scenario_ns(name, ns)]
     with Pool(workers) as pool:
         res = dict(pool.map(_power_cell, cells))
     write_power(out, res, population_effects(), reps, ns)
@@ -927,37 +1049,47 @@ def write_power(out: Path, res: dict, pop: dict, reps: int, ns) -> None:
     L = ["# W-73 DIF 規則的操作特性（**合成資料試跑，不是研究結果**）", "",
          f"> 產生：`python scripts/analyze_w73_invariance.py --power`（種子 {SEED}，每格 {reps} "
          "次）。規則是腳本檔頭預先登記的版本；本檔只用合成的等級反應模型資料，回答「在計畫的"
-         "每層人數下，規則能不能抓到 DIF、會不會誤報」。結論見 [FINDINGS](FINDINGS.md) F160–F165。",
+         "每層人數下，規則能不能抓到 DIF、會不會誤報」。結論見 [FINDINGS](FINDINGS.md) F160–F166。"
+         "v2（審查後）：修正 B-C1-45 並加入 n = 400 與有平均差時的母體效果量。",
          f"> 設定：73 題全部模擬，四層等人數；題目 a ~ U(1.2, 2.2)、閾值 (−1.5, −0.5, 0.5, 1.5) "
          f"+ U(−0.5, 0.5)；平均差情境各層潛在平均 {POWER_IMPACT}（same_field、adjacent、"
          "distant、multi_degree）；領域潛在特質 = 0.7 × 連結類型 + 雜訊。DIF 只放在 "
          f"{STUDIED}（distant 層）。", "",
          "## 1. 第一層誤報（被研究維度以外的 9 個維度）", "",
          "| 情境 | 每層 n | 維度判 C | 維度判 B 或 C | 題目 LR = C | 題目 MH = CC "
-         "| 每次分析至少一個維度 C |", "|---|---|---|---|---|---|---|"]  # fmt: skip
+         "| 每次分析至少一個維度 C | 至少一個維度 B 或 C |",
+         "|---|---|---|---|---|---|---|---|"]  # fmt: skip
     for name in SCENARIOS:
-        for n in ns:
+        for n in scenario_ns(name, ns):
             r = res[(name, n)]
             L.append(f"| {name} | {n} | {pct(r['fp_dim_c'])} | {pct(r['fp_dim_bc'])} | "
-                     f"{pct(r['fp_lr'])} | {pct(r['fp_mh'])} | {pct(r['any_c'])} |")  # fmt: skip
+                     f"{pct(r['fp_lr'])} | {pct(r['fp_mh'])} | {pct(r['any_c'])} | "
+                     f"{pct(r['any_bc'])} |")  # fmt: skip
     L += ["", f"## 2. 第一層檢定力（{STUDIED.split('#')[0]} 維度）", "",
-          "| 情境 | 母體 |SMD|/SD | 母體 ΔR²_N | 每層 n | 維度 C | 維度 B 或 C | 只看 LR = C "
-          "| 只看 MH = CC | 定位輔助指對（次數） |",
-          "|---|---|---|---|---|---|---|---|---|"]  # fmt: skip
+          "| 情境 | 每層 n | 維度 C | 維度 B 或 C（偵測） | 只看 LR = C | 只看 MH = CC "
+          "| 定位輔助指對（次數） |", "|---|---|---|---|---|---|---|"]  # fmt: skip
     for name in SCENARIOS:
         if name not in pop:
             continue
-        es, dr2 = pop[name]
-        for n in ns:
+        for n in scenario_ns(name, ns):
             r = res[(name, n)]
-            L.append(f"| {name} | {abs(es):.3f} | {dr2:.4f} | {n} | {pct(r['pw_c'])} | "
-                     f"{pct(r['pw_bc'])} | {pct(r['pw_lr'])} | {pct(r['pw_mh'])} | "
+            L.append(f"| {name} | {n} | {pct(r['pw_c'])} | {pct(r['pw_bc'])} | "
+                     f"{pct(r['pw_lr'])} | {pct(r['pw_mh'])} | "
                      f"{pct(r['aid'])}（{int(r['aid_n'])}） |")  # fmt: skip
-    L += ["", "母體效果量：每層 20,000 人、無平均差，只比較 same_field 與 distant 的被研究題。", "",
+    se = math.sqrt(0.25 / reps)
+    L += ["", f"蒙地卡羅標準誤：比例 p 的 SE = √(p(1−p)/{reps})，p = 0.5 時最大 "
+          f"{100 * se:.1f} 個百分點。", "",
+          "母體效果量（每層 20,000 人，被研究題）：", "",
+          "| 情境 | \\|SMD\\|/SD 無平均差（same_field vs distant） | ΔR²_N 兩組 "
+          "| \\|SMD\\|/SD 有平均差（distant） | ΔR²_N 四層規則（df 6，有平均差） |",
+          "|---|---|---|---|---|"]  # fmt: skip
+    for name, (es0, dr0, es1, dr1) in pop.items():
+        L.append(f"| {name} | {abs(es0):.3f} | {dr0:.4f} | {abs(es1):.3f} | {dr1:.4f} |")
+    L += ["",
           "## 3. 第二層誤報（53 個單題，沒有任何 DIF）", "",
           "| 情境 | 每層 n | 題目判 C | 題目判 B 或 C |", "|---|---|---|---|"]  # fmt: skip
     for name in SCENARIOS:
-        for n in ns:
+        for n in scenario_ns(name, ns):
             r = res[(name, n)]
             if "t2_c" in r:
                 L.append(f"| {name} | {n} | {pct(r['t2_c'])} | {pct(r['t2_bc'])} |")
@@ -1000,6 +1132,40 @@ def impact_check(out: Path, reps: int = IMPACT_REPS, ns=POWER_N) -> dict:
     return res
 
 
+def asymmetry_check(out: Path, reps: int = IMPACT_REPS, n: int = 200) -> dict:
+    """Added in v2 after review (report only): the two items of a dimension share the
+    Mantel statistic and opposite SMDs, but |SMD|/SD differs because each item has its
+    own SD. Appends section 5 to the power file."""
+    bank = [it["item_id"] for it in item_bank()]
+    cols, match, dims = {i: j for j, i in enumerate(bank)}, matching_items(), dim_items()
+    t1, _ = tiers()
+    pars = dict(zip(bank, item_params(len(bank), np.random.default_rng(SEED)), strict=True))
+    rng = np.random.default_rng([SEED, n, 200])
+    gaps, differ, total = [], 0, 0
+    for _ in range(reps):
+        Y, st = sim_items(n, POWER_IMPACT, {"group": 2, "shift": 1.0}, pars, rng)
+        d = dif_family(Y, st, cols, t1, match, lr=False)
+        for its in dims.values():
+            if len(its) != 2:
+                continue
+            for g in FOCALS:
+                a, b = (d[i]["mh"][g] for i in its)
+                gaps.append(abs(abs(a["es"]) - abs(b["es"])))
+                differ += a["cls"] != b["cls"]
+                total += 1
+    res = {"max": max(gaps), "mean": float(np.mean(gaps)), "differ": differ, "total": total}
+    L = ["", "## 5. 兩題維度的 \\|SMD\\|/SD 不對稱（v2 審查後追加；只報告）", "",
+         f"每層 {n} 人、U10 情境、{reps} 份資料；每個兩題維度 × 每個焦點層比較兩題的 "
+         "\\|SMD\\|/SD。", "",
+         "| 比較數 | 兩題 \\|SMD\\|/SD 差的最大值 | 平均 | 兩題落在不同 ETS 類別 |",
+         "|---|---|---|---|",
+         f"| {total} | {res['max']:.3f} | {res['mean']:.4f} | {differ} |"]  # fmt: skip
+    with open(out, "a", encoding="utf-8") as fh:
+        fh.write("\n".join(L) + "\n")
+    print(res, f"appended to {out}")
+    return res
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", type=Path, default=ROOT / "data" / "private" / "study")
@@ -1012,7 +1178,11 @@ def main() -> None:
     ap.add_argument("--reps", type=int, default=POWER_REPS)
     ap.add_argument("--workers", type=int, default=2)
     ap.add_argument("--impact-check", action="store_true", help="Tier 2 FPR vs mean gaps")
+    ap.add_argument("--asymmetry", action="store_true", help="two-item |SMD|/SD asymmetry")
     args = ap.parse_args()
+    if args.asymmetry:
+        asymmetry_check(args.out or POWER_OUT)
+        return
     if args.impact_check:
         impact_check(args.out or POWER_OUT)
         return
