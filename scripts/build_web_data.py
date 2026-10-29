@@ -14,7 +14,8 @@ Everything the page needs, exported from the Python model so the JavaScript engi
     python scripts/build_web_data.py            # write web/data.json
     python scripts/build_web_data.py --check    # exit 1 if web/data.json is stale
     python scripts/build_web_data.py --bundle web/dist/self-service.html
-        # one self-contained page (engine and data inlined) for hosting without a server
+        # one self-contained page (engine and data inlined) for hosting without a server;
+        # add --fragment for hosts that supply their own <html>/<head> skeleton
 """
 
 from __future__ import annotations
@@ -34,6 +35,7 @@ from aisc.pipeline import merge_identical_programs  # noqa: E402
 from aisc.profiling.anchors import NEUTRAL_VALUE  # noqa: E402
 from aisc.profiling.familiarity import DEFAULT_KNOWN, LEVELS  # noqa: E402
 from aisc.profiling.hierarchy import AREA_GROUPS, BASE_RATE, GROUP_LABELS  # noqa: E402
+from aisc.report import REASON_MIN_NEED  # noqa: E402
 
 OUT = ROOT / "web" / "data.json"
 FLOW = {"n_shortlist": 25, "k_new": 10, "k_known": 5}  # pipeline.interactive_discovery
@@ -71,6 +73,7 @@ def build() -> dict:
         "area_groups": {k: list(v) for k, v in AREA_GROUPS.items()},
         "base_rate": {k: float(v) for k, v in BASE_RATE.items()},
         "neutral": NEUTRAL_VALUE,
+        "reason_min_need": REASON_MIN_NEED,
         "scorer": scorer,
         "catalog": catalog,
         "schools": names,
@@ -85,6 +88,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
     ap.add_argument("--bundle", type=Path, default=None)
+    ap.add_argument("--fragment", action="store_true", help="bundle without the HTML skeleton")
     args = ap.parse_args()
     text = json.dumps(build(), ensure_ascii=False, separators=(",", ":")) + "\n"
     if args.check:
@@ -93,24 +97,31 @@ def main() -> None:
         print("web/data.json is up to date")
         return
     if args.bundle:
-        bundle(text, args.bundle)
+        bundle(text, args.bundle, standalone=not args.fragment)
         return
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(text, encoding="utf-8")
     print(f"wrote {OUT} ({OUT.stat().st_size / 1e6:.2f} MB)")
 
 
-def bundle(data_text: str, out: Path) -> None:
-    """Inline engine.js and the data into index.html (no relative loads)."""
+def bundle(data_text: str, out: Path, standalone: bool = True) -> None:
+    """Inline engine.js and the data into index.html (no relative loads). standalone=True
+    wraps it in a full HTML document (B-C1-42); --fragment leaves the skeleton to a host
+    that adds its own (e.g. an artifact page)."""
     page = (ROOT / "web" / "index.html").read_text("utf-8")
     engine = (ROOT / "web" / "engine.js").read_text("utf-8")
     tag = '<script src="engine.js"></script>'
     if page.count(tag) != 1:
         raise SystemExit("index.html must load engine.js exactly once")
-    safe = data_text.strip().replace("</", "<\\/")
-    page = page.replace(
-        tag, f"<script>\n{engine}</script>\n<script>window.AISC_DATA = {safe};</script>"
-    )
+    safe = data_text.strip().replace("<", "\\u003c")  # no "</script>" or "<!--" in the tag
+    inline = f"<script>\n{engine}</script>\n<script>window.AISC_DATA = {safe};</script>"
+    page = page.replace(tag, inline)
+    if standalone:
+        page = (
+            '<!doctype html>\n<html lang="zh-Hant-TW">\n<head>\n<meta charset="utf-8">\n'
+            '<meta name="viewport" content="width=device-width, initial-scale=1, '
+            'viewport-fit=cover">\n</head>\n<body>\n' + page + "\n</body>\n</html>\n"
+        )
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8")
     print(f"wrote {out} ({out.stat().st_size / 1e6:.2f} MB)")

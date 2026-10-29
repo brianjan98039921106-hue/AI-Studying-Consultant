@@ -1,11 +1,9 @@
 <title>研究所學門探索</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
 <style>
 /* Layout: one reading column; a four-step rail (consent → questions → familiarity → results)
-   sits above it and tracks the real order of the flow. */
+   sits above it and tracks the real order of the flow. System fonts only: the page makes no
+   third-party requests (B-C1-42). */
 :root {
   --paper: #f3f6f6;
   --card: #ffffff;
@@ -15,9 +13,9 @@
   --accent: #0d6b66;
   --accent-soft: #dcefec;
   --seal: #b5482f;
-  --display: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
-  --body: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --display: "Songti TC", "Noto Serif TC", "Noto Serif CJK TC", "PMingLiU", serif;
+  --body: "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
   --step: clamp(15px, 0.6vw + 13px, 17px);
 }
 @media (prefers-color-scheme: dark) {
@@ -125,6 +123,9 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
   color: var(--seal); border: 1px solid var(--seal); border-radius: 4px; padding: 0 6px;
 }
 .err { color: var(--seal); }
+.clear { font: inherit; font-size: 0.8em; font-weight: 500; padding: 2px 10px; border-width: 1px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+h2[tabindex] { outline: none; }
 @media (prefers-reduced-motion: no-preference) {
   section.panel { animation: rise 0.25s ease-out; }
   @keyframes rise { from { transform: translateY(6px); } to { transform: none; } }
@@ -141,25 +142,27 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
   <header class="top">
     <div class="eyebrow">美國研究所 · 碩士學門</div>
     <h1>研究所學門探索</h1>
-    <p class="lede">回答你想做什麼，不用先知道學程名稱。工具會從美國 17,552 個碩士學程（863 種學門）中，找出契合但你可能沒想過的選項。</p>
+    <p class="lede" id="lede">回答你想做什麼，不用先知道學程名稱。工具會從美國的碩士學程中，找出契合但你可能沒想過的學門。</p>
     <ol class="rail" id="rail" aria-label="進度">
       <li>1 同意</li><li>2 回答問題</li><li>3 你聽過哪些</li><li>4 結果</li>
     </ol>
   </header>
-  <main id="app" aria-live="polite"></main>
+  <main id="app"></main>
+  <div class="sr" id="status" aria-live="polite"></div>
 </div>
 
 <script src="engine.js"></script>
 <script>
 (function () {
   "use strict";
+  document.documentElement.lang = "zh-Hant-TW";
   const app = document.getElementById("app");
   const rail = document.getElementById("rail");
   const state = { stage: "consent", answers: {}, page: null, familiarity: {}, result: null };
   const STAGE_TITLES = {
-    core: ["第一段：興趣與學習偏好", "20 題。想像研究所的課程與活動，憑直覺回答。"],
-    group: ["第二段：大領域", "12 題。每題列出一類領域的代表活動，回答整體有多想做。"],
-    area: ["第三段：細分領域", "41 題，最有興趣的領域排在前面。"],
+    core: ["第一段：興趣與學習偏好", "想像研究所的課程與活動，憑直覺回答。"],
+    group: ["第二段：大領域", "每題列出一類領域的代表活動，回答整體有多想做。"],
+    area: ["第三段：細分領域", "最有興趣的領域排在前面。"],
   };
   let data, eng;
 
@@ -171,12 +174,20 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
       li.className = i < step ? "done" : i === step ? "now" : "";
     });
   }
-  function top() { window.scrollTo({ top: 0 }); }
+  function top() {
+    window.scrollTo({ top: 0 });
+    const h = app.querySelector("h2");
+    if (h) {
+      h.setAttribute("tabindex", "-1");
+      h.focus({ preventScroll: true });
+      document.getElementById("status").textContent = h.textContent;
+    }
+  }
 
   function sampleReasons(p) {
     // reasons for a sample student who likes investigative work, statistics and IT
     const { vector } = eng.complete({ riasec_i: 1, bi_mathematics_statistics: 1, bi_information_technology: 1 }, {});
-    return eng.reasons({ program: p, terms: eng.termsFor(vector, p.vector) }).map((x) => `<span>${esc(x.label)}</span>`).join("");
+    return eng.reasons({ program: p, terms: eng.termsFor(vector, p.vector) }, vector).map((x) => `<span>${esc(x.label)}</span>`).join("");
   }
 
   function renderConsent() {
@@ -190,7 +201,8 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
             <li>不需要姓名、身分證字號、電話或 e-mail。</li>
             <li>你的作答只在這個瀏覽器裡計算，不會上傳；關閉或重新整理頁面就會清除。</li>
             <li>每一題都可以不答；沒答的部分用一般預設值補上，結果會比較不精準。</li>
-            <li>約 10–15 分鐘，共 73 題，分三段。</li>
+            <li>約 10–15 分鐘，共 ${data.items.length} 題，分三段。</li>
+            <li>結果是探索的起點，不是申請建議；申請前請到各校官網確認。</li>
           </ul>
           <label class="consent"><input type="checkbox" id="agree"><span>我了解上述說明，同意開始。</span></label>
           <div class="row"><button id="start" disabled>開始作答</button></div>
@@ -230,14 +242,17 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
         const checked = state.answers[it.id] === v + 1 ? "checked" : "";
         return `<label class="opt"><input type="radio" name="${esc(it.id)}" id="${esc(it.id)}-${v + 1}" value="${v + 1}" ${checked}><span><b>${v + 1}</b>${esc(lab)}</span></label>`;
       }).join("");
-      const ex = it.examples.length ? `<ul class="ex">${it.examples.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>` : "";
+      const exId = `ex-${esc(it.id)}`;
+      const ex = it.examples.length ? `<ul class="ex" id="${exId}">${it.examples.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>` : "";
+      const desc = it.examples.length ? ` aria-describedby="${exId}"` : "";
+      const clear = `<button type="button" class="ghost clear" data-clear="${esc(it.id)}"${state.answers[it.id] ? "" : " hidden"}>改成不回答</button>`;
       return `<div class="q"><div class="num">${done + i + 1} / ${data.items.length}</div><div class="stem">${esc(it.stem)}</div>${ex}
-        <fieldset class="scale${anchored ? " anchored" : ""}"><legend>${esc(it.stem)}</legend>${opts}</fieldset></div>`;
+        <fieldset class="scale${anchored ? " anchored" : ""}"${desc}><legend>第 ${done + i + 1} 題：${esc(it.stem)}</legend>${opts}</fieldset><div>${clear}</div></div>`;
     }).join("");
     const nextLabel = stage === "area" ? "看看哪些你聽過" : "下一段";
     app.innerHTML = `
       <section class="panel">
-        <div class="stagehead"><h2>${esc(title)}</h2><p class="lede">${esc(sub)}</p></div>
+        <div class="stagehead"><h2>${esc(title)}</h2><p class="lede">${items.length} 題。${esc(sub)}</p></div>
         <div class="box" style="padding-block:4px">${qs}</div>
         <div class="sticky row"><button id="next">${nextLabel}</button>
           ${stage !== "core" ? '<button class="ghost" id="back">上一段</button>' : ""}
@@ -249,7 +264,20 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
       left.textContent = n ? `這一段還有 ${n} 題沒答，可以直接繼續` : "這一段都答完了";
     }
     app.querySelectorAll('input[type="radio"]').forEach((r) =>
-      r.addEventListener("change", () => { state.answers[r.name] = Number(r.value); updateLeft(); })
+      r.addEventListener("change", () => {
+        state.answers[r.name] = Number(r.value);
+        app.querySelector(`[data-clear="${CSS.escape(r.name)}"]`).hidden = false;
+        updateLeft();
+      })
+    );
+    app.querySelectorAll("[data-clear]").forEach((b) =>
+      b.addEventListener("click", () => {
+        const id = b.dataset.clear;
+        delete state.answers[id];
+        app.querySelectorAll(`input[name="${CSS.escape(id)}"]`).forEach((r) => { r.checked = false; });
+        b.hidden = true;
+        updateLeft();
+      })
     );
     updateLeft();
     document.getElementById("next").addEventListener("click", () => {
@@ -260,6 +288,10 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
     if (back) back.addEventListener("click", () => { state.stage = stage === "area" ? "group" : "core"; render(); top(); });
   }
 
+  function answeredCount() {
+    return Object.values(state.answers).filter(Boolean).length;
+  }
+
   function profileVector() {
     const { needs, groupScores } = eng.scoreAnswers(state.answers);
     return { needs, groupScores, ...eng.complete(needs, groupScores) };
@@ -268,9 +300,9 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
   function renderFamiliar() {
     setRail(2);
     const prof = profileVector();
-    if (!Object.keys(prof.needs).length) {
+    if (!Object.keys(prof.needs).length && !Object.keys(prof.groupScores).length) {
       app.innerHTML = `<section class="panel"><div class="box"><h2>還沒有任何作答</h2>
-        <p>至少回答一部分題目，工具才能找出適合你的學門。</p>
+        <p>你跳過了所有題目。至少回答一部分，工具才能找出適合你的學門。</p>
         <div class="row"><button id="again">回到第一段</button></div></div></section>`;
       document.getElementById("again").addEventListener("click", () => { state.stage = "core"; render(); top(); });
       return;
@@ -287,7 +319,8 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
     app.innerHTML = `
       <section class="panel">
         <div class="stagehead"><h2>這些學門你聽過嗎？</h2>
-          <p class="lede">這是和你最契合的 ${ids.length} 種學門。你沒聽過的會放進「你可能沒想過」，聽過的放在「你已經知道、而且適合」。</p></div>
+          <p class="lede">這是和你最契合的 ${ids.length} 種學門。你沒聽過的會放進「你可能沒想過」，聽過的放在「你已經知道、而且適合」。</p>
+          ${answeredCount() < data.items.length / 2 ? `<p class="note">你跳過了超過一半的題目（只答 ${answeredCount()} / ${data.items.length} 題），結果主要來自預設值，參考價值有限。可以按「修改作答」補答。</p>` : ""}</div>
         <div class="box" style="padding-block:4px">${rows}</div>
         <div class="sticky row"><button id="show">看結果</button><button class="ghost" id="back">修改作答</button></div>
       </section>`;
@@ -314,7 +347,7 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
   function recCard(r) {
     const p = r.program;
     const names = p.schools.map((i) => data.schools[i]);
-    const reasons = eng.reasons(r).map((x) => `<span>${esc(x.label)}</span>`).join("");
+    const reasons = eng.reasons(r, state.result.prof.vector).map((x) => `<span>${esc(x.label)}</span>`).join("");
     return `<div class="rec"><div class="head"><span class="name">${esc(p.name)}</span><span class="mono count">CIP ${esc(p.cip)}</span></div>
       ${reasons ? `<div class="reasons" aria-label="為什麼適合">${reasons}</div>` : ""}
       <details><summary>${names.length} 所學校開設</summary><p>${names.map(esc).join("、")}</p></details></div>`;
@@ -322,7 +355,7 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
 
   function resultText() {
     const { res } = state.result;
-    const line = (r) => `- ${r.program.name}（CIP ${r.program.cip}，${r.program.schools.length} 所學校）：${eng.reasons(r).map((x) => x.label).join("、")}`;
+    const line = (r) => `- ${r.program.name}（CIP ${r.program.cip}，${r.program.schools.length} 所學校）：${eng.reasons(r, state.result.prof.vector).map((x) => x.label).join("、") || "—"}`;
     return ["你可能沒想過：", ...res.discoveries.map(line), "", "你已經知道、而且適合：", ...(res.knownGood.length ? res.knownGood.map(line) : ["（無）"])].join("\n");
   }
 
@@ -332,7 +365,7 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
     const interest = data.dims.filter((d) => d.layer === "interest").map((d) => d.key);
     const areas = data.dims.filter((d) => d.layer === "domain").map((d) => d.key)
       .sort((a, b) => prof.vector[eng.keys.indexOf(b)] - prof.vector[eng.keys.indexOf(a)]).slice(0, 6);
-    const answered = Object.values(state.answers).filter(Boolean).length;
+    const answered = answeredCount();
     app.innerHTML = `
       <section class="panel">
         <div class="stagehead"><h2>你的結果</h2><p class="count">作答 ${answered} / ${data.items.length} 題</p></div>
@@ -382,6 +415,9 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
   function boot(d) {
     data = d;
     eng = AiscEngine.makeEngine(data);
+    const src = data.catalog_source;
+    document.getElementById("lede").textContent =
+      `回答你想做什麼，不用先知道學程名稱。工具會從美國 ${src.programmes.toLocaleString("en-US")} 個碩士學程（${src.degree_types} 種學門）中，找出契合但你可能沒想過的選項。`;
     render();
   }
   if (window.AISC_DATA) boot(window.AISC_DATA);

@@ -17,6 +17,7 @@ from aisc.discovery import discover, shortlist
 from aisc.pipeline import merge_identical_programs, prepare_profile
 from aisc.profiling import apply_familiarity
 from aisc.profiling.questionnaire import Questionnaire, load_questions
+from aisc.report import reason_keys
 
 ROOT = Path(__file__).resolve().parents[1]
 NODE = shutil.which("node")
@@ -36,6 +37,7 @@ const out = cases.map((c) => {
     areaOrder: eng.areaOrder(groupScores),
     shortlist: eng.shortlist(vector),
     discoveries: res.discoveries.map((r) => [r.id, r.relevance]),
+    reasons: res.discoveries.map((r) => eng.reasons(r, vector).map((x) => x.key)),
     knownGood: res.knownGood.map((r) => [r.id, r.relevance]),
   };
 });
@@ -81,6 +83,7 @@ def _cases(types, n=24, seed=53):
                 "areaOrder": [q.dimension for q in qs.page("area")],
                 "shortlist": short,
                 "discoveries": [[r.program.program_id, r.relevance] for r in res.discoveries],
+                "reasons": [reason_keys(r, prof.needs) for r in res.discoveries],
                 "knownGood": [[r.program.program_id, r.relevance] for r in res.known_good],
             },
         })  # fmt: skip
@@ -107,6 +110,7 @@ def test_javascript_engine_matches_the_python_pipeline(tmp_path):
         assert np.allclose(g["vector"], e["vector"], atol=1e-12), i
         assert g["areaOrder"] == e["areaOrder"], i
         assert g["shortlist"] == e["shortlist"], i
+        assert g["reasons"] == e["reasons"], i
         for key in ("discoveries", "knownGood"):
             assert [x[0] for x in g[key]] == [x[0] for x in e[key]], (i, key)
             assert np.allclose([x[1] for x in g[key]], [x[1] for x in e[key]], atol=1e-9)
@@ -123,18 +127,9 @@ def test_bundle_inlines_engine_and_data(tmp_path):
     assert "</script>" not in page.split("window.AISC_DATA = ", 1)[1].split(";</script>", 1)[0]
 
 
-# --- independent review of W-53 (2026-10-29): B-C2-34, B-C1-42 ------------------------
+# --- independent review of W-53 (2026-10-29): B-C2-34, B-C1-42 (started as probes) ----
 
 
-def _probe(reason):
-    def mark(fn):
-        return pytest.mark.probe(pytest.mark.xfail(strict=True, raises=AssertionError,
-                                                   reason=reason)(fn))  # fmt: skip
-
-    return mark
-
-
-@_probe("B-C2-34: reasons cite needs the student rated low")
 def test_probe_reasons_only_cite_needs_the_student_has():
     from aisc.pipeline import interactive_discovery
     from aisc.report import render_profile_report
@@ -151,7 +146,6 @@ def test_probe_reasons_only_cite_needs_the_student_has():
     assert not cited, cited[:5]
 
 
-@_probe("B-C1-42: the web page lacks document setup, accessible labels and offline fonts")
 def test_probe_web_page_structure_privacy_and_accessibility(tmp_path):
     page = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
     assert "fonts.googleapis.com" not in page, "third-party font request"

@@ -434,12 +434,12 @@ print([r.program.degree_name for r in found_q.discoveries][:2])
 
 ### 4.13 學生自助網頁
 
-`web/index.html` 是給學生自己用的網頁：同意 → 三段 73 題 → 勾選聽過哪些學門 → 結果（「你可能沒想過」「你已經知道、而且適合」、為什麼適合、開設學校、需求剖面），可以複製結果。全部在瀏覽器裡計算，作答不會上傳，也不會存起來；重新整理就清除。
+`web/index.html` 是給學生自己用的網頁：同意 → 三段 73 題 → 勾選聽過哪些學門 → 結果（「你可能沒想過」「你已經知道、而且適合」、為什麼適合、開設學校、需求剖面），可以複製結果。全部在瀏覽器裡計算，作答不會上傳，也不會存起來；重新整理就清除。頁面只用系統字型，不向任何第三方送出請求。「為什麼適合」只列你想要的維度（補全後高於中性值 0.5，報告相同，B-C2-34）。
 
 | 用途 | 做法 |
 |---|---|
 | 本機開啟 | 在 `web/` 執行 `python -m http.server`，瀏覽器開 `http://localhost:8000` |
-| 單一檔案（不需伺服器） | `python scripts/build_web_data.py --bundle web/dist/self-service.html` |
+| 單一檔案（不需伺服器） | `python scripts/build_web_data.py --bundle web/dist/self-service.html`（完整 HTML 文件；給會自己加外框的平台用時加 `--fragment`） |
 | 模型或目錄改了之後 | `python scripts/build_web_data.py` 重建 `web/data.json`（CI 會檢查是否最新） |
 
 網頁的計算核心 `web/engine.js` 是 Python 模型的 JavaScript 版本：問卷計分、補全、v2 預設計分器、短名單與分區推薦。CI 用 24 組作答逐項比對兩者的結果（`tests/test_web_parity.py`，A-C2-60）；改 Python 模型時要同步改 `engine.js`，否則 CI 會失敗。網頁目前用真實目錄 v0：各學門的數理、程式、研究與創業取向還沒有測量，同一學門的學校分數相同。

@@ -136,11 +136,13 @@
       };
     }
 
-    function reasons(rec, n = 3) {
+    // aisc.report.reason_keys: largest positive contributions among dimensions the
+    // student wants (completed value > reason_min_need), unmeasured ones excluded
+    function reasons(rec, vector, n = 3) {
       const skip = new Set(rec.program.unmeasured);
       return rec.terms
-        .map((t, i) => ({ key: keys[i], label: data.dims[i].label, value: t }))
-        .filter((r) => r.value > 0 && !skip.has(r.key))
+        .map((t, i) => ({ key: keys[i], label: data.dims[i].label, value: t, need: vector[i] }))
+        .filter((r) => r.value > 0 && !skip.has(r.key) && r.need > data.reason_min_need)
         .sort((a, b) => b.value - a.value)
         .slice(0, n);
     }
