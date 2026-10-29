@@ -121,3 +121,46 @@ def test_bundle_inlines_engine_and_data(tmp_path):
     assert '<script src="engine.js"></script>' not in page
     assert "function makeEngine" in page and "window.AISC_DATA = {" in page
     assert "</script>" not in page.split("window.AISC_DATA = ", 1)[1].split(";</script>", 1)[0]
+
+
+# --- independent review of W-53 (2026-10-29): B-C2-34, B-C1-42 ------------------------
+
+
+def _probe(reason):
+    def mark(fn):
+        return pytest.mark.probe(pytest.mark.xfail(strict=True, raises=AssertionError,
+                                                   reason=reason)(fn))  # fmt: skip
+
+    return mark
+
+
+@_probe("B-C2-34: reasons cite needs the student rated low")
+def test_probe_reasons_only_cite_needs_the_student_has():
+    from aisc.pipeline import interactive_discovery
+    from aisc.report import render_profile_report
+
+    types, _ = merge_identical_programs(load_real_catalog_v0(ROOT / "data" / "reference").programs)
+    qs = Questionnaire(load_questions(ROOT / "data" / "items" / "item_bank_v2.json"))
+    for q in qs.page("core"):
+        qs.answer(q.item_id, 5 if q.dimension == "riasec_i" else 2)
+    student = qs.profile("probe")
+    res = interactive_discovery(student, types, lambda ids: dict.fromkeys(ids, "unknown"))
+    md = render_profile_report(student, prepare_profile(student, types), res)
+    low = ("實用型", "藝術型", "社會型", "企業型", "事務型", "數理強度", "程式強度")
+    cited = [lab for line in md.splitlines() if "（+" in line for lab in low if f"{lab}（+" in line]
+    assert not cited, cited[:5]
+
+
+@_probe("B-C1-42: the web page lacks document setup, accessible labels and offline fonts")
+def test_probe_web_page_structure_privacy_and_accessibility(tmp_path):
+    page = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+    assert "fonts.googleapis.com" not in page, "third-party font request"
+    assert "documentElement.lang" in page
+    assert "aria-describedby" in page
+    assert "超過一半" in page, "no warning when most items are skipped"
+    out = tmp_path / "standalone.html"
+    run = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_web_data.py"), "--bundle",
+                          str(out)], capture_output=True, text=True)  # fmt: skip
+    assert run.returncode == 0, run.stderr
+    head = out.read_text(encoding="utf-8")[:600].lower()
+    assert head.startswith("<!doctype html>") and 'name="viewport"' in head and "zh-hant" in head
