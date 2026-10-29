@@ -332,7 +332,7 @@ print(sorted(migrate_needs_v1_to_v2({"domain_finance": 0.9}).items()))
 
 v2 的學生只能和 v2 的學程比較（`Program(..., dims="v2")`）；混用會直接報錯。
 
-第二層要細問哪些領域：`aisc.profiling.hierarchy.areas_to_ask(group_scores, m=2)`（前 m 個群的所有領域）或 `q=8`（依同樣順序取前 q 個）。m、q 沒有預設值：職業資料顯示「相關補全＋細問 4–8 個領域」可能就夠（[F115](../results/interest-area-adaptive-findings.md)），但要等 W-41 學生資料預先登記後才定。
+第二層要細問哪些領域：`aisc.profiling.hierarchy.areas_to_ask(group_scores, m=2)`（前 m 個群的所有領域）或 `q=8`（依同樣順序取前 q 個）。m、q 沒有預設值：職業資料顯示「相關補全＋細問 4–8 個領域」可能就夠（[F115](../results/interest-area-adaptive-findings.md)），但要等 W-41 學生資料預先登記後才定；合成資料的預先登記選擇（W-66）也沒有選出任何 m／q（[F180–F184](../results/synthetic-l3-two-stage-findings.md)）。
 
 可選用：`complete_neutral(v2, area_model="correlated")`（`pipeline.prepare_profile` 同名參數）以 O\*NET 學到的領域相關結構補全未作答領域。用職業資料檢驗時誤差大幅下降，答得越少越明顯，但未通過全部預先登記條件，所以不是預設（[F105–F107](../results/interest-area-imputation-findings.md)）。
 
