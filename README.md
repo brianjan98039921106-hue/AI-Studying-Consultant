@@ -59,7 +59,7 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
-| 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
+| 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs` 與 `to_type_ids`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
 | 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](docs/privacy-notice.md)）；用法沒有改變 | D14 |
 | 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
 <!-- AUTO:changelog END -->

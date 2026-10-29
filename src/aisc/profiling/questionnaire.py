@@ -26,7 +26,8 @@ from aisc.contracts import StudentProfile
 from aisc.dimensions import BASIC_INTEREST_KEYS, NEED_KEYS_V2
 from aisc.profiling.hierarchy import GROUP_LABELS, areas_to_ask
 
-DEFAULT_BANK = Path("data/items/item_bank_v2.json")
+DEFAULT_BANK = Path("data/items/item_bank_v2.json")  # relative to the repo root
+_REPO_BANK = Path(__file__).resolve().parents[3] / DEFAULT_BANK
 STAGES: tuple[str, ...] = ("core", "group", "area")
 ANSWERS = (1, 2, 3, 4, 5)
 
@@ -44,7 +45,10 @@ class Question:
 
 def load_questions(path: str | Path = DEFAULT_BANK) -> list[Question]:
     """Read the v2 item bank and check that it covers every v2 dimension and group."""
-    spec = json.loads(Path(path).read_text(encoding="utf-8"))
+    path = Path(path)
+    if path == DEFAULT_BANK and not path.exists() and _REPO_BANK.exists():
+        path = _REPO_BANK  # run from outside the repo root
+    spec = json.loads(path.read_text(encoding="utf-8"))
     out = []
     for it in spec["items"]:
         labels = tuple(it["scale"]["labels_zh"])
@@ -106,7 +110,9 @@ class Questionnaire:
     def answer(self, item_id: str, value: int | None) -> None:
         if item_id not in self._by_id:
             raise ValueError(f"unknown item {item_id!r}")
-        if value is not None and value not in ANSWERS:
+        ok = value is None or (isinstance(value, int) and not isinstance(value, bool)
+                               and value in ANSWERS)  # fmt: skip
+        if not ok:
             raise ValueError(f"{item_id}: answer must be 1-5 or None (skip), got {value!r}")
         self.answers[item_id] = value
 

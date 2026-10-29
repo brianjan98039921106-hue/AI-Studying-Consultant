@@ -57,6 +57,9 @@ def test_scoring_is_the_mean_of_rescaled_answers():
         qs.answer("riasec_r#1", 6)
     with pytest.raises(ValueError):
         qs.answer("no_such_item", 3)
+    for bad in (True, 3.0, "3"):
+        with pytest.raises(ValueError):
+            qs.answer("riasec_r#1", bad)
 
 
 def test_area_items_follow_the_group_answers():
@@ -139,15 +142,7 @@ def test_merge_identical_programs_keeps_members_and_singletons():
     assert {p.cip for p in big} == {rep.cip} and rep.attributes == big[0].attributes
 
 
-# --- independent review of W-52 (2026-10-29): B-C2-31..33, B-C1-41 -------------------
-
-
-def _probe(reason):
-    def mark(fn):
-        return pytest.mark.probe(pytest.mark.xfail(strict=True, raises=AssertionError,
-                                                   reason=reason)(fn))  # fmt: skip
-
-    return mark
+# --- independent review of W-52 (2026-10-29): B-C2-31..33, B-C1-41 (started as probes)
 
 
 def _real():
@@ -156,7 +151,6 @@ def _real():
     return load_real_catalog_v0(ROOT / "data" / "reference").programs
 
 
-@_probe("B-C2-31: merging hides fields that hard constraints read")
 def test_probe_merge_keeps_programmes_with_different_constraint_fields_apart():
     from dataclasses import replace
 
@@ -170,7 +164,6 @@ def test_probe_merge_keeps_programmes_with_different_constraint_fields_apart():
     assert len(merged) == 3, [len(v) for v in members.values()]
 
 
-@_probe("B-C2-32: anchors given as real programme ids are lost after merging")
 def test_probe_anchor_ids_can_be_translated_to_degree_types():
     from aisc import pipeline
 
@@ -183,7 +176,6 @@ def test_probe_anchor_ids_can_be_translated_to_degree_types():
     assert any(m.program_id == anchor for m in members[tid])
 
 
-@_probe("B-C2-33: degree-type ids depend on input order")
 def test_probe_type_ids_are_stable_under_input_order():
     import random
 
@@ -206,7 +198,6 @@ def _run_script(tmp_path, payload):
     return subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT), out
 
 
-@_probe("B-C1-41: the self-service flow accepts bad consent and answers silently")
 def test_probe_self_service_validates_consent_and_answers(tmp_path):
     run, out = _run_script(tmp_path, {"consent": "false", "items": {}})
     assert not out.exists(), "string 'false' was taken as consent"

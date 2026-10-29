@@ -18,8 +18,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import secrets
 import sys
-from datetime import date
+from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,6 +41,29 @@ NOTICE = """本工具依你的作答產生研究所學程推薦。
 - 每一題都可以按 Enter 跳過；跳過的部分用一般預設值補上，推薦會比較不精準。
 完整說明：docs/privacy-notice.md"""
 FAMILIAR = {"0": "unknown", "1": "heard", "2": "can_describe"}
+DELETE_NOTE = "這份報告只存在這台電腦；不需要時直接刪除這個檔案。共用電腦請看完就刪除。"
+
+
+def fail(msg: str) -> None:
+    print(f"錯誤：{msg}", file=sys.stderr)
+    sys.exit(2)
+
+
+def check_script(script: dict, item_ids: set[str]) -> None:
+    """Scripted answers must name known items with 1-5 integers or null (B-C1-41)."""
+    items = script.get("items")
+    if not isinstance(items, dict):
+        fail("answers 檔需要 items 物件")
+    unknown = sorted(set(items) - item_ids)
+    if unknown:
+        fail(f"不認得的題號 {unknown[:5]}")
+    bad = {k: v for k, v in items.items()
+           if v is not None and (isinstance(v, bool) or v not in (1, 2, 3, 4, 5))}  # fmt: skip
+    if bad:
+        fail(f"答案必須是 1-5 的整數或 null：{dict(list(bad.items())[:5])}")
+    fam = script.get("familiar", {})
+    if not isinstance(fam, dict) or set(fam.values()) - set(FAMILIAR.values()):
+        fail(f"familiar 的值必須是 {sorted(FAMILIAR.values())}")
 
 
 def ask_terminal(q, n, total) -> int | None:
@@ -58,6 +82,15 @@ def ask_terminal(q, n, total) -> int | None:
 
 
 def main() -> None:
+    sys.stdout.reconfigure(errors="replace")  # terminals that cannot show Chinese
+    try:
+        run()
+    except (EOFError, KeyboardInterrupt):
+        print("\n已中止，沒有儲存任何資料。")
+        sys.exit(1)
+
+
+def run() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--answers", type=Path, help="scripted answers (JSON)")
     ap.add_argument("--out", type=Path, default=None)
@@ -68,7 +101,7 @@ def main() -> None:
 
     print(NOTICE)
     if script is not None:
-        consent = bool(script.get("consent"))
+        consent = script.get("consent") is True  # B-C1-41: only an explicit true
     else:
         consent = input("\n同意並開始？（y／n）：").strip().lower() == "y"
     if not consent:
@@ -77,6 +110,8 @@ def main() -> None:
 
     qs = Questionnaire(load_questions(ROOT / "data" / "items" / "item_bank_v2.json"))
     total = len(qs.questions)
+    if script is not None:
+        check_script(script, {q.item_id for q in qs.questions})
     while qs.next_page():
         for q in qs.next_page():
             if script is not None:
@@ -84,8 +119,15 @@ def main() -> None:
             else:
                 v = ask_terminal(q, qs.progress()[0] + 1, total)
             qs.answer(q.item_id, v)
-    student = qs.profile(f"self-{date.today().isoformat()}")
-    print(f"\n完成：{total - len(qs.skipped())} 題作答、{len(qs.skipped())} 題跳過。")
+    answered = total - len(qs.skipped())
+    print(f"\n完成：{answered} 題作答、{len(qs.skipped())} 題跳過。")
+    if not qs.needs():
+        print("沒有任何作答，無法產生推薦；沒有儲存任何資料。")
+        return
+    if answered < total / 2:
+        print("提醒：跳過的題目超過一半，推薦主要來自預設值，參考價值有限。")
+    stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    student = qs.profile(f"self-{stamp}-{secrets.token_hex(3)}")
 
     real = load_real_catalog_v0(ROOT / "data" / "reference").programs
     catalog, members = merge_identical_programs(real)  # one entry per degree type (B-C2-30)
@@ -115,7 +157,7 @@ def main() -> None:
         schools = [m.school for m in members[r.program.program_id]]
         more = f" 等 {len(schools)} 所" if len(schools) > 3 else ""
         print(f"  {r.program.degree_name}｜{'、'.join(schools[:3])}{more}")
-    print(f"\n完整報告：{out}")
+    print(f"\n完整報告：{out}\n{DELETE_NOTE}")
 
 
 if __name__ == "__main__":

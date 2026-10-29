@@ -427,9 +427,9 @@ found_q = interactive_discovery(
 print([r.program.degree_name for r in found_q.discoveries][:2])
 ```
 
-真實目錄 v0 中同一學門所有學校的分數相同，`merge_identical_programs` 先把它們合併成一個「學位類型」（`members` 列出開設的學校），清單才不會被同一學門佔滿（B-C2-30）。
+真實目錄 v0 中同一學門所有學校的分數相同，`merge_identical_programs` 先把它們合併成一個「學位類型」（`members` 列出開設的學校），清單才不會被同一學門佔滿（B-C2-30）。學費、STEM OPT 等條件欄位不同的學校不會被合併（B-C2-31）；學位類型代號在每次執行都相同；原本以學程代號記下的錨點，用 `pipeline.to_type_ids(ids, members)` 轉成學位類型代號（B-C2-32）。
 
-學生自己在終端機使用：`python examples/self_service.py`。流程是個資告知與同意（[privacy-notice.md](privacy-notice.md)）→ 73 題 → 熟悉度確認（以學位類型詢問）→ 推薦 → 報告存在 `data/private/`（不進版控）。不需要姓名或聯絡方式。網頁介面是 W-53。
+學生自己在終端機使用：`python examples/self_service.py`。流程是個資告知與同意（[privacy-notice.md](privacy-notice.md)）→ 73 題 → 熟悉度確認（以學位類型詢問）→ 推薦 → 報告存在 `data/private/`（不進版控）。不需要姓名或聯絡方式；沒有任何作答時不產生推薦，跳過超過一半會提醒；報告檔名每次不同，結尾提醒在共用電腦上看完就刪除。網頁介面是 W-53。
 
 ---
 
@@ -510,7 +510,7 @@ print([r.program.degree_name for r in found_q.discoveries][:2])
 | 2026-10-29 | v0.4.1 | 新增實驗中的真實學程目錄 v0（`aisc.catalog.real.load_real_catalog_v0`、`scripts/build_real_catalog.py`，§4.11）；`Program` 新增 `unmeasured` 欄位；報告標示未測量維度與低信心剖面，且不以未測量維度當理由；錨點的未測量維度不再當作先驗證據（B-C1-32） | W-77 |
 | 2026-10-29 | v0.4.2 | 新增學經歷輸入：JSON 檔（多學位、修課、考試、經驗）→ `StudentRecord`，台灣課名對應表 draft-1（待確認），無法對應的課名列出待人工對應（`aisc.profiling.load_student_record`，§4.6）；`StudentRecord` 新增 `online_only`、`unmapped`；僅線上修課不再符合「不接受線上學分」的條件；報告新增條件差距卡（`render_profile_report(..., record=)`，§4.10） | W-61 |
 | 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](privacy-notice.md)）；用法沒有改變 | D14 |
-| 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
+| 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs` 與 `to_type_ids`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
 
 ---
 

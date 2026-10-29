@@ -18,6 +18,7 @@ simulated respondent in C5. It receives program_ids and returns
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, replace
 
@@ -40,37 +41,62 @@ from aisc.profiling import AdaptiveSession, Item, apply_familiarity, blend_profi
 AskFn = Callable[[list[str]], dict[str, str]]
 
 
+# Fields that must agree for programmes to share a degree type: everything the model
+# and the hard constraints read (B-C2-31). Provenance (source_url, retrieved_at) may differ.
+_MERGE_FIELDS = ("cip", "degree_name", "dims", "unmeasured", "tuition_usd", "stem_opt",
+                 "spring_intake", "duration_months", "prestige", "synthetic",
+                 "attribute_source")  # fmt: skip
+
+
+def _merge_key(p: Program) -> tuple:
+    return (*(getattr(p, f) for f in _MERGE_FIELDS), tuple(sorted(p.attributes.items())))
+
+
 def merge_identical_programs(
     catalog: Sequence[Program],
 ) -> tuple[list[Program], dict[str, list[Program]]]:
-    """Merge programmes the model cannot tell apart (same CIP, degree name, dimension
-    set, attribute vector and unmeasured list) into one "degree type" (B-C2-30).
+    """Merge programmes that agree on everything the model and the hard constraints
+    read (CIP, degree name, dimension set, attribute vector, unmeasured list, tuition,
+    STEM OPT, spring intake, duration, prestige, synthetic flag) into one "degree
+    type" (B-C2-30, B-C2-31).
 
     Real catalogue v0 gives every school in a CIP the same vector, so without this the
     list fills up with one degree at many schools. Returns (catalogue to rank,
     {type program_id: member programmes}); a programme with no twin is kept as is.
     The representative keeps the first member's fields (members sorted by school),
-    with program_id "type:<cip>:<n>" and school "<first school> 等 N 所". Anchors and
-    familiarity refer to the returned ids. Once attributes differ between schools
-    (W-21, W-22) nothing is merged."""
+    with a stable program_id "type:<cip>:<hash of the merge key>" (B-C2-33) and school
+    "<first school> 等 N 所". Anchors and familiarity must use the returned ids: use
+    `to_type_ids` to translate programme ids (B-C2-32). Once attributes differ between
+    schools (W-21, W-22) nothing is merged."""
     groups: dict[tuple, list[Program]] = {}
     for p in catalog:
-        key = (p.cip, p.degree_name, p.dims, tuple(sorted(p.attributes.items())),
-               tuple(p.unmeasured))  # fmt: skip
-        groups.setdefault(key, []).append(p)
+        groups.setdefault(_merge_key(p), []).append(p)
     out: list[Program] = []
     members: dict[str, list[Program]] = {}
-    for n, ps in enumerate(groups.values()):
+    for key, ps in groups.items():
         ps = sorted(ps, key=lambda q: (q.school, q.program_id))
         if len(ps) == 1:
             out.append(ps[0])
             members[ps[0].program_id] = ps
             continue
-        rep = replace(ps[0], program_id=f"type:{ps[0].cip}:{n}",
+        digest = hashlib.sha1(repr(key).encode("utf-8")).hexdigest()[:8]
+        rep = replace(ps[0], program_id=f"type:{ps[0].cip}:{digest}",
                       school=f"{ps[0].school} 等 {len(ps)} 所")  # fmt: skip
+        if rep.program_id in members:
+            raise ValueError(f"degree-type id collision: {rep.program_id}")
         out.append(rep)
         members[rep.program_id] = ps
     return out, members
+
+
+def to_type_ids(program_ids: Sequence[str], members: Mapping[str, list[Program]]) -> list[str]:
+    """Translate programme ids (e.g. anchors, familiarity) to the degree-type ids returned
+    by `merge_identical_programs` (B-C2-32). Unknown ids raise."""
+    owner = {m.program_id: tid for tid, ms in members.items() for m in ms}
+    missing = [i for i in program_ids if i not in owner]
+    if missing:
+        raise ValueError(f"programmes not in the merged catalogue: {missing[:5]}")
+    return list(dict.fromkeys(owner[i] for i in program_ids))
 
 
 AnswerFn = Callable[[Item], float]
