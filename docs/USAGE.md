@@ -6,7 +6,7 @@
 > **本文件隨開發更新**（工項 W-05）：任何改變使用方式的 PR 都要同步修改本文件與 §8 變更紀錄。
 > 本文件中的每一段 `python` 範例都由 `tests/test_usage_doc.py` 在 CI 中實際執行，API 改了而文件沒改，CI 會失敗。
 
-最後更新：2026-10-29 · 對應版本 v0.4.5（研究原型）
+最後更新：2026-10-31 · 對應版本 v0.4.6（研究原型）
 
 ---
 
@@ -434,7 +434,7 @@ print([r.program.degree_name for r in found_q.discoveries][:2])
 
 ### 4.13 學生自助網頁
 
-`web/index.html` 是給學生自己用的網頁：同意 → 三段 73 題 → 勾選聽過哪些學門 → 結果（「你可能沒想過」「你已經知道、而且適合」、為什麼適合、開設學校、需求剖面），可以複製結果。全部在瀏覽器裡計算，作答不會上傳，也不會存起來；重新整理就清除。頁面只用系統字型，不向任何第三方送出請求。「為什麼適合」只列你想要的維度（補全後高於中性值 0.5，報告相同，B-C2-34）。
+`web/index.html` 是給學生自己用的網頁：同意 → 三段 73 題 → 勾選聽過哪些學門 → 結果（「你可能沒想過」「你已經知道、而且適合」、為什麼適合、開設學校、需求剖面），可以複製結果；結果頁另有選填的「試用回饋」（每個推薦評 1–5 分、剖面像不像你），按「複製回饋」後貼給提供工具的人，再用 `python scripts/score_feedback.py <資料夾>` 評分（[evaluation-plan.md](evaluation-plan.md) §3）。全部在瀏覽器裡計算，作答不會上傳，也不會存起來；重新整理就清除。頁面只用系統字型，不向任何第三方送出請求。「為什麼適合」只列你想要的維度（補全後高於中性值 0.5，報告相同，B-C2-34）。
 
 | 用途 | 做法 |
 |---|---|
@@ -525,6 +525,7 @@ print([r.program.degree_name for r in found_q.discoveries][:2])
 | 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](privacy-notice.md)）；用法沒有改變 | D14 |
 | 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs` 與 `to_type_ids`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
 | 2026-10-29 | v0.4.5 | 新增學生自助網頁（`web/index.html`、`web/engine.js`、`web/data.json`；`scripts/build_web_data.py` 匯出資料與打包單一檔案）：作答到結果都在瀏覽器內，不上傳（§4.13） | W-53 |
+| 2026-10-31 | v0.4.6 | 網頁新增選填的試用回饋（每個推薦的評分、剖面吻合度；複製後交回，網頁不儲存；預留 `window.AISC_FEEDBACK_SINK` 給日後的回饋資料庫）與評分腳本 `scripts/score_feedback.py`（§4.13）；新增人物設定基準工具 `scripts/run_persona_benchmark.py` | W-80、W-81 |
 
 ---
 
