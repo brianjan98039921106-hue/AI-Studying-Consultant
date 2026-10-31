@@ -1,0 +1,6 @@
+# W-80 預期答案（docs/persona-benchmark.md）。以 # 開頭的列會被忽略。
+# 規則：寫完並提交之前，不要用這些人物跑網頁或模型。
+# label：core（核心）、acceptable（可接受）、exclude（不該出現）。cip_prefix 可為 2、4（如 27.05）或 6 碼（如 27.0501）。
+# 例：P01,52.08,core,金融與財務管理
+# 撰寫者：Brian；人物 P01–P16
+persona_id,cip_prefix,label,note
