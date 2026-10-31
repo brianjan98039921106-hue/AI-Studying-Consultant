@@ -92,7 +92,7 @@ flowchart LR
 | W-44 ⏸ | 錄取模型：資料稽核、階層模型、校準 | C3 v1；**v0 模型已實作**（`feasibility/hierarchical.py`：階層 logistic、Laplace 區間、自陳平移） | V-C3-1 ✅（F128–F131）；v0.2 預先登記採用（F136–F140）；V-C3-2…4 的評估工具已備（`calibration.py`）；**資料範本、載入器與時間切分檢查已備**（[data-intake.md](data-intake.md)），待真實申請結果 | **B-C3-1** ✅、B-C3-8 | W-40 |
 | W-45 ⏸ | 效用擷取 | C4.4 v1；**v0 工具已完成**（AHP 權重與一致性比率、加法效用、線性價值函數；L2 ✅） | 使用者研究 | B-C4-3 | W-42 |
 | W-46 | 外部審查 + 登錄表更新 | 審查紀錄 | L6 | 全部 | W-41 … W-45 |
-| W-80 🟡 | 人物設定基準（[evaluation-plan.md](evaluation-plan.md) §2；**工具已備**：16 個人物、評分腳本 `run_persona_benchmark.py`、撰寫說明 [persona-benchmark.md](persona-benchmark.md)；等你與一位顧問寫預期答案）：12–16 個人物、預期答案先寫定，模型 vs 熱門／只看興趣兩個基準；CI 退步檢查 | `results/` 基準報告、CI 測試 | V-C2-9 | A-C2-61 | 你寫預期答案 |
+| W-80 🟡 | 人物設定基準（[evaluation-plan.md](evaluation-plan.md) §2；**v2 盲評彙集，工具已備**：16 個人物、評分池 `pool.json`、評分網頁 `web/judge.html`、計分腳本 `run_persona_benchmark.py`、說明 [persona-benchmark.md](persona-benchmark.md)；等你與一位顧問評分）：模型 vs 熱門／只看興趣兩個基準；CI 退步檢查 | `results/` 基準報告、CI 測試 | V-C2-9 | A-C2-61 | 你與顧問盲評 |
 | W-81 ✅ | 網頁回饋（§3.1；複製交回、預留 `AISC_FEEDBACK_SINK`；`score_feedback.py`）：每個推薦評 1–5、想進一步查、剖面吻合度、看不懂的題目；作答時間與跳題數 | 網頁回饋區＋匯出 | V-C2-10、V-C1-10 | S-6 | §6 回饋交回方式的決定 |
 | W-82 | 試用 3–10 人（§3.2，含 W-41 題目試答）：事前清單 → 網頁 → 回饋 → 5 分鐘訪談 | 每位學生分數表與彙總 | V-C2-10、V-C1-10、V-C2-8 | B-C1-20 | W-81、W-40 |
 | W-83 | 追蹤（§4）：2–4 週後問是否查詢、列入考慮、改變申請方向 | 行為個數 | — | — | W-82 |
@@ -132,7 +132,7 @@ flowchart LR
 
 | 順序 | 工項 | 依據 |
 |---|---|---|
-| 1 | **W-80** 人物設定基準：你寫 P01–P16 的預期答案、一位顧問獨立寫 P02、P06、P09、P13（[persona-benchmark.md](persona-benchmark.md)），提交後執行 | 不需要學生就能衡量推薦品質，並擋住之後的退步（V-C2-9） |
+| 1 | **W-80** 人物設定基準：你在評分網頁盲評 P01–P16、一位顧問獨立評 P02、P06、P09、P13（[persona-benchmark.md](persona-benchmark.md)），交回後提交、計分 | 不需要學生就能衡量推薦品質，並擋住之後的退步（V-C2-9） |
 | 2 | **W-40** 個資告知填入提供者與聯絡方式 → **W-82** 試用 3–10 人（含 W-41 題目試答；回饋用網頁的「複製回饋」，評分用 `score_feedback.py`） | 真人才能回答「適合又沒想過」（V-C2-10） |
 | 3 | **W-77** 真實學程目錄 v0 補強度與取向（W-21；W-20 可由單一審核者人工檢查，D14） | 目前只依興趣與領域排序；W-80 與 W-82 的結果會指出最需要補的學門 |
 | 4 | **W-83** 試用後 2–4 週追蹤 | 行為證據 |

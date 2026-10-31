@@ -1,0 +1,229 @@
+<title>學門評分表</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one column per persona: who the student is, then step 1 (must-include, locked)
+   and step 2 (grade every pooled degree type). System fonts only; nothing leaves the page
+   except what the rater copies (W-80, docs/persona-benchmark.md). */
+:root {
+  --paper: #f4f5f1;
+  --card: #ffffff;
+  --ink: #1d2620;
+  --muted: #5d6a61;
+  --line: #d6ddd4;
+  --accent: #2f6b45;
+  --accent-soft: #e0eee3;
+  --mark: #a5512c;
+  --display: "Songti TC", "Noto Serif TC", "Noto Serif CJK TC", "PMingLiU", serif;
+  --body: "PingFang TC", "Noto Sans TC", "Noto Sans CJK TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121814; --card: #1a221d; --ink: #e3ebe4; --muted: #a1b0a5; --line: #2d3a31;
+    --accent: #7cc497; --accent-soft: #1f3a29; --mark: #e39a76; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121814; --card: #1a221d; --ink: #e3ebe4; --muted: #a1b0a5; --line: #2d3a31;
+  --accent: #7cc497; --accent-soft: #1f3a29; --mark: #e39a76; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.65;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 64px;
+}
+.wrap { max-width: 46rem; margin: 0 auto; display: grid; gap: 20px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.35; margin: 0; text-wrap: balance; }
+h1 { font-size: 1.7em; }
+h2 { font-size: 1.3em; }
+p { margin: 0; }
+.muted { color: var(--muted); font-size: 0.9em; }
+.mono { font-family: var(--mono); font-size: 0.85em; }
+.box { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: grid; gap: 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: inherit; font-weight: 700; border-radius: 999px; padding: 8px 18px; cursor: pointer;
+  border: 1.5px solid var(--accent); background: var(--accent); color: var(--card); }
+button.ghost { background: transparent; color: var(--accent); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+:focus-visible { outline: 3px solid var(--mark); outline-offset: 2px; }
+select, input[type="text"] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--card); color: var(--ink); max-width: 100%; }
+input[type="text"] { width: 100%; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { background: var(--accent-soft); border-radius: 4px; padding: 1px 8px; font-size: 0.86em; }
+.tag button { padding: 0 6px; margin-left: 4px; border: 0; background: transparent; color: var(--mark); font-weight: 700; }
+.item { display: grid; gap: 6px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.item .name { font-weight: 600; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip input { position: absolute; opacity: 0; pointer-events: none; }
+.chip span { display: inline-block; padding: 3px 14px; border-radius: 999px; border: 1.5px solid var(--line); font-size: 0.88em; cursor: pointer; }
+.chip input:checked + span { border-color: var(--accent); background: var(--accent-soft); }
+.chip input:focus-visible + span { outline: 3px solid var(--mark); outline-offset: 2px; }
+ol.nav { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+ol.nav button { padding: 2px 10px; font-size: 0.85em; font-family: var(--mono); background: transparent; color: var(--ink); border-color: var(--line); }
+ol.nav button.done { background: var(--accent-soft); border-color: var(--accent); }
+ol.nav button.now { border-color: var(--mark); }
+.note { border-left: 3px solid var(--mark); padding-left: 10px; font-size: 0.9em; color: var(--muted); }
+textarea { width: 100%; min-height: 8em; font: inherit; }
+</style>
+
+<div class="wrap">
+  <header class="box" style="background:transparent;border:0;padding:0">
+    <h1>學門評分表</h1>
+    <p class="muted">評估推薦模型用（W-80）。每個虛構學生：先寫下一定要出現的學門，再替一組學門評分。這組學門來自不同來源、順序隨機，看不出哪個來自模型。</p>
+  </header>
+  <section class="box" id="setup"></section>
+  <main id="app"></main>
+  <section class="box" id="out"></section>
+</div>
+
+<script>window.JUDGE_DATA = null;</script>
+<script>
+(function () {
+  "use strict";
+  document.documentElement.lang = "zh-Hant-TW";
+  const D = window.JUDGE_DATA;
+  const KEY = "aisc-judge-v1";
+  const BG = { same_field: "同領域延續", adjacent: "相近轉換", distant: "遠距轉換", multi_degree: "多學位" };
+  const GRADES = [[0, "0 不適合"], [1, "1 可以"], [2, "2 很適合"]];
+  const byCip = Object.fromEntries(Object.entries(D.types).map(([id, t]) => [t.cip, id]));
+  let st = load() || { rater: "", custom: "", current: null, personas: {} };
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  }
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) { /* keeps working */ } }
+  function raterId() { return st.rater === "custom" ? (st.custom || "other").trim().toLowerCase().replace(/[^a-z0-9_-]/g, "") || "other" : st.rater; }
+  function myPersonas() {
+    return st.rater === "consultant" ? D.personas.filter((p) => D.consultant.includes(p.id)) : D.personas;
+  }
+  function entry(pid) { return (st.personas[pid] = st.personas[pid] || { must: [], locked: false, grades: {} }); }
+  function complete(pid) {
+    const e = st.personas[pid];
+    return !!e && e.locked && D.pool[pid].every((id) => id in e.grades);
+  }
+  function label(id) { const t = D.types[id]; return `${t.cip} ${t.name}`; }
+
+  function renderSetup() {
+    const el = document.getElementById("setup");
+    el.innerHTML = `
+      <div class="row">
+        <label for="rater">我是</label>
+        <select id="rater">
+          <option value="">請選擇</option>
+          <option value="brian" ${st.rater === "brian" ? "selected" : ""}>Brian（P01–P16 全部）</option>
+          <option value="consultant" ${st.rater === "consultant" ? "selected" : ""}>顧問（P02、P06、P09、P13）</option>
+          <option value="custom" ${st.rater === "custom" ? "selected" : ""}>其他評分者（全部）</option>
+        </select>
+        <input type="text" id="custom" placeholder="英文代號，例如 alice" value="${esc(st.custom)}" style="width:12em" ${st.rater === "custom" ? "" : "hidden"}>
+      </div>
+      <p class="note">規則：評完以前不要用這些人物去試推薦網頁；顧問不要看 Brian 的評分。進度只存在這個瀏覽器，換電腦或清除資料會不見，評完記得複製結果。</p>`;
+    document.getElementById("rater").addEventListener("change", (e) => { st.rater = e.target.value; st.current = null; save(); renderAll(); });
+    const c = document.getElementById("custom");
+    c.addEventListener("input", () => { st.custom = c.value; save(); });
+  }
+
+  function renderNav(list) {
+    return `<ol class="nav" aria-label="人物">${list.map((p) => `<li><button type="button" data-go="${p.id}" class="${complete(p.id) ? "done" : ""} ${st.current === p.id ? "now" : ""}">${p.id}</button></li>`).join("")}</ol>`;
+  }
+
+  function renderPersona() {
+    const app = document.getElementById("app");
+    if (!st.rater) { app.innerHTML = ""; return; }
+    const list = myPersonas();
+    if (!st.current || !list.some((p) => p.id === st.current)) st.current = list.find((p) => !complete(p.id))?.id || list[0].id;
+    const p = list.find((x) => x.id === st.current);
+    const e = entry(p.id);
+    const done = list.filter((x) => complete(x.id)).length;
+    let body;
+    if (!e.locked) {
+      body = `
+        <h3>步驟 1：一定要出現的學門（2–3 個）</h3>
+        <p class="muted">憑你對這位學生的判斷寫，不用參考任何清單以外的工具。輸入學門名稱或 CIP 代碼，從選單挑選。鎖定後才會顯示要評分的學門，之後不能修改。</p>
+        <input type="text" id="pick" list="alltypes" placeholder="例如 27.0501 或 Statistics">
+        <datalist id="alltypes">${Object.keys(D.types).map((id) => `<option value="${esc(label(id))}"></option>`).join("")}</datalist>
+        <div class="tags">${e.must.map((id) => `<span class="tag">${esc(label(id))}<button type="button" data-drop="${esc(id)}" aria-label="移除">×</button></span>`).join("") || '<span class="muted">還沒有選</span>'}</div>
+        <div class="row"><button type="button" id="lock" ${e.must.length ? "" : "disabled"}>鎖定，開始評分</button></div>`;
+    } else {
+      const items = D.pool[p.id].map((id) => {
+        const t = D.types[id];
+        const chips = GRADES.map(([g, lab]) => `<label class="chip"><input type="radio" name="g-${esc(id)}" id="g-${esc(id)}-${g}" value="${g}" ${e.grades[id] === g ? "checked" : ""}><span>${lab}</span></label>`).join("");
+        return `<div class="item"><div><span class="name">${esc(t.name)}</span> <span class="mono muted">CIP ${esc(t.cip)}</span></div>
+          <div class="muted">${esc(t.family)}</div><div class="chips" role="radiogroup" aria-label="${esc(t.name)}">${chips}</div></div>`;
+      }).join("");
+      const left = D.pool[p.id].filter((id) => !(id in e.grades)).length;
+      body = `
+        <p class="muted">一定要出現：${e.must.map((id) => esc(label(id))).join("、")}（已鎖定）</p>
+        <h3>步驟 2：這些學門適合這位學生嗎？</h3>
+        <p class="muted">只看學門本身適不適合這位學生，不考慮學校或錄取難度。還有 <b id="left">${left}</b> 個沒評。</p>
+        <div>${items}</div>
+        <div class="row"><button type="button" id="next">下一位</button></div>`;
+    }
+    app.innerHTML = `
+      <section class="box">
+        <div class="row" style="justify-content:space-between"><span class="muted">已完成 ${done} / ${list.length}</span></div>
+        ${renderNav(list)}
+        <h2>${p.id}｜${BG[p.background]}</h2>
+        <p>${esc(p.description)}</p>
+        <p class="muted">作答設定（1–5 分）：${esc(p.high.join("、"))}${p.areas.length ? "；領域 " + esc(p.areas.join("、")) : ""}；其他領域 1 分</p>
+        ${body}
+      </section>`;
+    app.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => { st.current = b.dataset.go; save(); renderAll(); }));
+    const pick = document.getElementById("pick");
+    if (pick) {
+      pick.addEventListener("change", () => {
+        const id = byCip[pick.value.trim().split(" ")[0]];
+        if (id && !e.must.includes(id) && e.must.length < 3) { e.must.push(id); save(); renderAll(); }
+        else pick.value = "";
+      });
+      app.querySelectorAll("[data-drop]").forEach((b) => b.addEventListener("click", () => { e.must = e.must.filter((x) => x !== b.dataset.drop); save(); renderAll(); }));
+      document.getElementById("lock").addEventListener("click", () => { e.locked = true; save(); renderAll(); });
+    } else {
+      app.querySelectorAll('input[type="radio"]').forEach((r) => r.addEventListener("change", () => {
+        e.grades[r.name.slice(2)] = Number(r.value); save();
+        document.getElementById("left").textContent = D.pool[p.id].filter((id) => !(id in e.grades)).length;
+        renderOut();
+      }));
+      document.getElementById("next").addEventListener("click", () => {
+        const nextP = list.find((x) => !complete(x.id) && x.id !== p.id);
+        st.current = nextP ? nextP.id : p.id; save(); renderAll(); window.scrollTo({ top: 0 });
+      });
+    }
+  }
+
+  function payload() {
+    const personas = {};
+    for (const p of myPersonas()) {
+      if (complete(p.id)) personas[p.id] = { must_include: st.personas[p.id].must, grades: st.personas[p.id].grades };
+    }
+    return { schema: "aisc-judgments/1", rater: raterId(), date: new Date().toISOString().slice(0, 10), pool_version: D.pool_version, personas };
+  }
+
+  function renderOut() {
+    const el = document.getElementById("out");
+    if (!st.rater) { el.innerHTML = ""; return; }
+    const n = Object.keys(payload().personas).length;
+    el.innerHTML = `
+      <h3>交回評分</h3>
+      <p class="muted">只包含已完成的人物（目前 ${n} 個）。可以分次複製，後交的會取代先交的同一人物。按下後把文字貼給 Brian（或貼到對話裡）。</p>
+      <div class="row"><button type="button" id="copy" ${n ? "" : "disabled"}>複製評分結果</button><span class="muted" id="msg"></span></div>
+      <textarea id="box" readonly hidden></textarea>`;
+    document.getElementById("copy").addEventListener("click", () => {
+      const text = `AISC-JUDGMENTS v1\n${JSON.stringify(payload())}\nEND`;
+      const msg = document.getElementById("msg");
+      const fallback = () => { const b = document.getElementById("box"); b.value = text; b.hidden = false; b.select(); msg.textContent = "請手動複製下方文字"; };
+      try { navigator.clipboard.writeText(text).then(() => { msg.textContent = "已複製"; }, fallback); } catch (e) { fallback(); }
+    });
+  }
+
+  function renderAll() { renderSetup(); renderPersona(); renderOut(); }
+  if (!D) {
+    document.getElementById("app").innerHTML = '<p class="muted">缺少評分資料：請用 scripts/run_persona_benchmark.py --build-page 產生這個頁面。</p>';
+  } else {
+    renderAll();
+  }
+})();
+</script>

@@ -75,6 +75,7 @@
 | 熱門度偏誤 | Abdollahpouri, Burke & Mobasher (2019), FLAIRS | — |
 | 清單長度 | Iyengar & Lepper (2000), *JPSP*：選擇過載 | — |
 | 推薦理由 | Tintarev & Masthoff (2007)：推薦解釋的忠實性 | A-C2-4 理由反映實際的計分方式 |
+| 人物設定基準的評分（W-80 v2，評估方法） | 彙集評分（pooling）：只評各系統前 k 名的聯集（Spärck Jones & van Rijsbergen, 1975, British Library R&D Report 5266；TREC：Voorhees & Harman, 2005, *TREC: Experiment and Evaluation in Information Retrieval*）；評分者不知道來源（盲評）；分級相關度與 nDCG，增益 2^g − 1（Järvelin & Kekäläinen, 2002, *ACM TOIS* 20(4)；Burges et al., 2005, ICML）；評分者一致性用二次加權 κ（Cohen, 1968, *Psychological Bulletin* 70(4)）。本專案另加：評分前先鎖定「一定要出現」（池外召回）與 5 個隨機學門（評分寬嚴）。規格見 [persona-benchmark.md](persona-benchmark.md) | A-C2-61 |
 
 ## C3 錄取可行性
 
