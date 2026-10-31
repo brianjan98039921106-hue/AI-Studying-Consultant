@@ -5,7 +5,7 @@
 > Profile Taiwanese applicants, surface US graduate programs they never considered, and optimise which ones to apply to.
 
 <!-- AUTO:version START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-**Status:** v0.4.5 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
+**Status:** v0.4.6 · research prototype · program attributes used in simulations are **synthetic**; reference tables in `data/reference/` (CIP 2020, IPEDS 2025, O*NET) are real and sourced.
 <!-- AUTO:version END -->
 
 **範圍：** 服務所有台灣申請者，不限就學背景與目標領域（D10–D12，[docs/expansion.md](docs/expansion.md)）；資料分階段上線，目前為 v1（商管 × 數據 × 工程管理）。
@@ -60,23 +60,22 @@
 
 | 日期 | 版本 | 改變 | 工項 |
 |---|---|---|---|
+| 2026-10-31 | v0.4.6 | 網頁新增選填的試用回饋（每個推薦的評分、剖面吻合度；複製後交回，網頁不儲存；預留 `window.AISC_FEEDBACK_SINK` 給日後的回饋資料庫）與評分腳本 `scripts/score_feedback.py`（§4.13）；新增人物設定基準工具 `scripts/run_persona_benchmark.py` | W-80、W-81 |
 | 2026-10-29 | v0.4.5 | 新增學生自助網頁（`web/index.html`、`web/engine.js`、`web/data.json`；`scripts/build_web_data.py` 匯出資料與打包單一檔案）：作答到結果都在瀏覽器內，不上傳（§4.13） | W-53 |
 | 2026-10-29 | v0.4.4 | 新增學生自填問卷（`aisc.profiling.questionnaire`，73 題真題目、可跳題）與終端機自助流程（`examples/self_service.py`）；新增 `pipeline.merge_identical_programs` 與 `to_type_ids`，真實目錄的清單改列不同學位類型（§4.12） | W-52、B-C2-30 |
-| 2026-10-29 | v0.4.3 | 定位改為學生自助工具（D14）：不做研究型驗證；新增個資告知範本（[privacy-notice.md](docs/privacy-notice.md)）；用法沒有改變 | D14 |
 <!-- AUTO:changelog END -->
 
 ## 下一步
 
 <!-- AUTO:next-steps START · 由 scripts/update_readme.py 自動產生，請修改來源檔，不要直接改這裡 -->
-來源：[docs/ROADMAP.md](docs/ROADMAP.md) （2026-10-29 更新：學生自助工具，D14；C3、C4 暫停，D13）
+來源：[docs/ROADMAP.md](docs/ROADMAP.md) （2026-10-31 更新：學生自助工具，D14；C3、C4 暫停，D13）
 
 | 順序 | 工項 | 依據 |
 |---|---|---|
 | 1 | **W-80** 人物設定基準：你寫 P01–P16 的預期答案、一位顧問獨立寫 P02、P06、P09、P13（[persona-benchmark.md](docs/persona-benchmark.md)），提交後執行 | 不需要學生就能衡量推薦品質，並擋住之後的退步（V-C2-9） |
-| 2 | **W-81** 網頁回饋區（先決定回饋怎麼交回來） | 試用要能收到每個推薦的評分（V-C2-10） |
-| 3 | **W-82** 試用 3–10 人（含 W-41 題目試答；W-40 個資告知先填好） | 真人才能回答「適合又沒想過」 |
-| 4 | **W-77** 真實學程目錄 v0 補強度與取向（W-21；W-20 可由單一審核者人工檢查，D14） | 目前只依興趣與領域排序；W-80 與 W-82 的結果會指出最需要補的學門 |
-| 5 | **W-83** 試用後 2–4 週追蹤 | 行為證據 |
+| 2 | **W-40** 個資告知填入提供者與聯絡方式 → **W-82** 試用 3–10 人（含 W-41 題目試答；回饋用網頁的「複製回饋」，評分用 `score_feedback.py`） | 真人才能回答「適合又沒想過」（V-C2-10） |
+| 3 | **W-77** 真實學程目錄 v0 補強度與取向（W-21；W-20 可由單一審核者人工檢查，D14） | 目前只依興趣與領域排序；W-80 與 W-82 的結果會指出最需要補的學門 |
+| 4 | **W-83** 試用後 2–4 週追蹤 | 行為證據 |
 <!-- AUTO:next-steps END -->
 
 ## 文件導覽

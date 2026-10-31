@@ -123,6 +123,10 @@ details p { font-size: 0.86em; color: var(--muted); margin-top: 6px; overflow-wr
   color: var(--seal); border: 1px solid var(--seal); border-radius: 4px; padding: 0 6px;
 }
 .err { color: var(--seal); }
+.fb { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; padding-top: 4px; }
+.fb .chip span { padding: 2px 11px; font-family: var(--mono); }
+.tick { display: inline-flex; gap: 6px; align-items: center; font-size: 0.86em; }
+.tick input { accent-color: var(--accent); }
 .clear { font: inherit; font-size: 0.8em; font-weight: 500; padding: 2px 10px; border-width: 1px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 h2[tabindex] { outline: none; }
@@ -158,7 +162,37 @@ h2[tabindex] { outline: none; }
   document.documentElement.lang = "zh-Hant-TW";
   const app = document.getElementById("app");
   const rail = document.getElementById("rail");
-  const state = { stage: "consent", answers: {}, page: null, familiarity: {}, result: null };
+  const state = { stage: "consent", answers: {}, page: null, familiarity: {}, result: null, startedAt: 0, fb: null };
+  function emptyFeedback(prior) {
+    return { ratings: {}, considering: {}, explore: {}, profileFit: null, background: "", unclear: "", prior: prior || "" };
+  }
+  state.fb = emptyFeedback("");
+
+  // W-81: where feedback goes. (a) now: the student copies it and sends it to whoever
+  // shared the tool. (b) later: a host can set window.AISC_FEEDBACK_SINK to an object with
+  // submit(text, obj) -> Promise<string> (e.g. an anonymous feedback store); the page
+  // shows the returned message. docs/evaluation-plan.md §3.1.
+  const clipboardSink = {
+    label: "複製回饋",
+    submit(text) {
+      return copyText(text, "fbcopy").then((ok) =>
+        ok ? "已複製。請貼給提供這個工具的人（例如用訊息或 e-mail）。" : "請手動複製下方文字，貼給提供這個工具的人。");
+    },
+  };
+  const sink = window.AISC_FEEDBACK_SINK || clipboardSink;
+
+  function copyText(text, boxId) {
+    const fallback = () => {
+      const box = document.getElementById(boxId);
+      box.value = text; box.hidden = false; box.select();
+      return false;
+    };
+    try {
+      return navigator.clipboard.writeText(text).then(() => true, fallback);
+    } catch (e) {
+      return Promise.resolve(fallback());
+    }
+  }
   const STAGE_TITLES = {
     core: ["第一段：興趣與學習偏好", "想像研究所的課程與活動，憑直覺回答。"],
     group: ["第二段：大領域", "每題列出一類領域的代表活動，回答整體有多想做。"],
@@ -205,6 +239,8 @@ h2[tabindex] { outline: none; }
             <li>結果是探索的起點，不是申請建議；申請前請到各校官網確認。</li>
           </ul>
           <label class="consent"><input type="checkbox" id="agree"><span>我了解上述說明，同意開始。</span></label>
+          <label for="prior" class="count">選填（試用時用）：你目前在考慮哪些學程或學門？</label>
+          <textarea id="prior" rows="2" style="width:100%;font:inherit" placeholder="例如：MS Finance、資料科學">${esc(state.fb.prior)}</textarea>
           <div class="row"><button id="start" disabled>開始作答</button></div>
         </div>
         <div class="box sample" aria-label="結果範例">
@@ -220,7 +256,11 @@ h2[tabindex] { outline: none; }
     const agree = document.getElementById("agree");
     const start = document.getElementById("start");
     agree.addEventListener("change", () => { start.disabled = !agree.checked; });
-    start.addEventListener("click", () => { state.stage = "core"; render(); top(); });
+    start.addEventListener("click", () => {
+      state.fb.prior = document.getElementById("prior").value;
+      state.startedAt = Date.now();
+      state.stage = "core"; render(); top();
+    });
   }
 
   function pageItems(stage) {
@@ -348,9 +388,17 @@ h2[tabindex] { outline: none; }
     const p = r.program;
     const names = p.schools.map((i) => data.schools[i]);
     const reasons = eng.reasons(r, state.result.prof.vector).map((x) => `<span>${esc(x.label)}</span>`).join("");
+    const id = esc(r.id);
+    const rate = [1, 2, 3, 4, 5].map((v) => `<label class="chip"><input type="radio" name="rate-${id}" id="rate-${id}-${v}" value="${v}" ${state.fb.ratings[r.id] === v ? "checked" : ""}><span>${v}</span></label>`).join("");
     return `<div class="rec"><div class="head"><span class="name">${esc(p.name)}</span><span class="mono count">CIP ${esc(p.cip)}</span></div>
       ${reasons ? `<div class="reasons" aria-label="為什麼適合">${reasons}</div>` : ""}
-      <details><summary>${names.length} 所學校開設</summary><p>${names.map(esc).join("、")}</p></details></div>`;
+      <details><summary>${names.length} 所學校開設</summary><p>${names.map(esc).join("、")}</p></details>
+      <div class="fb" data-id="${id}">
+        <span class="count">適合你嗎？（1 完全不適合–5 非常適合）</span>
+        <div class="chips" role="radiogroup" aria-label="${esc(p.name)} 適合你嗎">${rate}</div>
+        <label class="tick"><input type="checkbox" data-kind="considering" ${state.fb.considering[r.id] ? "checked" : ""}> 原本就在考慮</label>
+        <label class="tick"><input type="checkbox" data-kind="explore" ${state.fb.explore[r.id] ? "checked" : ""}> 想進一步查</label>
+      </div></div>`;
   }
 
   function resultText() {
@@ -389,19 +437,52 @@ h2[tabindex] { outline: none; }
         <p class="note">結果只是探索的起點。學門資料來自 IPEDS 2025 碩士畢業紀錄與 O*NET 職業興趣（取得於 ${esc(data.catalog_source.retrieved_at)}）；各校課程的數理、程式、研究與創業取向還沒有測量，同一學門的學校目前分數相同。申請前請到各校官網確認課程內容與條件。</p>
         <div class="row"><button id="copy">複製結果</button><button class="ghost" id="restart">重新開始</button><span class="count" id="copied"></span></div>
         <textarea id="copybox" readonly hidden style="width:100%;min-height:10em;font:inherit"></textarea>
+        <div class="box">
+          <h3>試用回饋（選填）</h3>
+          <p class="count">在上面每個學門評「適合你嗎」，再填下面幾題。回饋不含姓名、聯絡方式或你對每一題的作答；只包含你對推薦的評分、需求剖面分數、作答時間與你寫的文字。</p>
+          <span class="count">你的需求剖面像你嗎？（1 完全不像–5 非常像）</span>
+          <div class="chips" role="radiogroup" aria-label="需求剖面像你嗎">${[1, 2, 3, 4, 5].map((v) => `<label class="chip"><input type="radio" name="fit" id="fit-${v}" value="${v}" ${state.fb.profileFit === v ? "checked" : ""}><span>${v}</span></label>`).join("")}</div>
+          <label for="bg" class="count">你的背景</label>
+          <select id="bg" style="font:inherit;max-width:100%">
+            ${[["", "不想說"], ["same_field", "延續大學領域"], ["adjacent", "轉到相近領域"], ["distant", "轉到很不同的領域"], ["multi_degree", "有兩個以上學位或主修"]].map(([v, l]) => `<option value="${v}" ${state.fb.background === v ? "selected" : ""}>${l}</option>`).join("")}
+          </select>
+          <label for="unclear" class="count">有哪些題目看不懂？（選填）</label>
+          <textarea id="unclear" rows="2" style="width:100%;font:inherit">${esc(state.fb.unclear)}</textarea>
+          <div class="row"><button id="sendfb">${esc(sink.label || "送出回饋")}</button><span class="count" id="fbmsg"></span></div>
+          <textarea id="fbcopy" readonly hidden style="width:100%;min-height:8em;font:inherit"></textarea>
+        </div>
       </section>`;
+    app.querySelectorAll(".fb").forEach((box) => {
+      const id = box.dataset.id;
+      box.querySelectorAll('input[type="radio"]').forEach((r) =>
+        r.addEventListener("change", () => { state.fb.ratings[id] = Number(r.value); }));
+      box.querySelectorAll('input[type="checkbox"]').forEach((c) =>
+        c.addEventListener("change", () => { state.fb[c.dataset.kind][id] = c.checked; }));
+    });
+    app.querySelectorAll('input[name="fit"]').forEach((r) =>
+      r.addEventListener("change", () => { state.fb.profileFit = Number(r.value); }));
+    document.getElementById("bg").addEventListener("change", (e) => { state.fb.background = e.target.value; });
+    document.getElementById("unclear").addEventListener("input", (e) => { state.fb.unclear = e.target.value; });
+    document.getElementById("sendfb").addEventListener("click", () => {
+      const fb = eng.makeFeedback({
+        result: res, ratings: state.fb.ratings, considering: state.fb.considering, explore: state.fb.explore,
+        profileFit: state.fb.profileFit, background: state.fb.background, unclear: state.fb.unclear,
+        prior: state.fb.prior, durationSec: (Date.now() - state.startedAt) / 1000, answered,
+        vector: prof.vector, date: new Date().toISOString().slice(0, 10),
+      });
+      const msg = document.getElementById("fbmsg");
+      Promise.resolve(sink.submit(eng.feedbackText(fb), fb)).then((m) => { msg.textContent = m; },
+        () => { msg.textContent = "沒有送出，請再試一次。"; });
+    });
     document.getElementById("copy").addEventListener("click", () => {
       const text = resultText();
-      const done = () => { document.getElementById("copied").textContent = "已複製"; };
-      const fallback = () => {
-        const box = document.getElementById("copybox");
-        box.value = text; box.hidden = false; box.select();
-        document.getElementById("copied").textContent = "請手動複製下方文字";
-      };
-      try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+      copyText(text, "copybox").then((ok) => {
+        document.getElementById("copied").textContent = ok ? "已複製" : "請手動複製下方文字";
+      });
     });
     document.getElementById("restart").addEventListener("click", () => {
-      state.answers = {}; state.familiarity = {}; state.result = null; state.stage = "consent"; render(); top();
+      state.answers = {}; state.familiarity = {}; state.result = null; state.fb = emptyFeedback("");
+      state.stage = "consent"; render(); top();
     });
   }
 

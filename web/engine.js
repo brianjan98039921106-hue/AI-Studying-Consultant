@@ -147,7 +147,51 @@
         .slice(0, n);
     }
 
-    return { keys, scoreAnswers, areaOrder, complete, termsFor, score, shortlist, discover, reasons };
+    // W-81 feedback (docs/evaluation-plan.md §3.1). Plain data only: no name, no contact,
+    // no item answers; parsed by scripts/score_feedback.py.
+    const FEEDBACK_SCHEMA = "aisc-feedback/1";
+    const RATINGS = [1, 2, 3, 4, 5];
+    const BACKGROUNDS = ["same_field", "adjacent", "distant", "multi_degree", ""];
+
+    function makeFeedback(f) {
+      const recs = [];
+      for (const [section, list] of [["new", f.result.discoveries], ["known", f.result.knownGood]]) {
+        list.forEach((r, i) => {
+          const rating = f.ratings[r.id] ?? null;
+          if (rating !== null && !RATINGS.includes(rating)) throw new Error(`rating for ${r.id} must be 1-5`);
+          recs.push({
+            section, rank: i + 1, id: r.id, cip: r.program.cip, name: r.program.name,
+            rating, already_considering: !!f.considering[r.id], want_to_explore: !!f.explore[r.id],
+          });
+        });
+      }
+      if (f.profileFit !== null && !RATINGS.includes(f.profileFit)) throw new Error("profile fit must be 1-5");
+      if (!BACKGROUNDS.includes(f.background)) throw new Error("unknown background");
+      return {
+        schema: FEEDBACK_SCHEMA,
+        data_version: data.version,
+        scorer: data.scorer.name,
+        date: f.date,
+        background: f.background,
+        duration_sec: Math.max(0, Math.round(f.durationSec)),
+        answered: f.answered,
+        total_items: data.items.length,
+        profile_fit: f.profileFit,
+        profile: Object.fromEntries(keys.map((k, i) => [k, Math.round(f.vector[i] * 1000) / 1000])),
+        prior_list: String(f.prior || "").slice(0, 1000),
+        unclear_items: String(f.unclear || "").slice(0, 2000),
+        recs,
+      };
+    }
+
+    function feedbackText(obj) {
+      return `AISC-FEEDBACK v1\n${JSON.stringify(obj)}\nEND`;
+    }
+
+    return {
+      keys, scoreAnswers, areaOrder, complete, termsFor, score, shortlist, discover, reasons,
+      makeFeedback, feedbackText, FEEDBACK_SCHEMA,
+    };
   }
 
   if (typeof module !== "undefined" && module.exports) module.exports = { makeEngine };
