@@ -67,6 +67,10 @@ ol.nav button.done { background: var(--accent-soft); border-color: var(--accent)
 ol.nav button.now { border-color: var(--mark); }
 .note { border-left: 3px solid var(--mark); padding-left: 10px; font-size: 0.9em; color: var(--muted); }
 textarea { width: 100%; min-height: 8em; font: inherit; }
+.picklist { max-height: 22rem; overflow-y: auto; border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; }
+.pick { display: flex; gap: 8px; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--line); cursor: pointer; overflow-wrap: anywhere; }
+.pick:last-child { border-bottom: 0; }
+.pick input { margin-top: 0.35em; }
 </style>
 
 <div class="wrap">
@@ -88,8 +92,9 @@ textarea { width: 100%; min-height: 8em; font: inherit; }
   const KEY = "aisc-judge-v1";
   const BG = { same_field: "同領域延續", adjacent: "相近轉換", distant: "遠距轉換", multi_degree: "多學位" };
   const GRADES = [[0, "0 不適合"], [1, "1 可以"], [2, "2 很適合"]];
-  const byCip = Object.fromEntries(Object.entries(D.types).map(([id, t]) => [t.cip, id]));
-  let st = load() || { rater: "", custom: "", current: null, personas: {} };
+  const MAX_SHOWN = 200;
+  const ids = D ? Object.keys(D.types).sort((a, b) => D.types[a].cip.localeCompare(D.types[b].cip)) : [];
+  let st =load() || { rater: "", custom: "", current: null, personas: {} };
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -106,6 +111,43 @@ textarea { width: 100%; min-height: 8em; font: inherit; }
     return !!e && e.locked && D.pool[pid].every((id) => id in e.grades);
   }
   function label(id) { const t = D.types[id]; return `${t.cip} ${t.name}`; }
+  function famName(code) { const f = D.families[code]; return f ? `${f.zh}（${f.en}）` : code; }
+  function famOptions() {
+    return Object.entries(D.families).sort((a, b) => a[1].zh.localeCompare(b[1].zh, "zh-Hant"))
+      .map(([c, f]) => `<option value="${c}">${esc(f.zh)}（${f.n}）</option>`).join("");
+  }
+
+  function renderPick(e) {
+    const q = (st.find || "").trim().toLowerCase();
+    const f = st.fam || "";
+    const list = document.getElementById("picklist");
+    const hint = document.getElementById("pickhint");
+    let shown = [];
+    if (f || q) {
+      shown = ids.filter((id) => {
+        const t = D.types[id];
+        return (!f || t.fam === f) && (!q || t.name.toLowerCase().includes(q) || t.cip.startsWith(q));
+      });
+    }
+    hint.textContent = !f && !q ? "先選一個大類或輸入關鍵字，清單才會出現。"
+      : `${f ? famName(f) : "全部大類"}${q ? `，含「${st.find.trim()}」` : ""}：${shown.length} 個`
+        + (shown.length > MAX_SHOWN ? `（只顯示前 ${MAX_SHOWN} 個，請再縮小）` : "");
+    const full = e.must.length >= 3;
+    list.innerHTML = shown.slice(0, MAX_SHOWN).map((id) => {
+      const t = D.types[id], on = e.must.includes(id);
+      return `<label class="pick"><input type="checkbox" value="${esc(id)}" ${on ? "checked" : ""} ${full && !on ? "disabled" : ""}>
+        <span>${esc(t.name)} <span class="mono muted">${esc(t.cip)}</span>${f ? "" : ` <span class="muted">· ${esc(D.families[t.fam]?.zh || "")}</span>`}</span></label>`;
+    }).join("");
+    list.hidden = !shown.length;
+    list.querySelectorAll("input").forEach((c) => c.addEventListener("change", () => {
+      if (c.checked && e.must.length < 3 && !e.must.includes(c.value)) e.must.push(c.value);
+      if (!c.checked) e.must = e.must.filter((x) => x !== c.value);
+      save(); renderPick(e);
+    }));
+    document.getElementById("tags").innerHTML = e.must.map((id) => `<span class="tag">${esc(label(id))}<button type="button" data-drop="${esc(id)}" aria-label="移除 ${esc(D.types[id].name)}">×</button></span>`).join("") || '<span class="muted">還沒有選</span>';
+    document.querySelectorAll("[data-drop]").forEach((b) => b.addEventListener("click", () => { e.must = e.must.filter((x) => x !== b.dataset.drop); save(); renderPick(e); }));
+    document.getElementById("lock").disabled = !e.must.length;
+  }
 
   function renderSetup() {
     const el = document.getElementById("setup");
@@ -137,22 +179,29 @@ textarea { width: 100%; min-height: 8em; font: inherit; }
     if (!st.current || !list.some((p) => p.id === st.current)) st.current = list.find((p) => !complete(p.id))?.id || list[0].id;
     const p = list.find((x) => x.id === st.current);
     const e = entry(p.id);
+    if (st.pickFor !== p.id) { st.pickFor = p.id; st.fam = ""; st.find = ""; save(); }  // no carry-over between personas
     const done = list.filter((x) => complete(x.id)).length;
     let body;
     if (!e.locked) {
       body = `
         <h3>步驟 1：一定要出現的學門（2–3 個）</h3>
-        <p class="muted">憑你對這位學生的判斷寫，不用參考任何清單以外的工具。輸入學門名稱或 CIP 代碼，從選單挑選。鎖定後才會顯示要評分的學門，之後不能修改。</p>
-        <input type="text" id="pick" list="alltypes" placeholder="例如 27.0501 或 Statistics">
-        <datalist id="alltypes">${Object.keys(D.types).map((id) => `<option value="${esc(label(id))}"></option>`).join("")}</datalist>
-        <div class="tags">${e.must.map((id) => `<span class="tag">${esc(label(id))}<button type="button" data-drop="${esc(id)}" aria-label="移除">×</button></span>`).join("") || '<span class="muted">還沒有選</span>'}</div>
-        <div class="row"><button type="button" id="lock" ${e.must.length ? "" : "disabled"}>鎖定，開始評分</button></div>`;
+        <p class="muted">憑你對這位學生的判斷選。先選大類，再勾學位；也可以直接輸入英文關鍵字或 CIP 代碼搜尋。鎖定後才會顯示要評分的學門，之後不能修改。</p>
+        <div class="row">
+          <label for="fam">大類</label>
+          <select id="fam"><option value="">全部大類（請先選一個，或直接搜尋）</option>${famOptions()}</select>
+        </div>
+        <input type="text" id="find" placeholder="搜尋，例如 statistics、finance、27.05" value="${esc(st.find || "")}" aria-describedby="pickhint">
+        <p class="muted" id="pickhint"></p>
+        <div class="picklist" id="picklist" role="group" aria-label="學位清單"></div>
+        <p class="muted">已選（最多 3 個）：</p>
+        <div class="tags" id="tags"></div>
+        <div class="row"><button type="button" id="lock">鎖定，開始評分</button></div>`;
     } else {
       const items = D.pool[p.id].map((id) => {
         const t = D.types[id];
         const chips = GRADES.map(([g, lab]) => `<label class="chip"><input type="radio" name="g-${esc(id)}" id="g-${esc(id)}-${g}" value="${g}" ${e.grades[id] === g ? "checked" : ""}><span>${lab}</span></label>`).join("");
         return `<div class="item"><div><span class="name">${esc(t.name)}</span> <span class="mono muted">CIP ${esc(t.cip)}</span></div>
-          <div class="muted">${esc(t.family)}</div><div class="chips" role="radiogroup" aria-label="${esc(t.name)}">${chips}</div></div>`;
+          <div class="muted">${esc(famName(t.fam))}</div><div class="chips" role="radiogroup" aria-label="${esc(t.name)}">${chips}</div></div>`;
       }).join("");
       const left = D.pool[p.id].filter((id) => !(id in e.grades)).length;
       body = `
@@ -172,15 +221,14 @@ textarea { width: 100%; min-height: 8em; font: inherit; }
         ${body}
       </section>`;
     app.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => { st.current = b.dataset.go; save(); renderAll(); }));
-    const pick = document.getElementById("pick");
-    if (pick) {
-      pick.addEventListener("change", () => {
-        const id = byCip[pick.value.trim().split(" ")[0]];
-        if (id && !e.must.includes(id) && e.must.length < 3) { e.must.push(id); save(); renderAll(); }
-        else pick.value = "";
-      });
-      app.querySelectorAll("[data-drop]").forEach((b) => b.addEventListener("click", () => { e.must = e.must.filter((x) => x !== b.dataset.drop); save(); renderAll(); }));
+    const fam = document.getElementById("fam");
+    if (fam) {
+      fam.value = st.fam || "";
+      const find = document.getElementById("find");
+      fam.addEventListener("change", () => { st.fam = fam.value; save(); renderPick(e); });
+      find.addEventListener("input", () => { st.find = find.value; save(); renderPick(e); });
       document.getElementById("lock").addEventListener("click", () => { e.locked = true; save(); renderAll(); });
+      renderPick(e);
     } else {
       app.querySelectorAll('input[type="radio"]').forEach((r) => r.addEventListener("change", () => {
         e.grades[r.name.slice(2)] = Number(r.value); save();

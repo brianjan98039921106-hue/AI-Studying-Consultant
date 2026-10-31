@@ -126,6 +126,11 @@ def test_judging_page_embeds_data_safely(tmp_path):
     assert data["consultant"] == ["P02", "P06", "P09", "P13"]
     assert all(i in data["types"] for ids in data["pool"].values() for i in ids)
     assert len(data["types"]) == 863 and len({t["cip"] for t in data["types"].values()}) == 863
+    fams = data["families"]  # the picker groups by CIP family: every family needs a label
+    assert {t["fam"] for t in data["types"].values()} == set(fams)
+    assert all(f["zh"] and f["en"] for f in fams.values())
+    assert sum(f["n"] for f in fams.values()) == 863
+    assert fams["27"]["en"] == "Mathematics and Statistics"
 
 
 def test_dry_run_with_fake_judgments(tmp_path, tops):
