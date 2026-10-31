@@ -193,6 +193,30 @@ def build_pool(force: bool = False) -> dict:
     return spec
 
 
+# Chinese UI labels for the CIP 2020 two-digit families (translations of the NCES titles,
+# shown next to the English title in the judging page; not program attributes).
+FAMILY_ZH = {
+    "01": "農業、動植物與獸醫科學", "03": "自然資源與保育", "04": "建築與規劃",
+    "05": "區域、族群、文化與性別研究", "09": "傳播與新聞", "10": "傳播科技",
+    "11": "電腦與資訊科學", "12": "個人與餐飲服務", "13": "教育", "14": "工程",
+    "15": "工程技術", "16": "外國語文、文學與語言學", "19": "家庭與消費者科學",
+    "22": "法律", "23": "英語語文與文學", "24": "博雅與通識", "25": "圖書資訊",
+    "26": "生物與生醫科學", "27": "數學與統計", "28": "軍事科學", "29": "軍事技術",
+    "30": "跨領域研究", "31": "休閒、遊憩與運動", "38": "哲學與宗教研究",
+    "39": "神學與宗教職業", "40": "物理科學", "41": "科學技術",
+    "42": "心理學", "43": "國土安全、執法與消防", "44": "公共行政與社會服務",
+    "45": "社會科學", "46": "營建", "47": "機械與維修技術", "48": "精密製造",
+    "49": "運輸與物流", "50": "視覺與表演藝術", "51": "健康專業與臨床科學",
+    "52": "商業、管理與行銷", "54": "歷史", "60": "住院醫師與專科訓練",
+}  # fmt: skip
+
+
+def _title(s: str) -> str:
+    small = {"and", "of", "the", "in", "for", "or"}
+    words = s.lower().split(" ")
+    return " ".join(w if i and w in small else w[:1].upper() + w[1:] for i, w in enumerate(words))
+
+
 def page_data() -> dict:
     """Everything the judging page shows: personas, pools and the degree-type list."""
     labels = {d.key: d.label_zh for d in DIMENSION_SETS["v2"]}
@@ -209,11 +233,14 @@ def page_data() -> dict:
         areas = [f"{labels[k]} {v}" for k, v in sorted(p["areas"].items(), key=lambda kv: -kv[1])]
         personas.append({"id": p["id"], "background": p["background"],
                          "description": p["description"], "high": hi, "areas": areas})  # fmt: skip
-    info = {t.program_id: {"name": t.degree_name, "cip": t.cip,
-                           "family": families.get(t.cip[:2], ""),
+    info = {t.program_id: {"name": t.degree_name, "cip": t.cip, "fam": t.cip[:2],
                            "schools": n_schools[t.program_id]} for t in types}  # fmt: skip
+    used = sorted({t.cip[:2] for t in types})
+    fams = {c: {"zh": FAMILY_ZH.get(c, ""), "en": _title(families.get(c, "")),
+                "n": sum(1 for t in types if t.cip[:2] == c)} for c in used}  # fmt: skip
     return {"pool_version": pool["version"], "personas": personas, "pool": pool["personas"],
-            "types": info, "consultant": ["P02", "P06", "P09", "P13"]}  # fmt: skip
+            "types": info, "families": fams,
+            "consultant": ["P02", "P06", "P09", "P13"]}  # fmt: skip
 
 
 def build_page(out: Path, fragment: bool = True) -> None:
