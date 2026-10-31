@@ -27,6 +27,7 @@
 | aq | [interest-area-adaptive-findings.md](interest-area-adaptive-findings.md)（**真實資料**，O\*NET 職業） | B-C1-21 |
 | dn | [interest-area-denoise-findings.md](interest-area-denoise-findings.md)（**真實資料**，O\*NET 職業） | F116 後續 |
 | w73 | [synthetic-w73-plan-check.md](synthetic-w73-plan-check.md)（合成資料；分析計畫檢查） | W-73 |
+| pb | [persona-benchmark.md](../docs/persona-benchmark.md) §0（合成人物 × 真實目錄 v0；評分池） | W-80 |
 | dvs | [synthetic-l3-diversity-findings.md](synthetic-l3-diversity-findings.md) | B-C2-9 |
 | ab | [synthetic-l3-admission-bias-findings.md](synthetic-l3-admission-bias-findings.md) | W-44 |
 | a01 | [synthetic-l3-admission-v01-findings.md](synthetic-l3-admission-v01-findings.md) | W-44 |
@@ -117,6 +118,7 @@
 | F125 | 族群多樣化提高最佳族群出現率（最多 +0.178），但新且相關比例幾乎每個條件都下降（λ ≥ 0.01 時全部下降，最多 −0.302）；預先登記無候選通過 | ✅ | dvs | 預設不多樣化 |
 | F126 | 多樣化帶進的族群常是隱藏領域不符的學程——**只在 archetype 成立**；continuous 下最佳學程保留反而多半上升 | ⚠️（一種生成方式） | dvs | 不影響判定（F125） |
 | F127 | 集中反映真實契合；若要處理應另設標示的「其他領域」區塊 | 💭 | dvs | 待 W-41 回饋 |
+| F190 | W-80 評分池（16 個合成人物、每人 25–35 個學門、7–14 個 CIP 2 碼大類）：模型前 10 名所在大類在池中平均有 9.94 個學門，其他池中學門所在大類平均 4.68 個；依大類分組顯示會讓組的大小洩漏來源 | ✅ | pb | 評分清單分頁、不分組（W-80 v2.1） |
 
 ## D12 背景分層
 
