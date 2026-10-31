@@ -39,6 +39,10 @@ with the mean number of grade-0 types):
   REGRESSION (--check, CI): fails if mean nDCG@10(MODEL) falls by more than 0.05 from
   results/persona-benchmark.json or judged coverage of MODEL's top 10 drops below 90%
   (then add the new types to the pool and judge them).
+  v2.1 (2026-10-31, before any judgment; display only): the must-include picker is grouped
+  by CIP family; the pool is shown paged in its shuffled order, NOT grouped by family,
+  because MODEL's picks concentrate in a few families (F190). Pool, rules and scoring
+  are unchanged.
   Guards: --build-pool refuses to overwrite a pool that has judgments; scoring refuses
   judgments that are not committed (--allow-uncommitted is for tests and writes nothing).
 

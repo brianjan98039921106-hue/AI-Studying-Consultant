@@ -93,6 +93,7 @@ textarea { width: 100%; min-height: 8em; font: inherit; }
   const BG = { same_field: "同領域延續", adjacent: "相近轉換", distant: "遠距轉換", multi_degree: "多學位" };
   const GRADES = [[0, "0 不適合"], [1, "1 可以"], [2, "2 很適合"]];
   const MAX_SHOWN = 200;
+  const PAGE = 8;
   const ids = D ? Object.keys(D.types).sort((a, b) => D.types[a].cip.localeCompare(D.types[b].cip)) : [];
   let st =load() || { rater: "", custom: "", current: null, personas: {} };
 
@@ -197,19 +198,29 @@ textarea { width: 100%; min-height: 8em; font: inherit; }
         <div class="tags" id="tags"></div>
         <div class="row"><button type="button" id="lock">鎖定，開始評分</button></div>`;
     } else {
-      const items = D.pool[p.id].map((id) => {
+      // Paged in the shuffled pool order (v2.1): shorter screens without grouping, because
+      // grouping by family would expose MODEL's concentrated picks (docs/persona-benchmark.md §0).
+      const pool = D.pool[p.id];
+      const pages = Math.ceil(pool.length / PAGE);
+      const pg = Math.min(e.page || 0, pages - 1);
+      const items = pool.slice(pg * PAGE, (pg + 1) * PAGE).map((id) => {
         const t = D.types[id];
         const chips = GRADES.map(([g, lab]) => `<label class="chip"><input type="radio" name="g-${esc(id)}" id="g-${esc(id)}-${g}" value="${g}" ${e.grades[id] === g ? "checked" : ""}><span>${lab}</span></label>`).join("");
         return `<div class="item"><div><span class="name">${esc(t.name)}</span> <span class="mono muted">CIP ${esc(t.cip)}</span></div>
           <div class="muted">${esc(famName(t.fam))}</div><div class="chips" role="radiogroup" aria-label="${esc(t.name)}">${chips}</div></div>`;
       }).join("");
+      const pager = `<div class="row" style="justify-content:space-between">
+          <button type="button" class="ghost" data-page="${pg - 1}" ${pg ? "" : "disabled"}>上一頁</button>
+          <span class="muted">第 ${pg + 1} / ${pages} 頁</span>
+          ${pg < pages - 1 ? `<button type="button" data-page="${pg + 1}">下一頁</button>` : '<button type="button" id="next">下一位人物</button>'}
+        </div>`;
       const left = D.pool[p.id].filter((id) => !(id in e.grades)).length;
       body = `
         <p class="muted">一定要出現：${e.must.map((id) => esc(label(id))).join("、")}（已鎖定）</p>
         <h3>步驟 2：這些學門適合這位學生嗎？</h3>
         <p class="muted">只看學門本身適不適合這位學生，不考慮學校或錄取難度。還有 <b id="left">${left}</b> 個沒評。</p>
         <div>${items}</div>
-        <div class="row"><button type="button" id="next">下一位</button></div>`;
+        ${pager}`;
     }
     app.innerHTML = `
       <section class="box">
@@ -235,7 +246,11 @@ textarea { width: 100%; min-height: 8em; font: inherit; }
         document.getElementById("left").textContent = D.pool[p.id].filter((id) => !(id in e.grades)).length;
         renderOut();
       }));
-      document.getElementById("next").addEventListener("click", () => {
+      app.querySelectorAll("[data-page]").forEach((b) => b.addEventListener("click", () => {
+        e.page = Number(b.dataset.page); save(); renderAll();
+        document.querySelector("#app h3")?.scrollIntoView({ block: "start" });
+      }));
+      document.getElementById("next")?.addEventListener("click", () => {
         const nextP = list.find((x) => !complete(x.id) && x.id !== p.id);
         st.current = nextP ? nextP.id : p.id; save(); renderAll(); window.scrollTo({ top: 0 });
       });
